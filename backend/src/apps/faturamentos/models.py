@@ -25,22 +25,27 @@ class Faturamento(BaseModel):
     ]
 
     paciente = models.ForeignKey(
-        Paciente,
+        "pacientes.Paciente",
         on_delete=models.CASCADE,
         related_name="faturamentos",
         verbose_name="Paciente",
     )
+
     consulta = models.ForeignKey(
-        Consulta,
+        "consultas.Consulta",
         on_delete=models.SET_NULL,
         null=True,
         blank=True,
         related_name="faturamentos",
         verbose_name="Consulta",
     )
-    data_servico = models.DateField(verbose_name="Data do Serviço")
+    data_servico = models.DateField(
+        verbose_name="Data do Serviço",
+    )
     valor_cobrado = models.DecimalField(
-        max_digits=10, decimal_places=2, verbose_name="Valor Cobrado"
+        max_digits=10,
+        decimal_places=2,
+        verbose_name="Valor Cobrado",
     )
     valor_pago = models.DecimalField(
         max_digits=10, decimal_places=2, default=0, verbose_name="Valor Pago"

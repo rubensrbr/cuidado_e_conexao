@@ -1,8 +1,4 @@
 from django.db import models
-from telefones.models import Telefone
-from enderecos.models import Endereco
-from profissionais.models import Profissional
-from consultas.models import Consulta
 from core.models import BaseModel
 
 
@@ -17,41 +13,67 @@ class Paciente(BaseModel):
         ("prefiro_nao_informar", "Prefiro não informar"),
     ]
 
-    primeiro_nome = models.CharField(max_length=100, verbose_name="Primeiro Nome")
-    sobrenome = models.CharField(max_length=100, verbose_name="Sobrenome")
-    data_nascimento = models.DateField(verbose_name="Data de Nascimento")
-    genero = models.CharField(
-        max_length=30, choices=GENERO_CHOICES, verbose_name="Gênero"
+    primeiro_nome = models.CharField(
+        max_length=100,
+        verbose_name="Primeiro Nome",
     )
-    email = models.EmailField(max_length=150, blank=True, verbose_name="E-mail")
+    sobrenome = models.CharField(
+        max_length=100,
+        verbose_name="Sobrenome",
+    )
+    data_nascimento = models.DateField(
+        verbose_name="Data de Nascimento",
+    )
+    genero = models.CharField(
+        max_length=30,
+        choices=GENERO_CHOICES,
+        verbose_name="Gênero",
+    )
+    email = models.EmailField(
+        max_length=150,
+        blank=True,
+        verbose_name="E-mail",
+    )
 
     enderecos = models.ForeignKey(
-        Endereco,
+        "enderecos.Endereco",
         on_delete=models.CASCADE,
         related_name="pacientes",
         verbose_name="Endereços",
     )
+
     telefones = models.ForeignKey(
-        Telefone,
+        "telefones.Telefone",
         on_delete=models.CASCADE,
         related_name="pacientes",
         verbose_name="Telefones",
     )
 
     contato_emergencia_nome = models.CharField(
-        max_length=150, verbose_name="Nome do Contato de Emergência"
+        max_length=150,
+        verbose_name="Nome do Contato de Emergência",
     )
     contato_emergencia_telefone = models.CharField(
-        max_length=20, verbose_name="Telefone do Contato de Emergência"
+        max_length=20,
+        verbose_name="Telefone do Contato de Emergência",
     )
 
     # Informações do convênio
-    convenio = models.CharField(max_length=150, blank=True, verbose_name="Convênio")
+    convenio = models.CharField(
+        max_length=150,
+        blank=True,
+        verbose_name="Convênio",
+    )
     numero_carteirinha = models.CharField(
-        max_length=100, blank=True, verbose_name="Número da Carteirinha"
+        max_length=100,
+        blank=True,
+        verbose_name="Número da Carteirinha",
     )
 
-    ativo = models.BooleanField(default=True, verbose_name="Ativo")
+    ativo = models.BooleanField(
+        default=True,
+        verbose_name="Ativo",
+    )
 
     class Meta:
         verbose_name = "Paciente"
@@ -70,19 +92,19 @@ class Prontuario(BaseModel):
     """Prontuário médico/psicológico do paciente"""
 
     paciente = models.ForeignKey(
-        Paciente,
+        "pacientes.Paciente",
         on_delete=models.CASCADE,
         related_name="prontuarios",
         verbose_name="Paciente",
     )
     profissional = models.ForeignKey(
-        Profissional,
+        "profissionais.Profissional",
         on_delete=models.CASCADE,
         related_name="prontuarios",
         verbose_name="Profissional",
     )
     consulta = models.ForeignKey(
-        Consulta,
+        "consultas.Consulta",
         on_delete=models.SET_NULL,
         null=True,
         blank=True,
