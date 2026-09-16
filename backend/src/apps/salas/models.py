@@ -29,7 +29,7 @@ class AgendaSala(BaseModel):
         Sala, on_delete=models.CASCADE, related_name="agendamentos", verbose_name="Sala"
     )
     consulta = models.ForeignKey(
-        Consulta,
+        "consultas.Consulta",
         on_delete=models.SET_NULL,
         null=True,
         blank=True,

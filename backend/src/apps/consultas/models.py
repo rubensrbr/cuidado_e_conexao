@@ -1,7 +1,5 @@
 from django.db import models
-from profissionais.models import Profissional
 from core.models import BaseModel
-from pacientes.models import Paciente
 
 
 class Consulta(BaseModel):
@@ -23,13 +21,13 @@ class Consulta(BaseModel):
     ]
 
     paciente = models.ForeignKey(
-        Paciente,
+        "pacientes.Paciente",
         on_delete=models.CASCADE,
         related_name="consultas",
         verbose_name="Paciente",
     )
     profissional = models.ForeignKey(
-        Profissional,
+        "profissionais.Profissional",
         on_delete=models.CASCADE,
         related_name="consultas",
         verbose_name="Profissional",
@@ -38,7 +36,9 @@ class Consulta(BaseModel):
     hora_inicio = models.TimeField(verbose_name="Hora de Início")
     hora_fim = models.TimeField(verbose_name="Hora de Fim")
     tipo_consulta = models.CharField(
-        max_length=30, choices=TIPO_CHOICES, verbose_name="Tipo de Consulta"
+        max_length=30,
+        choices=TIPO_CHOICES,
+        verbose_name="Tipo de Consulta",
     )
     status = models.CharField(
         max_length=20, choices=STATUS_CHOICES, default="agendada", verbose_name="Status"
@@ -78,7 +78,7 @@ class Lembrete(BaseModel):
     ]
 
     consulta = models.ForeignKey(
-        Consulta,
+        "consultas.Consulta",
         on_delete=models.CASCADE,
         related_name="lembretes",
         verbose_name="Consulta",
@@ -118,13 +118,13 @@ class ListaEspera(BaseModel):
     ]
 
     paciente = models.ForeignKey(
-        Paciente,
+        "pacientes.Paciente",
         on_delete=models.CASCADE,
         related_name="lista_espera",
         verbose_name="Paciente",
     )
     profissional_preferido = models.ForeignKey(
-        Profissional,
+        "profissionais.Profissional",
         on_delete=models.SET_NULL,
         null=True,
         blank=True,
@@ -166,33 +166,3 @@ class Sala(BaseModel):
 
     def __str__(self):
         return f"Sala {self.numero_sala}" + (f" - {self.nome}" if self.nome else "")
-
-
-class AgendaSala(BaseModel):
-    """Agendamento de salas"""
-
-    sala = models.ForeignKey(
-        Sala, on_delete=models.CASCADE, related_name="agendamentos", verbose_name="Sala"
-    )
-    consulta = models.ForeignKey(
-        Consulta,
-        on_delete=models.SET_NULL,
-        null=True,
-        blank=True,
-        related_name="sala_agendada",
-        verbose_name="Consulta",
-    )
-    data = models.DateField(verbose_name="Data")
-    hora_inicio = models.TimeField(verbose_name="Hora de Início")
-    hora_fim = models.TimeField(verbose_name="Hora de Fim")
-
-    class Meta:
-        verbose_name = "Agenda de Sala"
-        verbose_name_plural = "Agendas de Salas"
-        ordering = ["data", "hora_inicio"]
-        indexes = [
-            models.Index(fields=["sala", "data"]),
-        ]
-
-    def __str__(self):
-        return f"{self.sala} - {self.data} {self.hora_inicio}-{self.hora_fim}"

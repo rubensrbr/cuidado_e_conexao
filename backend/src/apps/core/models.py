@@ -39,4 +39,3 @@ class BaseModel(TimeStamped):
 
     class Meta:
         abstract = True
-        db_table = "base_model"
