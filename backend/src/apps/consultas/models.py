@@ -147,22 +147,3 @@ class ListaEspera(BaseModel):
     status = models.CharField(
         max_length=20, choices=STATUS_CHOICES, default="ativa", verbose_name="Status"
     )
-
-
-class Sala(BaseModel):
-    """Salas da clínica"""
-
-    numero_sala = models.CharField(
-        max_length=20, unique=True, verbose_name="Número da Sala"
-    )
-    nome = models.CharField(max_length=100, blank=True, verbose_name="Nome")
-    capacidade = models.IntegerField(default=1, verbose_name="Capacidade")
-    ativa = models.BooleanField(default=True, verbose_name="Ativa")
-
-    class Meta:
-        verbose_name = "Sala"
-        verbose_name_plural = "Salas"
-        ordering = ["numero_sala"]
-
-    def __str__(self):
-        return f"Sala {self.numero_sala}" + (f" - {self.nome}" if self.nome else "")
