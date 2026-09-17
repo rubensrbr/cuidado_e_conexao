@@ -113,5 +113,8 @@ class TipoProfissional(BaseModel):
         max_length=100,
     )
 
+    class Meta:
+        verbose_name = "Tipo Profissional"
+
     def __str__(self) -> str:
         return f"{self.descricao}"

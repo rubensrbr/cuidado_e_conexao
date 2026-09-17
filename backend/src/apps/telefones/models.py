@@ -24,6 +24,18 @@ class Telefone(BaseModel):
     )
     tipo = models.CharField(max_length=20, choices=TIPO_CHOICES, verbose_name="Tipo")
     principal = models.BooleanField(default=False, verbose_name="Principal")
+    pacientes = models.ForeignKey(
+        "pacientes.Paciente",
+        on_delete=models.CASCADE,
+        related_name="telefones",
+        verbose_name="pacientes",
+    )
+    profissionais = models.ForeignKey(
+        "profissionais.Profissional",
+        on_delete=models.CASCADE,
+        related_name="profissionais",
+        verbose_name="profissionais",
+    )
 
     class Meta:
         verbose_name = "Telefone"
