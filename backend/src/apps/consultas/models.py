@@ -14,6 +14,7 @@ class Consulta(BaseModel):
 
     STATUS_CHOICES = [
         ("agendada", "Agendada"),
+        ("reagendada", "Reagendada"),
         ("confirmada", "Confirmada"),
         ("realizada", "Realizada"),
         ("cancelada", "Cancelada"),
@@ -32,20 +33,33 @@ class Consulta(BaseModel):
         related_name="consultas",
         verbose_name="Profissional",
     )
-    data_consulta = models.DateField(verbose_name="Data da Consulta")
-    hora_inicio = models.TimeField(verbose_name="Hora de Início")
-    hora_fim = models.TimeField(verbose_name="Hora de Fim")
+    data_consulta = models.DateField(
+        verbose_name="Data da Consulta",
+    )
+    hora_inicio = models.TimeField(
+        verbose_name="Hora de Início",
+    )
+    hora_fim = models.TimeField(
+        verbose_name="Hora de Fim",
+    )
     tipo_consulta = models.CharField(
         max_length=30,
         choices=TIPO_CHOICES,
         verbose_name="Tipo de Consulta",
     )
     status = models.CharField(
-        max_length=20, choices=STATUS_CHOICES, default="agendada", verbose_name="Status"
+        max_length=20,
+        choices=STATUS_CHOICES,
+        default="agendada",
+        verbose_name="Status",
     )
-    notas_sessao = models.TextField(blank=True, verbose_name="Notas da Sessão")
+    notas_sessao = models.TextField(
+        blank=True,
+        verbose_name="Notas da Sessão",
+    )
     motivo_cancelamento = models.TextField(
-        blank=True, verbose_name="Motivo do Cancelamento"
+        blank=True,
+        verbose_name="Motivo do Cancelamento",
     )
 
     class Meta:
@@ -84,12 +98,23 @@ class Lembrete(BaseModel):
         verbose_name="Consulta",
     )
     tipo_lembrete = models.CharField(
-        max_length=20, choices=TIPO_CHOICES, verbose_name="Tipo de Lembrete"
+        max_length=20,
+        choices=TIPO_CHOICES,
+        verbose_name="Tipo de Lembrete",
     )
-    data_hora_envio = models.DateTimeField(verbose_name="Data/Hora de Envio")
-    enviado_em = models.DateTimeField(null=True, blank=True, verbose_name="Enviado em")
+    data_hora_envio = models.DateTimeField(
+        verbose_name="Data/Hora de Envio",
+    )
+    enviado_em = models.DateTimeField(
+        null=True,
+        blank=True,
+        verbose_name="Enviado em",
+    )
     status = models.CharField(
-        max_length=20, choices=STATUS_CHOICES, default="pendente", verbose_name="Status"
+        max_length=20,
+        choices=STATUS_CHOICES,
+        default="pendente",
+        verbose_name="Status",
     )
 
     class Meta:

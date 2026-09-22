@@ -64,7 +64,7 @@ class Profissional(BaseModel):
         ordering = ["sobrenome", "primeiro_nome"]
 
     def __str__(self):
-        return f"{self.primeiro_nome} {self.sobrenome} - {self.get_tipo_profissional_display()}"
+        return f"{self.primeiro_nome} {self.sobrenome} - {self.tipo_profissional}"
 
     @property
     def nome_completo(self):
