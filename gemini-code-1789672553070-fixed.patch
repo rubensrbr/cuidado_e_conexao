@@ -1,0 +1,508 @@
+--- /dev/null
++++ b/consultas/views.py
+@@ -0,0 +1,115 @@
++from django.urls import reverse_lazy
++from django.views.generic import ListView, DetailView, CreateView, UpdateView, DeleteView
++from .models import Consulta, Lembrete, ListaEspera
++
++
++# --- Consulta Views ---
++class ConsultaListView(ListView):
++    model = Consulta
++    template_name = "consultas/consulta_list.html"
++    context_object_name = "consultas"
++    paginate_by = 10
++
++
++class ConsultaDetailView(DetailView):
++    model = Consulta
++    template_name = "consultas/consulta_detail.html"
++    slug_field = "uuid"
++    slug_url_kwarg = "uuid"
++
++
++class ConsultaCreateView(CreateView):
++    model = Consulta
++    template_name = "consultas/consulta_form.html"
++    fields = [
++        "paciente",
++        "profissional",
++        "data_consulta",
++        "hora_inicio",
++        "hora_fim",
++        "tipo_consulta",
++        "status",
++        "notas_sessao",
++        "motivo_cancelamento",
++    ]
++    success_url = reverse_lazy("consultas:consulta_list")
++
++
++class ConsultaUpdateView(UpdateView):
++    model = Consulta
++    template_name = "consultas/consulta_form.html"
++    fields = [
++        "paciente",
++        "profissional",
++        "data_consulta",
++        "hora_inicio",
++        "hora_fim",
++        "tipo_consulta",
++        "status",
++        "notas_sessao",
++        "motivo_cancelamento",
++    ]
++    slug_field = "uuid"
++    slug_url_kwarg = "uuid"
++    success_url = reverse_lazy("consultas:consulta_list")
++
++
++class ConsultaDeleteView(DeleteView):
++    model = Consulta
++    template_name = "consultas/consulta_confirm_delete.html"
++    slug_field = "uuid"
++    slug_url_kwarg = "uuid"
++    success_url = reverse_lazy("consultas:consulta_list")
++
++
++# --- Lembrete Views ---
++class LembreteListView(ListView):
++    model = Lembrete
++    template_name = "consultas/lembrete_list.html"
++    context_object_name = "lembretes"
++
++
++class LembreteCreateView(CreateView):
++    model = Lembrete
++    template_name = "consultas/lembrete_form.html"
++    fields = ["consulta", "tipo_lembrete", "data_hora_envio", "enviado_em", "status"]
++    success_url = reverse_lazy("consultas:lembrete_list")
++
++
++# --- ListaEspera Views ---
++class ListaEsperaListView(ListView):
++    model = ListaEspera
++    template_name = "consultas/lista_espera_list.html"
++    context_object_name = "lista_espera"
++
++
++class ListaEsperaCreateView(CreateView):
++    model = ListaEspera
++    template_name = "consultas/lista_espera_form.html"
++    fields = [
++        "paciente",
++        "profissional_preferido",
++        "dias_preferidos",
++        "horario_preferido",
++        "prioridade",
++        "observacoes",
++        "status",
++    ]
++    success_url = reverse_lazy("consultas:lista_espera_list")
++
++
++class ListaEsperaUpdateView(UpdateView):
++    model = ListaEspera
++    template_name = "consultas/lista_espera_form.html"
++    fields = [
++        "paciente",
++        "profissional_preferido",
++        "dias_preferidos",
++        "horario_preferido",
++        "prioridade",
++        "observacoes",
++        "status",
++    ]
++    slug_field = "uuid"
++    slug_url_kwarg = "uuid"
++    success_url = reverse_lazy("consultas:lista_espera_list")
+--- /dev/null
++++ b/consultas/urls.py
+@@ -0,0 +1,22 @@
++from django.urls import path
++from . import views
++
++app_name = "consultas"
++
++urlpatterns = [
++    # Consulta URLs
++    path("", views.ConsultaListView.as_view(), name="consulta_list"),
++    path("nova/", views.ConsultaCreateView.as_view(), name="consulta_create"),
++    path("<uuid:uuid>/", views.ConsultaDetailView.as_view(), name="consulta_detail"),
++    path("<uuid:uuid>/editar/", views.ConsultaUpdateView.as_view(), name="consulta_update"),
++    path("<uuid:uuid>/deletar/", views.ConsultaDeleteView.as_view(), name="consulta_delete"),
++    
++    # Lembrete URLs
++    path("lembretes/", views.LembreteListView.as_view(), name="lembrete_list"),
++    path("lembretes/novo/", views.LembreteCreateView.as_view(), name="lembrete_create"),
++    
++    # ListaEspera URLs
++    path("lista-espera/", views.ListaEsperaListView.as_view(), name="lista_espera_list"),
++    path("lista-espera/nova/", views.ListaEsperaCreateView.as_view(), name="lista_espera_create"),
++    path("lista-espera/<uuid:uuid>/editar/", views.ListaEsperaUpdateView.as_view(), name="lista_espera_update"),
++]
+--- /dev/null
++++ b/faturamentos/views.py
+@@ -0,0 +1,63 @@
++from django.urls import reverse_lazy
++from django.views.generic import ListView, DetailView, CreateView, UpdateView, DeleteView
++from .models import Faturamento
++
++
++class FaturamentoListView(ListView):
++    model = Faturamento
++    template_name = "faturamentos/faturamento_list.html"
++    context_object_name = "faturamentos"
++    paginate_by = 10
++
++
++class FaturamentoDetailView(DetailView):
++    model = Faturamento
++    template_name = "faturamentos/faturamento_detail.html"
++    slug_field = "uuid"
++    slug_url_kwarg = "uuid"
++
++
++class FaturamentoCreateView(CreateView):
++    model = Faturamento
++    template_name = "faturamentos/faturamento_form.html"
++    fields = [
++        "paciente",
++        "consulta",
++        "data_servico",
++        "valor_cobrado",
++        "valor_pago",
++        "valor_convenio",
++        "metodo_pagamento",
++        "status_pagamento",
++        "numero_nota",
++        "observacoes",
++    ]
++    success_url = reverse_lazy("faturamentos:faturamento_list")
++
++
++class FaturamentoUpdateView(UpdateView):
++    model = Faturamento
++    template_name = "faturamentos/faturamento_form.html"
++    fields = [
++        "paciente",
++        "consulta",
++        "data_servico",
++        "valor_cobrado",
++        "valor_pago",
++        "valor_convenio",
++        "metodo_pagamento",
++        "status_pagamento",
++        "numero_nota",
++        "observacoes",
++    ]
++    slug_field = "uuid"
++    slug_url_kwarg = "uuid"
++    success_url = reverse_lazy("faturamentos:faturamento_list")
++
++
++class FaturamentoDeleteView(DeleteView):
++    model = Faturamento
++    template_name = "faturamentos/faturamento_confirm_delete.html"
++    slug_field = "uuid"
++    slug_url_kwarg = "uuid"
++    success_url = reverse_lazy("faturamentos:faturamento_list")
+--- /dev/null
++++ b/faturamentos/urls.py
+@@ -0,0 +1,12 @@
++from django.urls import path
++from . import views
++
++app_name = "faturamentos"
++
++urlpatterns = [
++    path("", views.FaturamentoListView.as_view(), name="faturamento_list"),
++    path("novo/", views.FaturamentoCreateView.as_view(), name="faturamento_create"),
++    path("<uuid:uuid>/", views.FaturamentoDetailView.as_view(), name="faturamento_detail"),
++    path("<uuid:uuid>/editar/", views.FaturamentoUpdateView.as_view(), name="faturamento_update"),
++    path("<uuid:uuid>/deletar/", views.FaturamentoDeleteView.as_view(), name="faturamento_delete"),
++]
+--- /dev/null
++++ b/pacientes/views.py
+@@ -0,0 +1,88 @@
++from django.urls import reverse_lazy
++from django.views.generic import ListView, DetailView, CreateView, UpdateView, DeleteView
++from .models import Paciente, Prontuario
++
++
++# --- Paciente Views ---
++class PacienteListView(ListView):
++    model = Paciente
++    template_name = "pacientes/paciente_list.html"
++    context_object_name = "pacientes"
++    paginate_by = 10
++
++
++class PacienteDetailView(DetailView):
++    model = Paciente
++    template_name = "pacientes/paciente_detail.html"
++    slug_field = "uuid"
++    slug_url_kwarg = "uuid"
++
++
++class PacienteCreateView(CreateView):
++    model = Paciente
++    template_name = "pacientes/paciente_form.html"
++    fields = [
++        "primeiro_nome",
++        "sobrenome",
++        "data_nascimento",
++        "genero",
++        "email",
++        "convenio",
++        "numero_carteirinha",
++        "ativo",
++    ]
++    success_url = reverse_lazy("pacientes:paciente_list")
++
++
++class PacienteUpdateView(UpdateView):
++    model = Paciente
++    template_name = "pacientes/paciente_form.html"
++    fields = [
++        "primeiro_nome",
++        "sobrenome",
++        "data_nascimento",
++        "genero",
++        "email",
++        "convenio",
++        "numero_carteirinha",
++        "ativo",
++    ]
++    slug_field = "uuid"
++    slug_url_kwarg = "uuid"
++    success_url = reverse_lazy("pacientes:paciente_list")
++
++
++class PacienteDeleteView(DeleteView):
++    model = Paciente
++    template_name = "pacientes/paciente_confirm_delete.html"
++    slug_field = "uuid"
++    slug_url_kwarg = "uuid"
++    success_url = reverse_lazy("pacientes:paciente_list")
++
++
++# --- Prontuario Views ---
++class ProntuarioDetailView(DetailView):
++    model = Prontuario
++    template_name = "pacientes/prontuario_detail.html"
++    slug_field = "uuid"
++    slug_url_kwarg = "uuid"
++
++
++class ProntuarioCreateView(CreateView):
++    model = Prontuario
++    template_name = "pacientes/prontuario_form.html"
++    fields = [
++        "paciente",
++        "profissional",
++        "consulta",
++        "data_registro",
++        "codigo_cid",
++        "queixa_principal",
++        "plano_tratamento",
++        "evolucao",
++        "medicamentos",
++        "avaliacao_risco",
++    ]
++    
++    def get_success_url(self):
++        return reverse_lazy("pacientes:paciente_detail", kwargs={"uuid": self.object.paciente.uuid})
+--- /dev/null
++++ b/pacientes/urls.py
+@@ -0,0 +1,17 @@
++from django.urls import path
++from . import views
++
++app_name = "pacientes"
++
++urlpatterns = [
++    # Paciente URLs
++    path("", views.PacienteListView.as_view(), name="paciente_list"),
++    path("novo/", views.PacienteCreateView.as_view(), name="paciente_create"),
++    path("<uuid:uuid>/", views.PacienteDetailView.as_view(), name="paciente_detail"),
++    path("<uuid:uuid>/editar/", views.PacienteUpdateView.as_view(), name="paciente_update"),
++    path("<uuid:uuid>/deletar/", views.PacienteDeleteView.as_view(), name="paciente_delete"),
++    
++    # Prontuario URLs
++    path("prontuarios/novo/", views.ProntuarioCreateView.as_view(), name="prontuario_create"),
++    path("prontuarios/<uuid:uuid>/", views.ProntuarioDetailView.as_view(), name="prontuario_detail"),
++]
+--- /dev/null
++++ b/profissionais/views.py
+@@ -0,0 +1,80 @@
++from django.urls import reverse_lazy
++from django.views.generic import ListView, DetailView, CreateView, UpdateView, DeleteView
++from .models import Profissional, Disponibilidade
++
++
++# --- Profissional Views ---
++class ProfissionalListView(ListView):
++    model = Profissional
++    template_name = "profissionais/profissional_list.html"
++    context_object_name = "profissionais"
++    paginate_by = 10
++
++
++class ProfissionalDetailView(DetailView):
++    model = Profissional
++    template_name = "profissionais/profissional_detail.html"
++    slug_field = "uuid"
++    slug_url_kwarg = "uuid"
++
++
++class ProfissionalCreateView(CreateView):
++    model = Profissional
++    template_name = "profissionais/profissional_form.html"
++    fields = [
++        "primeiro_nome",
++        "sobrenome",
++        "email",
++        "telefones",
++        "tipo_profissional",
++        "numero_registro",
++        "especializacao",
++        "titulacao",
++        "valor_hora",
++        "ativo",
++    ]
++    success_url = reverse_lazy("profissionais:profissional_list")
++
++
++class ProfissionalUpdateView(UpdateView):
++    model = Profissional
++    template_name = "profissionais/profissional_form.html"
++    fields = [
++        "primeiro_nome",
++        "sobrenome",
++        "email",
++        "telefones",
++        "tipo_profissional",
++        "numero_registro",
++        "especializacao",
++        "titulacao",
++        "valor_hora",
++        "ativo",
++    ]
++    slug_field = "uuid"
++    slug_url_kwarg = "uuid"
++    success_url = reverse_lazy("profissionais:profissional_list")
++
++
++class ProfissionalDeleteView(DeleteView):
++    model = Profissional
++    template_name = "profissionais/profissional_confirm_delete.html"
++    slug_field = "uuid"
++    slug_url_kwarg = "uuid"
++    success_url = reverse_lazy("profissionais:profissional_list")
++
++
++# --- Disponibilidade Views ---
++class DisponibilidadeCreateView(CreateView):
++    model = Disponibilidade
++    template_name = "profissionais/disponibilidade_form.html"
++    fields = [
++        "profissional",
++        "dia_semana",
++        "hora_inicio",
++        "hora_fim",
++        "recorrente",
++        "data_inicio",
++        "data_fim",
++    ]
++    success_url = reverse_lazy("profissionais:profissional_list")
+--- /dev/null
++++ b/profissionais/urls.py
+@@ -0,0 +1,16 @@
++from django.urls import path
++from . import views
++
++app_name = "profissionais"
++
++urlpatterns = [
++    # Profissional URLs
++    path("", views.ProfissionalListView.as_view(), name="profissional_list"),
++    path("novo/", views.ProfissionalCreateView.as_view(), name="profissional_create"),
++    path("<uuid:uuid>/", views.ProfissionalDetailView.as_view(), name="profissional_detail"),
++    path("<uuid:uuid>/editar/", views.ProfissionalUpdateView.as_view(), name="profissional_update"),
++    path("<uuid:uuid>/deletar/", views.ProfissionalDeleteView.as_view(), name="profissional_delete"),
++    
++    # Disponibilidade URLs
++    path("disponibilidade/nova/", views.DisponibilidadeCreateView.as_view(), name="disponibilidade_create"),
++]
+--- /dev/null
++++ b/salas/views.py
+@@ -0,0 +1,49 @@
++from django.urls import reverse_lazy
++from django.views.generic import ListView, DetailView, CreateView, UpdateView, DeleteView
++from .models import Sala, AgendaSala
++
++
++# --- Sala Views ---
++class SalaListView(ListView):
++    model = Sala
++    template_name = "salas/sala_list.html"
++    context_object_name = "salas"
++
++
++class SalaCreateView(CreateView):
++    model = Sala
++    template_name = "salas/sala_form.html"
++    fields = ["numero_sala", "nome", "capacidade", "ativa"]
++    success_url = reverse_lazy("salas:sala_list")
++
++
++class SalaUpdateView(UpdateView):
++    model = Sala
++    template_name = "salas/sala_form.html"
++    fields = ["numero_sala", "nome", "capacidade", "ativa"]
++    slug_field = "uuid"
++    slug_url_kwarg = "uuid"
++    success_url = reverse_lazy("salas:sala_list")
++
++
++# --- AgendaSala Views ---
++class AgendaSalaListView(ListView):
++    model = AgendaSala
++    template_name = "salas/agendasala_list.html"
++    context_object_name = "agendamentos"
++
++
++class AgendaSalaCreateView(CreateView):
++    model = AgendaSala
++    template_name = "salas/agendasala_form.html"
++    fields = ["sala", "consulta", "data", "hora_inicio", "hora_fim"]
++    success_url = reverse_lazy("salas:agendasala_list")
++
++
++class AgendaSalaUpdateView(UpdateView):
++    model = AgendaSala
++    template_name = "salas/agendasala_form.html"
++    fields = ["sala", "consulta", "data", "hora_inicio", "hora_fim"]
++    slug_field = "uuid"
++    slug_url_kwarg = "uuid"
++    success_url = reverse_lazy("salas:agendasala_list")
+--- /dev/null
++++ b/salas/urls.py
+@@ -0,0 +1,16 @@
++from django.urls import path
++from . import views
++
++app_name = "salas"
++
++urlpatterns = [
++    # Sala URLs
++    path("", views.SalaListView.as_view(), name="sala_list"),
++    path("nova/", views.SalaCreateView.as_view(), name="sala_create"),
++    path("<uuid:uuid>/editar/", views.SalaUpdateView.as_view(), name="sala_update"),
++    
++    # AgendaSala URLs
++    path("agenda/", views.AgendaSalaListView.as_view(), name="agendasala_list"),
++    path("agenda/nova/", views.AgendaSalaCreateView.as_view(), name="agendasala_create"),
++    path("agenda/<uuid:uuid>/editar/", views.AgendaSalaUpdateView.as_view(), name="agendasala_update"),
++]

@@ -35,29 +35,6 @@ class Paciente(BaseModel):
         verbose_name="E-mail",
     )
 
-    enderecos = models.ForeignKey(
-        "enderecos.Endereco",
-        on_delete=models.CASCADE,
-        related_name="pacientes",
-        verbose_name="Endereços",
-    )
-
-    telefones = models.ForeignKey(
-        "telefones.Telefone",
-        on_delete=models.CASCADE,
-        related_name="pacientes",
-        verbose_name="Telefones",
-    )
-
-    contato_emergencia_nome = models.CharField(
-        max_length=150,
-        verbose_name="Nome do Contato de Emergência",
-    )
-    contato_emergencia_telefone = models.CharField(
-        max_length=20,
-        verbose_name="Telefone do Contato de Emergência",
-    )
-
     # Informações do convênio
     convenio = models.CharField(
         max_length=150,

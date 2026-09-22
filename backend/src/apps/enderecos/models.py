@@ -14,6 +14,12 @@ class Endereco(BaseModel):
     cidade = models.CharField(max_length=100, verbose_name="Cidade")
     estado = models.CharField(max_length=2, verbose_name="Estado")
     cep = models.CharField(max_length=9, verbose_name="CEP")
+    pacientes = models.ForeignKey(
+        "pacientes.Paciente",
+        on_delete=models.CASCADE,
+        related_name="enderecos",
+        verbose_name="pacientes",
+    )
 
     class Meta:
         verbose_name = "Endereço"

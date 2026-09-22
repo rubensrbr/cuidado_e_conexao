@@ -64,7 +64,7 @@ class Profissional(BaseModel):
         ordering = ["sobrenome", "primeiro_nome"]
 
     def __str__(self):
-        return f"{self.primeiro_nome} {self.sobrenome} - {self.get_tipo_profissional_display()}"
+        return f"{self.primeiro_nome} {self.sobrenome} - {self.tipo_profissional}"
 
     @property
     def nome_completo(self):
@@ -112,6 +112,9 @@ class TipoProfissional(BaseModel):
     descricao = models.CharField(
         max_length=100,
     )
+
+    class Meta:
+        verbose_name = "Tipo Profissional"
 
     def __str__(self) -> str:
         return f"{self.descricao}"
