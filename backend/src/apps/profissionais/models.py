@@ -1,6 +1,5 @@
 from django.db import models
 from core.models import BaseModel
-from telefones.models import Telefone
 
 
 class Profissional(BaseModel):

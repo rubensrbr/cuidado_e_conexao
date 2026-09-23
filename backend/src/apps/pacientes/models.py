@@ -41,6 +41,7 @@ class Paciente(BaseModel):
         blank=True,
         verbose_name="Convênio",
     )
+
     numero_carteirinha = models.CharField(
         max_length=100,
         blank=True,
