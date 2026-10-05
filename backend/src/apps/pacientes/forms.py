@@ -13,10 +13,6 @@ class PacienteForm(forms.ModelForm):
             "data_nascimento",
             "genero",
             "email",
-            "enderecos",
-            "telefones",
-            "contato_emergencia_nome",
-            "contato_emergencia_telefone",
             "convenio",
             "numero_carteirinha",
             "ativo",
@@ -44,7 +40,9 @@ class PacienteForm(forms.ModelForm):
     def clean_data_nascimento(self):
         data_nascimento = self.cleaned_data["data_nascimento"]
         if data_nascimento > timezone.localdate():
-            raise forms.ValidationError("A data de nascimento não pode estar no futuro.")
+            raise forms.ValidationError(
+                "A data de nascimento não pode estar no futuro."
+            )
         return data_nascimento
 
 
@@ -71,11 +69,17 @@ class ProntuarioForm(forms.ModelForm):
                 attrs={"class": "form-control", "type": "date"}
             ),
             "codigo_cid": forms.TextInput(attrs={"class": "form-control"}),
-            "queixa_principal": forms.Textarea(attrs={"class": "form-control", "rows": 3}),
-            "plano_tratamento": forms.Textarea(attrs={"class": "form-control", "rows": 3}),
+            "queixa_principal": forms.Textarea(
+                attrs={"class": "form-control", "rows": 3}
+            ),
+            "plano_tratamento": forms.Textarea(
+                attrs={"class": "form-control", "rows": 3}
+            ),
             "evolucao": forms.Textarea(attrs={"class": "form-control", "rows": 4}),
             "medicamentos": forms.Textarea(attrs={"class": "form-control", "rows": 2}),
-            "avaliacao_risco": forms.Textarea(attrs={"class": "form-control", "rows": 2}),
+            "avaliacao_risco": forms.Textarea(
+                attrs={"class": "form-control", "rows": 2}
+            ),
         }
 
     def clean(self):
@@ -83,5 +87,7 @@ class ProntuarioForm(forms.ModelForm):
         consulta = cleaned_data.get("consulta")
         paciente = cleaned_data.get("paciente")
         if consulta and paciente and consulta.paciente_id != paciente.pk:
-            self.add_error("consulta", "Esta consulta não pertence ao paciente selecionado.")
+            self.add_error(
+                "consulta", "Esta consulta não pertence ao paciente selecionado."
+            )
         return cleaned_data

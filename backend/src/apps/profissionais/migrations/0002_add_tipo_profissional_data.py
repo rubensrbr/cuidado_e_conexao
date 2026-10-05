@@ -68,7 +68,7 @@ PROFISSOES = [
 
 
 def create_profissoes(apps, schema_editor):
-    TipoProfissional = apps.get_model("seu_app", "TipoProfissional")
+    TipoProfissional = apps.get_model("profissionais", "TipoProfissional")
 
     for descricao in PROFISSOES:
         TipoProfissional.objects.get_or_create(
@@ -77,14 +77,14 @@ def create_profissoes(apps, schema_editor):
 
 
 def remove_profissoes(apps, schema_editor):
-    TipoProfissional = apps.get_model("seu_app", "TipoProfissional")
+    TipoProfissional = apps.get_model("profissionais", "TipoProfissional")
 
     TipoProfissional.objects.filter(descricao__in=PROFISSOES).delete()
 
 
 class Migration(migrations.Migration):
     dependencies = [
-        ("seu_app", "0001_initial"),
+        ("profissionais", "0001_initial"),
     ]
 
     operations = [

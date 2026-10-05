@@ -31,7 +31,6 @@ class PacienteAdmin(admin.ModelAdmin):
         "numero_carteirinha",
     )
     ordering = ("sobrenome", "primeiro_nome")
-    autocomplete_fields = ("enderecos", "telefones")
     readonly_fields = ("uuid", "created_at", "modified_at")
     inlines = [ProntuarioInline]
     fieldsets = (

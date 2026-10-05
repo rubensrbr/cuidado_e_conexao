@@ -9,7 +9,6 @@ from django.views.generic import (
 from .models import Paciente, Prontuario
 
 
-# --- Paciente Views ---
 class PacienteListView(ListView):
     model = Paciente
     template_name = "pacientes/paciente_list.html"

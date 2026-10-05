@@ -21,7 +21,6 @@ class ProfissionalForm(forms.ModelForm):
             "primeiro_nome",
             "sobrenome",
             "email",
-            "telefones",
             "tipo_profissional",
             "numero_registro",
             "especializacao",
@@ -67,11 +66,19 @@ class DisponibilidadeForm(forms.ModelForm):
         widgets = {
             "profissional": forms.Select(attrs={"class": "form-select"}),
             "dia_semana": forms.Select(attrs={"class": "form-select"}),
-            "hora_inicio": forms.TimeInput(attrs={"class": "form-control", "type": "time"}),
-            "hora_fim": forms.TimeInput(attrs={"class": "form-control", "type": "time"}),
+            "hora_inicio": forms.TimeInput(
+                attrs={"class": "form-control", "type": "time"}
+            ),
+            "hora_fim": forms.TimeInput(
+                attrs={"class": "form-control", "type": "time"}
+            ),
             "recorrente": forms.CheckboxInput(attrs={"class": "form-check-input"}),
-            "data_inicio": forms.DateInput(attrs={"class": "form-control", "type": "date"}),
-            "data_fim": forms.DateInput(attrs={"class": "form-control", "type": "date"}),
+            "data_inicio": forms.DateInput(
+                attrs={"class": "form-control", "type": "date"}
+            ),
+            "data_fim": forms.DateInput(
+                attrs={"class": "form-control", "type": "date"}
+            ),
         }
 
     def clean(self):
@@ -83,7 +90,9 @@ class DisponibilidadeForm(forms.ModelForm):
         data_fim = cleaned_data.get("data_fim")
 
         if hora_inicio and hora_fim and hora_fim <= hora_inicio:
-            self.add_error("hora_fim", "A hora de fim deve ser depois da hora de início.")
+            self.add_error(
+                "hora_fim", "A hora de fim deve ser depois da hora de início."
+            )
 
         if not recorrente and not (data_inicio and data_fim):
             raise forms.ValidationError(
@@ -91,6 +100,8 @@ class DisponibilidadeForm(forms.ModelForm):
             )
 
         if data_inicio and data_fim and data_fim < data_inicio:
-            self.add_error("data_fim", "A data de fim não pode ser anterior à data de início.")
+            self.add_error(
+                "data_fim", "A data de fim não pode ser anterior à data de início."
+            )
 
         return cleaned_data

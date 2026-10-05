@@ -12,8 +12,7 @@ from django.contrib.auth.views import (
 )
 
 
-# class IndexView(LoginRequiredMixin, TemplateView):
-class IndexView(TemplateView):
+class IndexView(LoginRequiredMixin, TemplateView):
     """Painel principal — ponto de entrada do sistema após o login."""
 
     template_name = "core/index.html"

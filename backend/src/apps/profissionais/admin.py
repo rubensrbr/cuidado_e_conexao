@@ -32,13 +32,12 @@ class ProfissionalAdmin(admin.ModelAdmin):
     list_filter = ("ativo", "tipo_profissional")
     search_fields = ("primeiro_nome", "sobrenome", "email", "numero_registro")
     ordering = ("sobrenome", "primeiro_nome")
-    autocomplete_fields = ("telefones",)
     readonly_fields = ("uuid", "created_at", "modified_at")
     inlines = [DisponibilidadeInline]
     fieldsets = (
         (
             "Dados pessoais",
-            {"fields": ("primeiro_nome", "sobrenome", "email", "telefones", "ativo")},
+            {"fields": ("primeiro_nome", "sobrenome", "email", "ativo")},
         ),
         (
             "Dados profissionais",

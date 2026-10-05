@@ -5,26 +5,29 @@ from core.models import BaseModel
 class Profissional(BaseModel):
     """Profissionais da clínica (psicólogos, médicos, etc)"""
 
+    user = models.OneToOneField(
+        "core.User",
+        on_delete=models.SET_NULL,
+        null=True,
+        blank=True,
+        related_name="profissional",
+        verbose_name="Usuário do sistema",
+    )
+
     primeiro_nome = models.CharField(
         max_length=100,
         verbose_name="Primeiro Nome",
     )
+
     sobrenome = models.CharField(
         max_length=100,
         verbose_name="Sobrenome",
     )
+
     email = models.EmailField(
         max_length=150,
         unique=True,
         verbose_name="E-mail",
-    )
-
-    # Relacionamentos
-    telefones = models.ForeignKey(
-        "telefones.Telefone",
-        on_delete=models.CASCADE,
-        related_name="profissionais",
-        verbose_name="Telefones",
     )
 
     tipo_profissional = models.ForeignKey(
@@ -36,6 +39,7 @@ class Profissional(BaseModel):
         max_length=100,
         verbose_name="Número de Registro (CRP, CRM, etc)",
     )
+
     especializacao = models.CharField(
         max_length=255,
         blank=True,
@@ -104,7 +108,7 @@ class Disponibilidade(BaseModel):
         ordering = ["dia_semana", "hora_inicio"]
 
     def __str__(self):
-        return f"{self.profissional.nome_completo} - {self.get_dia_semana_display()} {self.hora_inicio}-{self.hora_fim}"
+        return f"{self.profissional.nome_completo} - {self.hora_inicio}-{self.hora_fim}"
 
 
 class TipoProfissional(BaseModel):
