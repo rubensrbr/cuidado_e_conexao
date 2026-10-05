@@ -20,22 +20,20 @@ class IndexView(TemplateView):
     extra_context = {"page_title": "Painel"}
 
 
-# @method_decorator(unauthenticated_user, name="dispatch")
-# class LoginView(AuthLoginView):
-#     template_name = "core/registration/login.html"
-#     success_url = "/"
-#
-#     def form_valid(self, form):
-#         self.request.session["just_logged_in"] = True
-#
-#         http_respose = super().form_valid(form)
-#         if form.get_user().change_password:
-#             return redirect("alterar_senha")
-#         return http_respose
-#
-#
-# @method_decorator(login_required(login_url="login"), name="dispatch")
-# class LogoutView(AuthLogoutView):
-#     success_url = "/"
-#
-#
+@method_decorator(unauthenticated_user, name="dispatch")
+class LoginView(AuthLoginView):
+    template_name = "core/registration/login.html"
+    success_url = "/"
+
+    def form_valid(self, form):
+        self.request.session["just_logged_in"] = True
+
+        http_respose = super().form_valid(form)
+        if form.get_user().change_password:
+            return redirect("alterar_senha")
+        return http_respose
+
+
+@method_decorator(login_required(login_url="login"), name="dispatch")
+class LogoutView(AuthLogoutView):
+    success_url = "/"
