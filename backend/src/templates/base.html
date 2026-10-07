@@ -18,7 +18,7 @@
 
       <nav class="sidebar-nav">
         <div class="sidebar-section">Principal</div>
-        <a class="nav-link{% if request.resolver_match.namespace == 'core' %} active{% endif %}" href="{% url 'core:index' %}">
+        <a class="nav-link{% if request.resolver_match.namespace == 'core' %} active{% endif %}" href="{% url 'home' %}">
           <i class="bi bi-grid-1x2-fill"></i><span>Painel</span>
         </a>
 
