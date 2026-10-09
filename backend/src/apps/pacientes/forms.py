@@ -2,6 +2,7 @@ from django import forms
 from django.utils import timezone
 
 from .models import Paciente, Prontuario
+from telefones.forms import TelefoneForm
 from telefones.models import Telefone
 
 
@@ -105,7 +106,8 @@ class ProntuarioForm(forms.ModelForm):
 TelefoneFormSet = forms.inlineformset_factory(
     Paciente,
     Telefone,
-    fields=["numero", "tipo", "principal"],
+    form=TelefoneForm,
+    fk_name="pacientes",
     extra=1,
     can_delete=True,
 )

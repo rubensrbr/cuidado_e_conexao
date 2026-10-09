@@ -1,0 +1,32 @@
+{# Uma linha do formset de telefones (formulários existentes e empty_form). #}
+<div class="row g-2 align-items-start mb-2 telefone-row">
+    {% for hidden in f.hidden_fields %}{{ hidden }}{% endfor %}
+
+    <div class="col-md-5">
+        {{ f.numero }}
+        {% for error in f.numero.errors %}
+            <div class="field-error">{{ error }}</div>
+        {% endfor %}
+    </div>
+
+    <div class="col-md-3">
+        {{ f.tipo }}
+        {% for error in f.tipo.errors %}
+            <div class="field-error">{{ error }}</div>
+        {% endfor %}
+    </div>
+
+    <div class="col-md-2 telefone-cell">
+        <div class="form-check">
+            {{ f.principal }}
+            <label for="{{ f.principal.id_for_label }}">Principal</label>
+        </div>
+    </div>
+
+    <div class="col-md-2 telefone-cell end">
+        <span class="d-none">{{ f.DELETE }}</span>
+        <button type="button" class="btn btn-outline-danger btn-sm remove-telefone" title="Remover telefone">
+            <i class="bi bi-trash"></i>
+        </button>
+    </div>
+</div>

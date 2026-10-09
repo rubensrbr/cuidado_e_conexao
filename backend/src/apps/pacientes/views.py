@@ -1,3 +1,4 @@
+from django.db import transaction
 from django.shortcuts import redirect
 from django.urls import reverse_lazy
 from django.views.generic import (
@@ -26,55 +27,55 @@ class PacienteDetailView(DetailView):
     slug_url_kwarg = "uuid"
 
 
-class PacienteCreateView(CreateView):
+class PacienteFormsetMixin:
+    """Salva o paciente e seus telefones (inline formset) na mesma transação."""
+
     model = Paciente
-    template_name = "pacientes/paciente_form.html"
     form_class = PacienteForm
-    success_url = reverse_lazy("pacientes:paciente_list")
-
-
-class PacienteUpdateView(UpdateView):
-    model = Paciente
     template_name = "pacientes/paciente_form.html"
-    fields = [
-        "primeiro_nome",
-        "sobrenome",
-        "data_nascimento",
-        "genero",
-        "email",
-        "convenio",
-        "numero_carteirinha",
-        "ativo",
-    ]
-    slug_field = "uuid"
-    slug_url_kwarg = "uuid"
     success_url = reverse_lazy("pacientes:paciente_list")
+
+    def get_telefone_formset(self):
+        return TelefoneFormSet(
+            self.request.POST or None,
+            instance=self.object,  # None ao criar
+            prefix="telefones",
+        )
 
     def get_context_data(self, **kwargs):
         context = super().get_context_data(**kwargs)
-
-        if self.request.POST:
-            context["telefone_formset"] = TelefoneFormSet(
-                self.request.POST,
-                instance=self.object,
-            )
-        else:
-            context["telefone_formset"] = TelefoneFormSet(instance=self.object)
-
+        if "telefone_formset" not in context:
+            context["telefone_formset"] = self.get_telefone_formset()
         return context
 
     def form_valid(self, form):
-        context = self.get_context_data()
-        telefone_formset = context["telefone_formset"]
-
-        if telefone_formset.is_valid():
+        telefone_formset = self.get_telefone_formset()
+        if not telefone_formset.is_valid():
+            return self.render_to_response(
+                self.get_context_data(form=form, telefone_formset=telefone_formset)
+            )
+        with transaction.atomic():
             self.object = form.save()
             telefone_formset.instance = self.object
             telefone_formset.save()
+        return redirect(self.get_success_url())
 
-            return redirect(self.success_url)
+    def form_invalid(self, form):
+        # Mantém o que foi digitado nos telefones e mostra os erros deles também.
+        telefone_formset = self.get_telefone_formset()
+        telefone_formset.is_valid()
+        return self.render_to_response(
+            self.get_context_data(form=form, telefone_formset=telefone_formset)
+        )
 
-        return self.form_invalid(form)
+
+class PacienteCreateView(PacienteFormsetMixin, CreateView):
+    pass
+
+
+class PacienteUpdateView(PacienteFormsetMixin, UpdateView):
+    slug_field = "uuid"
+    slug_url_kwarg = "uuid"
 
 
 class PacienteDeleteView(DeleteView):

@@ -29,17 +29,30 @@ class Telefone(BaseModel):
         on_delete=models.CASCADE,
         related_name="telefones",
         verbose_name="pacientes",
+        null=True,
+        blank=True,
     )
     profissionais = models.ForeignKey(
         "profissionais.Profissional",
         on_delete=models.CASCADE,
         related_name="profissionais",
         verbose_name="profissionais",
+        null=True,
+        blank=True,
     )
 
     class Meta:
         verbose_name = "Telefone"
         verbose_name_plural = "Telefones"
+        constraints = [
+            models.CheckConstraint(
+                condition=(
+                    models.Q(pacientes__isnull=False, profissionais__isnull=True)
+                    | models.Q(pacientes__isnull=True, profissionais__isnull=False)
+                ),
+                name="telefone_com_um_unico_dono",
+            )
+        ]
 
     def __str__(self):
         return f"{self.numero} ({self.get_tipo_display()})"

@@ -680,3 +680,59 @@ a:hover {
   }
 
 }
+
+
+/* Checkbox placement fix.
+ * Bootstrap's `.form-check .form-check-input` floats the box and pulls it left
+ * with `margin-left: -1.5em`. The page-level `.form-check input { margin: 0 }`
+ * rules have lower specificity and lose, so the box ended up misplaced.
+ * This selector (3 classes) outranks both. */
+
+.form-check {
+  display: flex;
+  align-items: center;
+  gap: .5rem;
+  min-height: 0;
+  padding-left: 0;
+  margin-bottom: 0;
+}
+
+.form-check .form-check-input[type="checkbox"] {
+  float: none;
+  flex: 0 0 auto;
+  width: 1.15rem;
+  height: 1.15rem;
+  margin: 0;
+  padding: 0;
+  border: 1px solid var(--ink-400);
+  border-radius: .25rem;
+  background-color: #fff;
+  cursor: pointer;
+}
+
+.form-check .form-check-input[type="checkbox"]:checked {
+  background-color: var(--teal-600);
+  border-color: var(--teal-600);
+}
+
+.form-check .form-check-input[type="checkbox"]:focus {
+  border-color: var(--teal-500);
+  box-shadow: 0 0 0 .2rem rgba(46, 111, 96, .15);
+}
+
+.form-check .form-check-label,
+.form-check label {
+  margin: 0;
+  cursor: pointer;
+}
+
+/* Telefones formset: line up checkbox and trash button with the inputs. */
+.telefone-row .telefone-cell {
+  display: flex;
+  align-items: center;
+  min-height: 2.65rem;
+}
+
+.telefone-row .telefone-cell.end {
+  justify-content: flex-end;
+}
