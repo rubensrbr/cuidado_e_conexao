@@ -32,31 +32,6 @@ class PacienteCreateView(CreateView):
     form_class = PacienteForm
     success_url = reverse_lazy("pacientes:paciente_list")
 
-    def get_context_data(self, **kwargs):
-        context = super().get_context_data(**kwargs)
-
-        if self.request.POST:
-            context["telefone_formset"] = TelefoneFormSet(
-                self.request.POST,
-                instance=self.object,
-            )
-        else:
-            context
-        return context
-
-    def form_valid(self, form):
-        context = self.get_context_data()
-        telefone_formset = context["telefone_formset"]
-
-        if telefone_formset.is_valid():
-            self.object = form.save()
-            telefone_formset.instance = self.object
-            telefone_formset.save()
-
-            return redirect(self.success_url)
-
-        return self.form_invalid(form)
-
 
 class PacienteUpdateView(UpdateView):
     model = Paciente
