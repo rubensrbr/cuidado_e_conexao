@@ -1,4 +1,5 @@
 from django.db import transaction
+from django.db.models import Prefetch
 from django.shortcuts import redirect
 from django.urls import reverse_lazy
 from django.views.generic import (
@@ -10,6 +11,8 @@ from django.views.generic import (
 )
 
 from .forms import PacienteForm, TelefoneFormSet
+from telefones.models import Telefone
+
 from .models import Paciente, Prontuario
 
 
@@ -18,6 +21,13 @@ class PacienteListView(ListView):
     template_name = "pacientes/paciente_list.html"
     context_object_name = "pacientes"
     paginate_by = 10
+
+    def get_queryset(self):
+        # Uma query extra para todos os telefones da página (evita N+1),
+        # com o telefone principal primeiro.
+        return super().get_queryset().prefetch_related(
+            Prefetch("telefones", queryset=Telefone.objects.order_by("-principal", "id"))
+        )
 
 
 class PacienteDetailView(DetailView):

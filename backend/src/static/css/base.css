@@ -736,3 +736,76 @@ a:hover {
 .telefone-row .telefone-cell.end {
   justify-content: flex-end;
 }
+
+
+/* Narrow page container (confirmations, short forms) */
+
+.app-page--narrow {
+  max-width: 640px;
+}
+
+
+/* Danger variant of the card header (destructive actions) */
+
+.app-card-header--danger {
+  background: var(--danger);
+}
+
+.app-card-header--danger .subtitle {
+  color: rgba(255, 255, 255, .8);
+}
+
+
+/* Danger notice box */
+
+.app-alert-danger {
+  padding: .9rem 1rem;
+  margin-bottom: 1.25rem;
+  background: #FBEDEB;
+  border: 1px solid #EBC5C0;
+  border-radius: 12px;
+  color: #7A2E27;
+  font-size: .88rem;
+}
+
+.app-alert-danger ul {
+  margin: .5rem 0 0;
+  padding-left: 1.2rem;
+}
+
+
+/* Record summary: avatar + name + secondary line */
+
+.app-summary {
+  display: flex;
+  align-items: center;
+  gap: .85rem;
+  padding: .9rem 1rem;
+  margin-bottom: 1.25rem;
+  background: #fff;
+  border: 1px solid var(--line);
+  border-radius: 12px;
+}
+
+.app-summary-avatar {
+  width: 42px;
+  height: 42px;
+  flex: 0 0 auto;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  border-radius: 999px;
+  background: var(--sage-100);
+  color: var(--teal-600);
+  font-size: 1.1rem;
+}
+
+.app-summary-name {
+  color: var(--ink-900);
+  font-weight: 600;
+}
+
+.app-summary-meta {
+  color: var(--ink-400);
+  font-size: .8rem;
+}

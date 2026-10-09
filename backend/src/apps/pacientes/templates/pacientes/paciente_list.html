@@ -104,6 +104,23 @@
         color: var(--danger);
     }
 
+    .phone-item {
+        white-space: nowrap;
+        line-height: 1.5;
+    }
+
+    .phone-type {
+        color: var(--ink-400);
+        font-size: .74rem;
+        margin-left: .25rem;
+    }
+
+    .phone-main {
+        color: var(--clay-500);
+        font-size: .7rem;
+        margin-left: .2rem;
+    }
+
     .patient-actions {
         display: inline-flex;
         gap: .35rem;
@@ -190,8 +207,17 @@
                         </td>
 
                         <td>
-
-                            {{ paciente.telefone|default:"-" }}
+                            {% for telefone in paciente.telefones.all %}
+                                <div class="phone-item">
+                                    {{ telefone.numero }}
+                                    <span class="phone-type">{{ telefone.get_tipo_display }}</span>
+                                    {% if telefone.principal %}
+                                        <i class="bi bi-star-fill phone-main" title="Principal"></i>
+                                    {% endif %}
+                                </div>
+                            {% empty %}
+                                -
+                            {% endfor %}
                         </td>
 
                         <td>
@@ -227,7 +253,7 @@
                     {% empty %}
 
                     <tr>
-                        <td colspan="6">
+                        <td colspan="5">
 
                             <div class="empty-state">
                                 <i class="bi bi-people d-block mb-3"></i>
