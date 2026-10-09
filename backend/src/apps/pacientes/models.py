@@ -98,6 +98,7 @@ class Prontuario(BaseModel):
         related_name="prontuarios",
         verbose_name="Consulta",
     )
+
     data_registro = models.DateField(verbose_name="Data do Registro")
     codigo_cid = models.CharField(
         max_length=20, blank=True, verbose_name="Código CID-10"

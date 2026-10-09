@@ -190,6 +190,7 @@
                         </td>
 
                         <td>
+
                             {{ paciente.telefone|default:"-" }}
                         </td>
 
@@ -210,7 +211,7 @@
                                 </a>
 
                                 <a
-                                    href="#"
+                                    href="{% url 'pacientes:paciente_delete' paciente.uuid %}"
                                     class="btn btn-outline-danger"
                                     title="Excluir"
                                 >

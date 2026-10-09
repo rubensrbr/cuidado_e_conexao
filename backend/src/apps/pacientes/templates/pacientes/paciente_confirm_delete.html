@@ -1,0 +1,181 @@
+{% extends 'base.html' %}
+{% load static %}
+
+{% block title %}Excluir Paciente | Cuidado & Conexão{% endblock %}
+
+{% block content %}
+
+<style>
+    .delete-page {
+        max-width: 640px;
+        margin: 0 auto;
+    }
+
+    .delete-card {
+        background: var(--paper);
+        border: 1px solid var(--line);
+        border-radius: 16px;
+        overflow: hidden;
+        box-shadow: 0 18px 40px -18px rgba(22, 48, 43, .20);
+    }
+
+    .delete-header {
+        background: var(--danger);
+        color: white;
+        padding: 1rem 1.25rem;
+    }
+
+    .delete-header h4 {
+        font-size: 1.1rem;
+        font-weight: 600;
+        margin: 0;
+    }
+
+    .delete-header .subtitle {
+        margin: .2rem 0 0;
+        font-size: .78rem;
+        color: rgba(255, 255, 255, .8);
+    }
+
+    .delete-body {
+        padding: 1.5rem;
+    }
+
+    .delete-patient {
+        display: flex;
+        align-items: center;
+        gap: .85rem;
+        padding: .9rem 1rem;
+        margin-bottom: 1.25rem;
+        background: #fff;
+        border: 1px solid var(--line);
+        border-radius: 12px;
+    }
+
+    .delete-patient .avatar {
+        width: 42px;
+        height: 42px;
+        flex: 0 0 auto;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        border-radius: 999px;
+        background: var(--sage-100);
+        color: var(--teal-600);
+        font-size: 1.1rem;
+    }
+
+    .delete-patient .name {
+        color: var(--ink-900);
+        font-weight: 600;
+    }
+
+    .delete-patient .meta {
+        color: var(--ink-400);
+        font-size: .8rem;
+    }
+
+    .delete-warning {
+        padding: .9rem 1rem;
+        margin-bottom: 1.25rem;
+        background: #FBEDEB;
+        border: 1px solid #EBC5C0;
+        border-radius: 12px;
+        color: #7A2E27;
+        font-size: .88rem;
+    }
+
+    .delete-warning ul {
+        margin: .5rem 0 0;
+        padding-left: 1.2rem;
+    }
+
+    .delete-hint {
+        color: var(--ink-600);
+        font-size: .84rem;
+    }
+
+    .delete-actions {
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+        gap: .75rem;
+        padding-top: 1.25rem;
+        margin-top: 1.5rem;
+        border-top: 1px solid var(--line);
+    }
+
+    @media (max-width: 576px) {
+        .delete-actions {
+            flex-direction: column-reverse;
+            align-items: stretch;
+        }
+    }
+</style>
+
+<div class="delete-page">
+    <div class="delete-card">
+
+        <div class="delete-header">
+            <h4>
+                <i class="bi bi-trash3-fill me-2"></i>
+                Excluir Paciente
+            </h4>
+            <div class="subtitle">Esta ação não pode ser desfeita.</div>
+        </div>
+
+        <div class="delete-body">
+
+            <div class="delete-patient">
+                <span class="avatar"><i class="bi bi-person-fill"></i></span>
+                <div>
+                    <div class="name">{{ object.nome_completo }}</div>
+                    <div class="meta">
+                        {% if object.email %}{{ object.email }}{% else %}Sem e-mail cadastrado{% endif %}
+                    </div>
+                </div>
+            </div>
+
+            {% with consultas=object.consultas.count prontuarios=object.prontuarios.count faturamentos=object.faturamentos.count espera=object.lista_espera.count telefones=object.telefones.count enderecos=object.enderecos.count %}
+                {% if consultas or prontuarios or faturamentos or espera or telefones or enderecos %}
+                    <div class="delete-warning">
+                        <strong><i class="bi bi-exclamation-triangle-fill me-1"></i> Ao excluir, também serão apagados:</strong>
+                        <ul>
+                            {% if consultas %}<li>{{ consultas }} consulta{{ consultas|pluralize }}</li>{% endif %}
+                            {% if prontuarios %}<li>{{ prontuarios }} prontuário{{ prontuarios|pluralize }}</li>{% endif %}
+                            {% if faturamentos %}<li>{{ faturamentos }} faturamento{{ faturamentos|pluralize }}</li>{% endif %}
+                            {% if espera %}<li>{{ espera }} registro{{ espera|pluralize }} na lista de espera</li>{% endif %}
+                            {% if telefones %}<li>{{ telefones }} telefone{{ telefones|pluralize }}</li>{% endif %}
+                            {% if enderecos %}<li>{{ enderecos }} endereço{{ enderecos|pluralize }}</li>{% endif %}
+                        </ul>
+                    </div>
+                {% endif %}
+            {% endwith %}
+
+            <p class="delete-hint mb-0">
+                Se o paciente apenas deixou de ser atendido, prefira
+                <a href="{% url 'pacientes:paciente_update' object.uuid %}">editar o cadastro</a>
+                e desmarcar <strong>Ativo</strong>: o histórico é mantido.
+            </p>
+
+            <form method="post">
+                {% csrf_token %}
+
+                <div class="delete-actions">
+                    <a href="{% url 'pacientes:paciente_list' %}" class="btn btn-outline-secondary">
+                        <i class="bi bi-arrow-left me-1"></i>
+                        Cancelar
+                    </a>
+
+                    <button type="submit" class="btn btn-danger">
+                        <i class="bi bi-trash3 me-1"></i>
+                        Sim, excluir paciente
+                    </button>
+                </div>
+            </form>
+
+        </div>
+    </div>
+</div>
+
+{% endblock %}
