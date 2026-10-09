@@ -34,6 +34,11 @@ class Paciente(BaseModel):
         blank=True,
         verbose_name="E-mail",
     )
+    profissionais = models.ManyToManyField(
+        "profissionais.Profissional",
+        related_name="pacientes",
+        blank=True,
+    )
 
     # Informações do convênio
     convenio = models.CharField(
@@ -56,7 +61,7 @@ class Paciente(BaseModel):
     class Meta:
         verbose_name = "Paciente"
         verbose_name_plural = "Pacientes"
-        ordering = ["sobrenome", "primeiro_nome"]
+        ordering = ["ativo", "sobrenome", "primeiro_nome"]
 
     def __str__(self):
         return f"{self.primeiro_nome} {self.sobrenome}"
@@ -64,6 +69,10 @@ class Paciente(BaseModel):
     @property
     def nome_completo(self):
         return f"{self.primeiro_nome} {self.sobrenome}"
+
+    # @property
+    # def meus_telefones(self):
+    #     return
 
 
 class Prontuario(BaseModel):

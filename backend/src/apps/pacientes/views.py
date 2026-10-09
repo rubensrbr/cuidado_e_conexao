@@ -1,3 +1,4 @@
+from django.shortcuts import redirect
 from django.urls import reverse_lazy
 from django.views.generic import (
     ListView,
@@ -6,6 +7,8 @@ from django.views.generic import (
     UpdateView,
     DeleteView,
 )
+
+from .forms import PacienteForm, TelefoneFormSet
 from .models import Paciente, Prontuario
 
 
@@ -26,17 +29,33 @@ class PacienteDetailView(DetailView):
 class PacienteCreateView(CreateView):
     model = Paciente
     template_name = "pacientes/paciente_form.html"
-    fields = [
-        "primeiro_nome",
-        "sobrenome",
-        "data_nascimento",
-        "genero",
-        "email",
-        "convenio",
-        "numero_carteirinha",
-        "ativo",
-    ]
+    form_class = PacienteForm
     success_url = reverse_lazy("pacientes:paciente_list")
+
+    def get_context_data(self, **kwargs):
+        context = super().get_context_data(**kwargs)
+
+        if self.request.POST:
+            context["telefone_formset"] = TelefoneFormSet(
+                self.request.POST,
+                instance=self.object,
+            )
+        else:
+            context
+        return context
+
+    def form_valid(self, form):
+        context = self.get_context_data()
+        telefone_formset = context["telefone_formset"]
+
+        if telefone_formset.is_valid():
+            self.object = form.save()
+            telefone_formset.instance = self.object
+            telefone_formset.save()
+
+            return redirect(self.success_url)
+
+        return self.form_invalid(form)
 
 
 class PacienteUpdateView(UpdateView):
@@ -55,6 +74,32 @@ class PacienteUpdateView(UpdateView):
     slug_field = "uuid"
     slug_url_kwarg = "uuid"
     success_url = reverse_lazy("pacientes:paciente_list")
+
+    def get_context_data(self, **kwargs):
+        context = super().get_context_data(**kwargs)
+
+        if self.request.POST:
+            context["telefone_formset"] = TelefoneFormSet(
+                self.request.POST,
+                instance=self.object,
+            )
+        else:
+            context["telefone_formset"] = TelefoneFormSet(instance=self.object)
+
+        return context
+
+    def form_valid(self, form):
+        context = self.get_context_data()
+        telefone_formset = context["telefone_formset"]
+
+        if telefone_formset.is_valid():
+            self.object = form.save()
+            telefone_formset.instance = self.object
+            telefone_formset.save()
+
+            return redirect(self.success_url)
+
+        return self.form_invalid(form)
 
 
 class PacienteDeleteView(DeleteView):

@@ -1,0 +1,387 @@
+{% extends 'base.html' %}
+{% load static %}
+
+{% block title %}
+    {% if object %}
+        Editar Paciente | Cuidado & Conexão
+    {% else %}
+        Novo Paciente | Cuidado & Conexão
+    {% endif %}
+{% endblock %}
+
+{% block content %}
+
+<style>
+    .patient-form-page {
+        max-width: 900px;
+        margin: 0 auto;
+    }
+
+    .patient-form-card {
+        background: var(--paper);
+        border: 1px solid var(--line);
+        border-radius: 16px;
+        overflow: hidden;
+        box-shadow: 0 18px 40px -18px rgba(22, 48, 43, .20);
+    }
+
+    .patient-form-header {
+        background: var(--pine-900);
+        color: white;
+        padding: 1rem 1.25rem;
+    }
+
+    .patient-form-header h4 {
+        font-size: 1.1rem;
+        font-weight: 600;
+        margin: 0;
+    }
+
+    .patient-form-header .subtitle {
+        margin: .2rem 0 0;
+        font-size: .78rem;
+        color: rgba(255, 255, 255, .7);
+    }
+
+    .patient-form-body {
+        padding: 1.5rem;
+    }
+
+    .form-section {
+        margin-bottom: 1.5rem;
+    }
+
+    .form-section:last-child {
+        margin-bottom: 0;
+    }
+
+    .form-section-title {
+        display: flex;
+        align-items: center;
+        gap: .5rem;
+        padding-bottom: .65rem;
+        margin-bottom: 1rem;
+        border-bottom: 1px solid var(--line);
+        color: var(--ink-900);
+        font-size: .95rem;
+        font-weight: 600;
+    }
+
+    .form-section-title i {
+        color: var(--teal-500);
+    }
+
+    .patient-form-body label {
+        color: var(--ink-900);
+        font-size: .84rem;
+        font-weight: 500;
+        margin-bottom: .4rem;
+    }
+
+    .patient-form-body input,
+    .patient-form-body select,
+    .patient-form-body textarea {
+        width: 100%;
+        border: 1px solid var(--line);
+        border-radius: .375rem;
+        padding: .6rem .75rem;
+        background: #fff;
+        color: var(--ink-900);
+        font-size: .88rem;
+    }
+
+    .patient-form-body input:focus,
+    .patient-form-body select:focus,
+    .patient-form-body textarea:focus {
+        border-color: var(--teal-500);
+        outline: 0;
+        box-shadow: 0 0 0 .2rem rgba(46, 111, 96, .15);
+    }
+
+    .patient-form-body textarea {
+        min-height: 100px;
+        resize: vertical;
+    }
+
+    .form-check {
+        display: flex;
+        align-items: center;
+        gap: .5rem;
+        padding-left: 0;
+    }
+
+    .form-check input {
+        width: 18px;
+        height: 18px;
+        flex: 0 0 auto;
+        margin: 0;
+        padding: 0;
+    }
+
+    .form-check label {
+        margin: 0;
+    }
+
+    .field-error {
+        color: var(--danger);
+        font-size: .78rem;
+        margin-top: .3rem;
+    }
+
+    .form-actions {
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+        gap: .75rem;
+        padding-top: 1.25rem;
+        margin-top: 1.5rem;
+        border-top: 1px solid var(--line);
+    }
+
+    .form-actions .btn {
+        min-width: 120px;
+    }
+
+    @media (max-width: 576px) {
+        .patient-form-body {
+            padding: 1rem;
+        }
+
+        .form-actions {
+            flex-direction: column-reverse;
+            align-items: stretch;
+        }
+
+        .form-actions .btn {
+            width: 100%;
+        }
+    }
+</style>
+
+<div class="patient-form-page">
+
+    <div class="patient-form-card">
+
+        <!-- Header -->
+        <div class="patient-form-header">
+
+            <h4>
+                {% if object %}
+                    <i class="bi bi-pencil-square me-2"></i>
+                    Editar Paciente
+                {% else %}
+                    <i class="bi bi-person-plus-fill me-2"></i>
+                    Novo Paciente
+                {% endif %}
+            </h4>
+
+            <div class="subtitle">
+                {% if object %}
+                    Atualize os dados cadastrais do paciente.
+                {% else %}
+                    Cadastre um novo paciente no sistema.
+                {% endif %}
+            </div>
+
+        </div>
+
+        <!-- Form -->
+        <div class="patient-form-body">
+
+            {% if form.non_field_errors %}
+                <div class="alert alert-danger">
+                    {% for error in form.non_field_errors %}
+                        <div>{{ error }}</div>
+                    {% endfor %}
+                </div>
+            {% endif %}
+
+            <form method="post">
+
+                {% csrf_token %}
+
+                <!-- Dados pessoais -->
+                <div class="form-section">
+
+                    <div class="form-section-title">
+                        <i class="bi bi-person"></i>
+                        Dados pessoais
+                    </div>
+
+                    <div class="row g-3">
+
+                        <div class="col-md-6">
+                            <label for="{{ form.primeiro_nome.id_for_label }}">
+                                Primeiro nome
+                            </label>
+
+                            {{ form.primeiro_nome }}
+
+                            {% for error in form.primeiro_nome.errors %}
+                                <div class="field-error">{{ error }}</div>
+                            {% endfor %}
+                        </div>
+
+                        <div class="col-md-6">
+                            <label for="{{ form.sobrenome.id_for_label }}">
+                                Sobrenome
+                            </label>
+
+                            {{ form.sobrenome }}
+
+                            {% for error in form.sobrenome.errors %}
+                                <div class="field-error">{{ error }}</div>
+                            {% endfor %}
+                        </div>
+
+                        <div class="col-md-6">
+                            <label for="{{ form.data_nascimento.id_for_label }}">
+                                Data de nascimento
+                            </label>
+
+                            {{ form.data_nascimento }}
+
+                            {% for error in form.data_nascimento.errors %}
+                                <div class="field-error">{{ error }}</div>
+                            {% endfor %}
+                        </div>
+
+                        <div class="col-md-6">
+                            <label for="{{ form.genero.id_for_label }}">
+                                Gênero
+                            </label>
+
+                            {{ form.genero }}
+
+                            {% for error in form.genero.errors %}
+                                <div class="field-error">{{ error }}</div>
+                            {% endfor %}
+                        </div>
+
+                    </div>
+
+                </div>
+
+                <!-- Contato -->
+                <div class="form-section">
+
+                    <div class="form-section-title">
+                        <i class="bi bi-envelope"></i>
+                        Contato
+                    </div>
+
+                    <div class="row g-3">
+
+                        <div class="col-12">
+                            <label for="{{ form.email.id_for_label }}">
+                                E-mail
+                            </label>
+
+                            {{ form.email }}
+
+                            {% for error in form.email.errors %}
+                                <div class="field-error">{{ error }}</div>
+                            {% endfor %}
+                        </div>
+
+                    </div>
+
+                </div>
+
+                <!-- Convênio -->
+                <div class="form-section">
+
+                    <div class="form-section-title">
+                        <i class="bi bi-credit-card"></i>
+                        Convênio
+                    </div>
+
+                    <div class="row g-3">
+
+                        <div class="col-md-6">
+                            <label for="{{ form.convenio.id_for_label }}">
+                                Convênio
+                            </label>
+
+                            {{ form.convenio }}
+
+                            {% for error in form.convenio.errors %}
+                                <div class="field-error">{{ error }}</div>
+                            {% endfor %}
+                        </div>
+
+                        <div class="col-md-6">
+                            <label for="{{ form.numero_carteirinha.id_for_label }}">
+                                Número da carteirinha
+                            </label>
+
+                            {{ form.numero_carteirinha }}
+
+                            {% for error in form.numero_carteirinha.errors %}
+                                <div class="field-error">{{ error }}</div>
+                            {% endfor %}
+                        </div>
+
+                    </div>
+
+                </div>
+
+                <!-- Status -->
+                <div class="form-section">
+
+                    <div class="form-section-title">
+                        <i class="bi bi-toggle-on"></i>
+                        Status
+                    </div>
+
+                    <div class="form-check">
+
+                        {{ form.ativo }}
+
+                        <label for="{{ form.ativo.id_for_label }}">
+                            Paciente ativo
+                        </label>
+
+                    </div>
+
+                    {% for error in form.ativo.errors %}
+                        <div class="field-error">{{ error }}</div>
+                    {% endfor %}
+
+                </div>
+
+                <!-- Actions -->
+                <div class="form-actions">
+
+                    <a
+                        href="{% url 'pacientes:paciente_list' %}"
+                        class="btn btn-outline-secondary"
+                    >
+                        <i class="bi bi-arrow-left me-1"></i>
+                        Cancelar
+                    </a>
+
+                    <button
+                        type="submit"
+                        class="btn btn-primary"
+                    >
+                        <i class="bi bi-check-lg me-1"></i>
+
+                        {% if object %}
+                            Salvar alterações
+                        {% else %}
+                            Cadastrar paciente
+                        {% endif %}
+                    </button>
+
+                </div>
+
+            </form>
+
+        </div>
+
+    </div>
+
+</div>
+
+{% endblock %}

@@ -2,6 +2,7 @@ from django import forms
 from django.utils import timezone
 
 from .models import Paciente, Prontuario
+from telefones.models import Telefone
 
 
 class PacienteForm(forms.ModelForm):
@@ -35,7 +36,15 @@ class PacienteForm(forms.ModelForm):
             "numero_carteirinha": forms.TextInput(attrs={"class": "form-control"}),
             "ativo": forms.CheckboxInput(attrs={"class": "form-check-input"}),
         }
-        labels = {"enderecos": "Endereço", "telefones": "Telefone"}
+        labels = {
+            "enderecos": "Endereço",
+            "telefones": "Telefone",
+            "genero": "Gênero",
+            "contato_emergencia_nome": "Contato de Emergência - Nome",
+            "contato_emergencia_telefone": "Contato de Emergência - Telefone",
+            "convenio": "convênio",
+            "numero_carteirinha": "Número da Carteirinha",
+        }
 
     def clean_data_nascimento(self):
         data_nascimento = self.cleaned_data["data_nascimento"]
@@ -91,3 +100,12 @@ class ProntuarioForm(forms.ModelForm):
                 "consulta", "Esta consulta não pertence ao paciente selecionado."
             )
         return cleaned_data
+
+
+TelefoneFormSet = forms.inlineformset_factory(
+    Paciente,
+    Telefone,
+    fields=["numero", "tipo", "principal"],
+    extra=1,
+    can_delete=True,
+)
