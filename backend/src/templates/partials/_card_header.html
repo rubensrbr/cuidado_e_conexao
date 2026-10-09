@@ -1,0 +1,24 @@
+{% comment %}
+Cabeçalho do card.
+   Uso: {% include "partials/_card_header.html" with icon="bi-people-fill" title="Pacientes" subtitle="..." %}
+   Opcionais: variant="danger", action_url / action_label / action_icon (botão à direita)
+{% endcomment %}
+<div class="app-card-header{% if variant %} app-card-header--{{ variant }}{% endif %}{% if action_url %} d-flex justify-content-between align-items-center{% endif %}">
+    {% if action_url %}<div>{% endif %}
+        <h4>
+            <i class="bi {{ icon }} me-2"></i>
+            {{ title }}
+        </h4>
+
+        {% if subtitle %}
+            <div class="subtitle">{{ subtitle }}</div>
+        {% endif %}
+    {% if action_url %}</div>{% endif %}
+
+    {% if action_url %}
+        <a href="{{ action_url }}" class="btn btn-sm fw-semibold">
+            {% if action_icon %}<i class="bi {{ action_icon }} me-1"></i>{% endif %}
+            {{ action_label }}
+        </a>
+    {% endif %}
+</div>

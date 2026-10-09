@@ -1,0 +1,16 @@
+{% comment %}
+Rodapé do formulário: Cancelar + enviar.
+   Uso: {% include "partials/_form_actions.html" with cancel_url=url submit_label="Salvar" %}
+   Opcionais: submit_icon="bi-check-lg", submit_class="btn-primary"
+{% endcomment %}
+<div class="app-form-actions">
+    <a href="{{ cancel_url }}" class="btn btn-outline-secondary">
+        <i class="bi bi-arrow-left me-1"></i>
+        Cancelar
+    </a>
+
+    <button type="submit" class="btn {{ submit_class|default:'btn-primary' }}">
+        <i class="bi {{ submit_icon|default:'bi-check-lg' }} me-1"></i>
+        {{ submit_label }}
+    </button>
+</div>

@@ -1,0 +1,16 @@
+{% comment %}
+Campo de formulário: label + widget + ajuda + erros.
+   Uso: {% include "partials/_field.html" with field=form.nome %}
+   Opcionais: label="Texto" (padrão: label do form), col="col-12" (padrão: col-md-6)
+{% endcomment %}
+<div class="{{ col|default:'col-md-6' }}">
+    <label for="{{ field.id_for_label }}">{{ label|default:field.label }}</label>
+
+    {{ field }}
+
+    {% if field.help_text %}
+        <div class="form-text">{{ field.help_text }}</div>
+    {% endif %}
+
+    {% include "partials/_field_errors.html" %}
+</div>

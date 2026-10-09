@@ -5,180 +5,18 @@
 
 {% block content %}
 
-<style>
-    .patient-page {
-        max-width: 1100px;
-        margin: 0 auto;
-    }
+<div class="app-page">
 
-    .patient-card {
-        background: var(--paper);
-        border: 1px solid var(--line);
-        border-radius: 16px;
-        overflow: hidden;
-        box-shadow: 0 18px 40px -18px rgba(22, 48, 43, .20);
-    }
-
-    .patient-header {
-        background: var(--pine-900);
-        color: white;
-        padding: 1rem 1.25rem;
-    }
-
-    .patient-header h4 {
-        font-size: 1.1rem;
-        font-weight: 600;
-        margin: 0;
-    }
-
-    .patient-header .subtitle {
-        margin: .2rem 0 0;
-        font-size: .78rem;
-        color: rgba(255, 255, 255, .7);
-    }
-
-    .patient-header .btn {
-        background: var(--paper);
-        color: var(--pine-900);
-        border: none;
-    }
-
-    .patient-header .btn:hover {
-        background: var(--sage-100);
-        color: var(--pine-900);
-    }
-
-    .patient-table {
-        margin-bottom: 0;
-    }
-
-    .patient-table thead th {
-        background: var(--sage-100);
-        color: var(--ink-600);
-        border-bottom: 1px solid var(--line);
-        font-size: .75rem;
-        font-weight: 600;
-        text-transform: uppercase;
-        letter-spacing: .04em;
-        padding: .85rem 1rem;
-    }
-
-    .patient-table tbody td {
-        padding: .9rem 1rem;
-        border-color: var(--line);
-        color: var(--ink-900);
-        font-size: .88rem;
-        vertical-align: middle;
-    }
-
-    .patient-table tbody tr:hover {
-        background: var(--sage-100);
-    }
-
-    .patient-name {
-        color: var(--ink-900);
-        font-weight: 600;
-    }
-
-    .patient-name:hover {
-        color: var(--teal-500);
-    }
-
-    .status-badge {
-        display: inline-flex;
-        align-items: center;
-        gap: .35rem;
-        padding: .3rem .6rem;
-        border-radius: 999px;
-        font-size: .72rem;
-        font-weight: 600;
-    }
-
-    .status-active {
-        background: var(--sage-200);
-        color: var(--pine-800);
-    }
-
-    .status-inactive {
-        background: #f1e3e0;
-        color: var(--danger);
-    }
-
-    .phone-item {
-        white-space: nowrap;
-        line-height: 1.5;
-    }
-
-    .phone-type {
-        color: var(--ink-400);
-        font-size: .74rem;
-        margin-left: .25rem;
-    }
-
-    .phone-main {
-        color: var(--clay-500);
-        font-size: .7rem;
-        margin-left: .2rem;
-    }
-
-    .patient-actions {
-        display: inline-flex;
-        gap: .35rem;
-    }
-
-    .patient-actions .btn {
-        width: 32px;
-        height: 32px;
-        padding: 0;
-        display: inline-flex;
-        align-items: center;
-        justify-content: center;
-    }
-
-    .empty-state {
-        text-align: center;
-        padding: 3.5rem 1.5rem;
-        color: var(--ink-600);
-    }
-
-    .empty-state i {
-        font-size: 2.5rem;
-        color: var(--ink-400);
-    }
-</style>
-
-<div class="patient-page">
-
-    <div class="patient-card">
+    <div class="app-card">
 
         <!-- Header -->
-        <div class="patient-header d-flex justify-content-between align-items-center">
-
-            <div>
-                <h4>
-                    <i class="bi bi-people-fill me-2"></i>
-                    Lista de Pacientes
-                </h4>
-
-                <div class="subtitle">
-                    Pacientes cadastrados no sistema
-                </div>
-            </div>
-
-            <a
-                href="{% url 'pacientes:paciente_create' %}"
-                class="btn btn-sm fw-semibold"
-            >
-                <i class="bi bi-plus-lg me-1"></i>
-                Novo paciente
-            </a>
-
-        </div>
+        {% url 'pacientes:paciente_create' as create_url %}
+        {% include "partials/_card_header.html" with icon="bi-people-fill" title="Lista de Pacientes" subtitle="Pacientes cadastrados no sistema" action_url=create_url action_label="Novo paciente" action_icon="bi-plus-lg" %}
 
         <!-- Table -->
         <div class="table-responsive">
 
-            <table class="table table-hover patient-table">
+            <table class="table table-hover app-table">
 
                 <thead>
                     <tr>
@@ -197,7 +35,7 @@
                     <tr>
 
                         <td>
-                            <span class="patient-name">
+                            <span class="app-name">
                                 {{ paciente.nome_completo }}
                             </span>
                         </td>
@@ -208,11 +46,11 @@
 
                         <td>
                             {% for telefone in paciente.telefones.all %}
-                                <div class="phone-item">
+                                <div class="app-phone-item">
                                     {{ telefone.numero }}
-                                    <span class="phone-type">{{ telefone.get_tipo_display }}</span>
+                                    <span class="app-phone-type">{{ telefone.get_tipo_display }}</span>
                                     {% if telefone.principal %}
-                                        <i class="bi bi-star-fill phone-main" title="Principal"></i>
+                                        <i class="bi bi-star-fill app-phone-main" title="Principal"></i>
                                     {% endif %}
                                 </div>
                             {% empty %}
@@ -226,7 +64,7 @@
 
                         <td class="text-end">
 
-                            <div class="patient-actions">
+                            <div class="app-actions">
 
                                 <a
                                     href="{% url 'pacientes:paciente_update' paciente.uuid %}"
@@ -255,7 +93,7 @@
                     <tr>
                         <td colspan="5">
 
-                            <div class="empty-state">
+                            <div class="app-empty">
                                 <i class="bi bi-people d-block mb-3"></i>
 
                                 <div>

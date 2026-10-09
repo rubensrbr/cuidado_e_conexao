@@ -4,16 +4,12 @@
 
     <div class="col-md-5">
         {{ f.numero }}
-        {% for error in f.numero.errors %}
-            <div class="field-error">{{ error }}</div>
-        {% endfor %}
+        {% include "partials/_field_errors.html" with field=f.numero %}
     </div>
 
     <div class="col-md-3">
         {{ f.tipo }}
-        {% for error in f.tipo.errors %}
-            <div class="field-error">{{ error }}</div>
-        {% endfor %}
+        {% include "partials/_field_errors.html" with field=f.tipo %}
     </div>
 
     <div class="col-md-2 telefone-cell">

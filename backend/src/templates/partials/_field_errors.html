@@ -1,0 +1,4 @@
+{# Erros de um campo. Uso: {% include "partials/_field_errors.html" with field=form.nome %} #}
+{% for error in field.errors %}
+    <div class="app-field-error">{{ error }}</div>
+{% endfor %}

@@ -1,0 +1,8 @@
+{# Erros que não pertencem a um campo específico. Uso: {% include "partials/_form_errors.html" with form=form %} #}
+{% if form.non_field_errors %}
+    <div class="alert alert-danger">
+        {% for error in form.non_field_errors %}
+            <div>{{ error }}</div>
+        {% endfor %}
+    </div>
+{% endif %}

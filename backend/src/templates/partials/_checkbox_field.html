@@ -1,0 +1,10 @@
+{% comment %}
+Checkbox com label ao lado.
+   Uso: {% include "partials/_checkbox_field.html" with field=form.ativo label="Paciente ativo" %}
+{% endcomment %}
+<div class="form-check">
+    {{ field }}
+    <label for="{{ field.id_for_label }}">{{ label|default:field.label }}</label>
+</div>
+
+{% include "partials/_field_errors.html" %}

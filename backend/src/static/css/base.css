@@ -809,3 +809,30 @@ a:hover {
   color: var(--ink-400);
   font-size: .8rem;
 }
+
+
+/* Medium page container (forms) */
+
+.app-page--medium {
+  max-width: 900px;
+}
+
+
+/* Phone list inside table cells */
+
+.app-phone-item {
+  white-space: nowrap;
+  line-height: 1.5;
+}
+
+.app-phone-type {
+  color: var(--ink-400);
+  font-size: .74rem;
+  margin-left: .25rem;
+}
+
+.app-phone-main {
+  color: var(--clay-500);
+  font-size: .7rem;
+  margin-left: .2rem;
+}
