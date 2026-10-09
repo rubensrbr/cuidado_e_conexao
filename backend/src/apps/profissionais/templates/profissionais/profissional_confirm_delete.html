@@ -1,0 +1,66 @@
+{% extends 'base.html' %}
+
+{% block title %}Excluir Profissional | Cuidado & Conexão{% endblock %}
+
+{% block content %}
+
+<div class="app-page app-page--narrow">
+    <div class="app-card">
+
+        {% include "partials/_card_header.html" with variant="danger" icon="bi-trash3-fill" title="Excluir Profissional" subtitle="Esta ação não pode ser desfeita." %}
+
+        <div class="app-form-body">
+
+            <div class="app-summary">
+                <span class="app-summary-avatar"><i class="bi bi-person-badge-fill"></i></span>
+                <div>
+                    <div class="app-summary-name">{{ object.nome_completo }}</div>
+                    <div class="app-summary-meta">
+                        {{ object.tipo_profissional }} · {{ object.numero_registro }}
+                    </div>
+                </div>
+            </div>
+
+            {# Telefone.profissionais usa related_name="profissionais", por isso object.profissionais abaixo. #}
+            {% with consultas=object.consultas.count prontuarios=object.prontuarios.count disponibilidades=object.disponibilidades.count telefones=object.profissionais.count enderecos=object.enderecos.count espera=object.lista_espera.count pacientes=object.pacientes.count %}
+
+                {% if consultas or prontuarios or disponibilidades or telefones or enderecos %}
+                    <div class="app-alert-danger">
+                        <strong><i class="bi bi-exclamation-triangle-fill me-1"></i> Ao excluir, também serão apagados:</strong>
+                        <ul>
+                            {% if consultas %}<li>{{ consultas }} consulta{{ consultas|pluralize }}</li>{% endif %}
+                            {% if prontuarios %}<li>{{ prontuarios }} prontuário{{ prontuarios|pluralize }}</li>{% endif %}
+                            {% if disponibilidades %}<li>{{ disponibilidades }} disponibilidade{{ disponibilidades|pluralize }}</li>{% endif %}
+                            {% if telefones %}<li>{{ telefones }} telefone{{ telefones|pluralize }}</li>{% endif %}
+                            {% if enderecos %}<li>{{ enderecos }} endereço{{ enderecos|pluralize }}</li>{% endif %}
+                        </ul>
+                    </div>
+                {% endif %}
+
+                {% if espera or pacientes %}
+                    <p class="text-muted small">
+                        {% if pacientes %}O vínculo com {{ pacientes }} paciente{{ pacientes|pluralize }} será removido (os pacientes são mantidos).{% endif %}
+                        {% if espera %}{{ espera }} registro{{ espera|pluralize }} da lista de espera ficará{{ espera|pluralize:"ão" }} sem profissional preferido.{% endif %}
+                    </p>
+                {% endif %}
+
+            {% endwith %}
+
+            <p class="text-muted small mb-0">
+                Se o profissional apenas deixou de atender, prefira
+                <a href="{% url 'profissionais:profissional_update' object.uuid %}">editar o cadastro</a>
+                e desmarcar <strong>Ativo</strong>: o histórico é mantido.
+            </p>
+
+            <form method="post">
+                {% csrf_token %}
+
+                {% url 'profissionais:profissional_list' as cancel_url %}
+                {% include "partials/_form_actions.html" with cancel_url=cancel_url submit_label="Sim, excluir profissional" submit_icon="bi-trash3" submit_class="btn-danger" %}
+            </form>
+
+        </div>
+    </div>
+</div>
+
+{% endblock %}

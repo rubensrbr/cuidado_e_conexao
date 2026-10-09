@@ -19,11 +19,30 @@ class Endereco(BaseModel):
         on_delete=models.CASCADE,
         related_name="enderecos",
         verbose_name="pacientes",
+        null=True,
+        blank=True,
+    )
+    profissionais = models.ForeignKey(
+        "profissionais.Profissional",
+        on_delete=models.CASCADE,
+        related_name="enderecos",
+        verbose_name="profissionais",
+        null=True,
+        blank=True,
     )
 
     class Meta:
         verbose_name = "Endereço"
         verbose_name_plural = "Endereços"
+        constraints = [
+            models.CheckConstraint(
+                condition=(
+                    models.Q(pacientes__isnull=False, profissionais__isnull=True)
+                    | models.Q(pacientes__isnull=True, profissionais__isnull=False)
+                ),
+                name="endereco_com_um_unico_dono",
+            )
+        ]
 
     def __str__(self):
         return f"{self.logradouro}, {self.numero} - {self.cidade}/{self.estado}"

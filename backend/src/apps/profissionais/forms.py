@@ -2,6 +2,11 @@ from decimal import Decimal
 
 from django import forms
 
+from enderecos.forms import EnderecoForm
+from enderecos.models import Endereco
+from telefones.forms import TelefoneForm
+from telefones.models import Telefone
+
 from .models import Disponibilidade, Profissional, TipoProfissional
 
 
@@ -32,7 +37,6 @@ class ProfissionalForm(forms.ModelForm):
             "primeiro_nome": forms.TextInput(attrs={"class": "form-control"}),
             "sobrenome": forms.TextInput(attrs={"class": "form-control"}),
             "email": forms.EmailInput(attrs={"class": "form-control"}),
-            "telefones": forms.Select(attrs={"class": "form-select"}),
             "tipo_profissional": forms.Select(attrs={"class": "form-select"}),
             "numero_registro": forms.TextInput(attrs={"class": "form-control"}),
             "especializacao": forms.TextInput(attrs={"class": "form-control"}),
@@ -42,7 +46,6 @@ class ProfissionalForm(forms.ModelForm):
             ),
             "ativo": forms.CheckboxInput(attrs={"class": "form-check-input"}),
         }
-        labels = {"telefones": "Telefone"}
 
     def clean_valor_hora(self):
         valor_hora = self.cleaned_data["valor_hora"]
@@ -105,3 +108,22 @@ class DisponibilidadeForm(forms.ModelForm):
             )
 
         return cleaned_data
+
+
+TelefoneFormSet = forms.inlineformset_factory(
+    Profissional,
+    Telefone,
+    form=TelefoneForm,
+    fk_name="profissionais",
+    extra=1,
+    can_delete=True,
+)
+
+EnderecoFormSet = forms.inlineformset_factory(
+    Profissional,
+    Endereco,
+    form=EnderecoForm,
+    fk_name="profissionais",
+    extra=1,
+    can_delete=True,
+)

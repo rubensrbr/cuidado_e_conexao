@@ -1,0 +1,94 @@
+{% extends 'base.html' %}
+{% load static %}
+
+{% block title %}
+    {% if object %}
+        Editar Profissional | Cuidado & Conexão
+    {% else %}
+        Novo Profissional | Cuidado & Conexão
+    {% endif %}
+{% endblock %}
+
+{% block content %}
+
+<div class="app-page app-page--medium">
+
+    <div class="app-card">
+
+        <!-- Header -->
+        {% include "partials/_card_header.html" with icon=object|yesno:"bi-pencil-square,bi-person-plus-fill" title=object|yesno:"Editar Profissional,Novo Profissional" subtitle=object|yesno:"Atualize os dados cadastrais do profissional.,Cadastre um novo profissional no sistema." %}
+
+        <!-- Form -->
+        <div class="app-form-body app-form">
+
+            {% include "partials/_form_errors.html" %}
+
+            <form method="post">
+
+                {% csrf_token %}
+
+                <!-- Dados pessoais -->
+                <div class="app-form-section">
+
+                    <div class="app-form-section-title">
+                        <i class="bi bi-person"></i>
+                        Dados pessoais
+                    </div>
+
+                    <div class="row g-3">
+                        {% include "partials/_field.html" with field=form.primeiro_nome label="Primeiro nome" %}
+                        {% include "partials/_field.html" with field=form.sobrenome label="Sobrenome" %}
+                        {% include "partials/_field.html" with field=form.email label="E-mail" col="col-12" %}
+                    </div>
+
+                </div>
+
+                <!-- Dados profissionais -->
+                <div class="app-form-section">
+
+                    <div class="app-form-section-title">
+                        <i class="bi bi-briefcase"></i>
+                        Dados profissionais
+                    </div>
+
+                    <div class="row g-3">
+                        {% include "partials/_field.html" with field=form.tipo_profissional label="Tipo de profissional" %}
+                        {% include "partials/_field.html" with field=form.numero_registro label="Número de registro" %}
+                        {% include "partials/_field.html" with field=form.especializacao label="Especialização" %}
+                        {% include "partials/_field.html" with field=form.titulacao label="Titulação" %}
+                        {% include "partials/_field.html" with field=form.valor_hora label="Valor por hora" %}
+                    </div>
+
+                </div>
+
+                <!-- Telefones (reaproveita o partial de pacientes) -->
+                {% include "pacientes/_telefones_formset.html" %}
+
+                <!-- Endereços -->
+                {% include "profissionais/_enderecos_formset.html" %}
+
+                <!-- Status -->
+                <div class="app-form-section">
+
+                    <div class="app-form-section-title">
+                        <i class="bi bi-toggle-on"></i>
+                        Status
+                    </div>
+
+                    {% include "partials/_checkbox_field.html" with field=form.ativo label="Profissional ativo" %}
+
+                </div>
+
+                <!-- Actions -->
+                {% url 'profissionais:profissional_list' as cancel_url %}
+                {% include "partials/_form_actions.html" with cancel_url=cancel_url submit_label=object|yesno:"Salvar alterações,Cadastrar profissional" %}
+
+            </form>
+
+        </div>
+
+    </div>
+
+</div>
+
+{% endblock %}
