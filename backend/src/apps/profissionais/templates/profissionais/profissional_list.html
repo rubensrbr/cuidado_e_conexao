@@ -1,0 +1,120 @@
+{% extends 'base.html' %}
+{% load static %}
+
+{% block title %}Profissionais | Cuidado & Conexão{% endblock %}
+
+{% block content %}
+
+<div class="app-page">
+
+    <div class="app-card">
+
+        <!-- Header -->
+        {% url 'profissionais:profissional_create' as create_url %}
+        {% include "partials/_card_header.html" with icon="bi-people-fill" title="Lista de Profissionais" subtitle="Profissionais cadastrados no sistema" action_url=create_url action_label="Novo profissional" action_icon="bi-plus-lg" %}
+
+        <!-- Table -->
+        <div class="table-responsive">
+
+            <table class="table table-hover app-table">
+
+                <thead>
+                    <tr>
+                        <th>Nome</th>
+                        <th>Telefones</th>
+                        <th>E-mail</th>
+                        <th>Especialidade</th>
+                        <th class="text-end">Ações</th>
+                    </tr>
+                </thead>
+
+                <tbody>
+
+                    {% for profissional in profissionais %}
+
+                    <tr>
+
+                        <td>
+                            <span class="app-name">
+                                {{ profissional.nome_completo }}
+                            </span>
+                        </td>
+
+                        <td>
+                            {% for telefone in profissionais.telefones.all %}
+                                <div class="app-phone-item">
+                                    {{ telefone.numero }}
+                                    <span class="app-phone-type">{{ telefone.get_tipo_display }}</span>
+                                    {% if telefone.principal %}
+                                        <i class="bi bi-star-fill app-phone-main" title="Principal"></i>
+                                    {% endif %}
+                                </div>
+                            {% empty %}
+                                -
+                            {% endfor %}
+                        </td>
+
+                        <td>
+                            {{ profissional.email|default:"-" }}
+                        </td>
+
+                        <td>
+                            {{ profissional.tipo_profissional|default:"-" }}
+                        </td>
+
+                        <td class="text-end">
+
+                            <div class="app-actions">
+
+                                <a
+                                    href="{% url 'profissionais:profissional_update' profissional.uuid %}"
+                                    class="btn btn-outline-secondary"
+                                    title="Editar"
+                                >
+                                    <i class="bi bi-pencil"></i>
+                                </a>
+
+                                <a
+                                    href="{% url 'profissionais:profissional_delete' profissional.uuid %}"
+                                    class="btn btn-outline-danger"
+                                    title="Excluir"
+                                >
+                                    <i class="bi bi-trash"></i>
+                                </a>
+
+                            </div>
+
+                        </td>
+
+                    </tr>
+
+                    {% empty %}
+
+                    <tr>
+                        <td colspan="5">
+
+                            <div class="app-empty">
+                                <i class="bi bi-people d-block mb-3"></i>
+
+                                <div>
+                                    Nenhum profissional cadastrado.
+                                </div>
+
+                            </div>
+
+                        </td>
+                    </tr>
+
+                    {% endfor %}
+
+                </tbody>
+
+            </table>
+
+        </div>
+
+    </div>
+
+</div>
+
+{% endblock %}
