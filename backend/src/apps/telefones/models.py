@@ -35,7 +35,7 @@ class Telefone(BaseModel):
     profissionais = models.ForeignKey(
         "profissionais.Profissional",
         on_delete=models.CASCADE,
-        related_name="profissionais",
+        related_name="telefones",
         verbose_name="profissionais",
         null=True,
         blank=True,

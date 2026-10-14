@@ -41,7 +41,7 @@
                         </td>
 
                         <td>
-                            {% for telefone in profissionais.telefones.all %}
+                            {% for telefone in profissional.telefones.all %}
                                 <div class="app-phone-item">
                                     {{ telefone.numero }}
                                     <span class="app-phone-type">{{ telefone.get_tipo_display }}</span>
