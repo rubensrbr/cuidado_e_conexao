@@ -6,6 +6,7 @@ from django.views.generic import (
     UpdateView,
     DeleteView,
 )
+from .forms import ConsultaForm
 from .models import Consulta, Lembrete, ListaEspera
 
 
@@ -15,6 +16,10 @@ class ConsultaListView(ListView):
     template_name = "consultas/consulta_list.html"
     context_object_name = "consultas"
     paginate_by = 10
+
+    def get_queryset(self):
+        # Paciente e profissional vêm no mesmo SELECT (evita N+1 na tabela).
+        return super().get_queryset().select_related("paciente", "profissional")
 
 
 class ConsultaDetailView(DetailView):
@@ -27,34 +32,14 @@ class ConsultaDetailView(DetailView):
 class ConsultaCreateView(CreateView):
     model = Consulta
     template_name = "consultas/consulta_form.html"
-    fields = [
-        "paciente",
-        "profissional",
-        "data_consulta",
-        "hora_inicio",
-        "hora_fim",
-        "tipo_consulta",
-        "status",
-        "notas_sessao",
-        "motivo_cancelamento",
-    ]
+    form_class = ConsultaForm
     success_url = reverse_lazy("consultas:consulta_list")
 
 
 class ConsultaUpdateView(UpdateView):
     model = Consulta
     template_name = "consultas/consulta_form.html"
-    fields = [
-        "paciente",
-        "profissional",
-        "data_consulta",
-        "hora_inicio",
-        "hora_fim",
-        "tipo_consulta",
-        "status",
-        "notas_sessao",
-        "motivo_cancelamento",
-    ]
+    form_class = ConsultaForm
     slug_field = "uuid"
     slug_url_kwarg = "uuid"
     success_url = reverse_lazy("consultas:consulta_list")

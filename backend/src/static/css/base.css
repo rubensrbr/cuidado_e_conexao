@@ -493,6 +493,11 @@ a:hover {
   color: var(--danger);
 }
 
+.app-status-pending {
+  background: #f3e6d8;
+  color: var(--clay-600);
+}
+
 
 /* Table actions */
 
