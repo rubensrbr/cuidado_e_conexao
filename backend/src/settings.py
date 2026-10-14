@@ -45,6 +45,7 @@ INSTALLED_APPS = [
     "consultas",
     "telefones",
     "enderecos",
+    "localidades",
     "salas",
     "faturamentos",
 ]

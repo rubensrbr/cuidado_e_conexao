@@ -11,8 +11,12 @@ class Endereco(BaseModel):
         max_length=100, blank=True, verbose_name="Complemento"
     )
     bairro = models.CharField(max_length=100, verbose_name="Bairro")
-    cidade = models.CharField(max_length=100, verbose_name="Cidade")
-    estado = models.CharField(max_length=2, verbose_name="Estado")
+    cidade = models.ForeignKey(
+        "localidades.Cidade",
+        on_delete=models.PROTECT,
+        related_name="enderecos",
+        verbose_name="cidade",
+    )
     cep = models.CharField(max_length=9, verbose_name="CEP")
     pacientes = models.ForeignKey(
         "pacientes.Paciente",
@@ -43,6 +47,10 @@ class Endereco(BaseModel):
                 name="endereco_com_um_unico_dono",
             )
         ]
+
+    @property
+    def estado(self):
+        return self.cidade.estado
 
     def __str__(self):
         return f"{self.logradouro}, {self.numero} - {self.cidade}/{self.estado}"

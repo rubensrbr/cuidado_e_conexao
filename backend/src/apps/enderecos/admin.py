@@ -7,8 +7,8 @@ from .models import Endereco
 @admin.register(Endereco)
 class EnderecoAdmin(admin.ModelAdmin):
     form = EnderecoForm
-    list_display = ("logradouro", "numero", "bairro", "cidade", "estado", "cep")
-    list_filter = ("estado", "cidade")
+    list_display = ("logradouro", "numero", "bairro", "cidade", "cep")
+    list_filter = ("cidade",)
     search_fields = ("logradouro", "bairro", "cidade", "cep")
     ordering = ("cidade", "logradouro")
     readonly_fields = ("uuid", "created_at", "modified_at")
@@ -22,10 +22,12 @@ class EnderecoAdmin(admin.ModelAdmin):
                     "complemento",
                     "bairro",
                     "cidade",
-                    "estado",
                     "cep",
                 )
             },
         ),
-        ("Metadados", {"fields": ("uuid", "created_at", "modified_at"), "classes": ("collapse",)}),
+        (
+            "Metadados",
+            {"fields": ("uuid", "created_at", "modified_at"), "classes": ("collapse",)},
+        ),
     )
