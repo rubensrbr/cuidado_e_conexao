@@ -1,0 +1,169 @@
+diff --git a/backend/src/apps/enderecos/forms.py b/backend/src/apps/enderecos/forms.py
+index fe807f4..9814e78 100644
+--- a/backend/src/apps/enderecos/forms.py
++++ b/backend/src/apps/enderecos/forms.py
+@@ -2,7 +2,7 @@ import re
+ 
+ from django import forms
+ 
+-from localidades.models import Cidade
++from localidades.models import Cidade, Estado
+ 
+ from .models import Endereco
+ 
+@@ -10,6 +10,14 @@ CEP_RE = re.compile(r"^\d{5}-?\d{3}$")
+ 
+ 
+ class EnderecoForm(forms.ModelForm):
++    # Campo auxiliar (não é do model): serve só para filtrar as cidades.
++    estado = forms.ModelChoiceField(
++        queryset=Estado.objects.all(),
++        label="UF",
++        empty_label="UF",
++        widget=forms.Select(attrs={"class": "form-select endereco-estado"}),
++    )
++
+     class Meta:
+         model = Endereco
+         fields = [
+@@ -25,7 +33,7 @@ class EnderecoForm(forms.ModelForm):
+             "numero": forms.TextInput(attrs={"class": "form-control"}),
+             "complemento": forms.TextInput(attrs={"class": "form-control"}),
+             "bairro": forms.TextInput(attrs={"class": "form-control"}),
+-            "cidade": forms.Select(attrs={"class": "form-select"}),
++            "cidade": forms.Select(attrs={"class": "form-select endereco-cidade"}),
+             "cep": forms.TextInput(
+                 attrs={"class": "form-control", "placeholder": "00000-000"}
+             ),
+@@ -33,10 +41,26 @@ class EnderecoForm(forms.ModelForm):
+ 
+     def __init__(self, *args, **kwargs):
+         super().__init__(*args, **kwargs)
+-        # __str__ de Cidade usa estado.sigla; select_related evita 1 query por opção.
+-        self.fields["cidade"].queryset = Cidade.objects.select_related("estado")
++        self.fields["estado"].label_from_instance = lambda e: f"{e.sigla} - {e.nome}"
++        self.fields["cidade"].label_from_instance = lambda c: c.nome
+         self.fields["cidade"].empty_label = "Selecione a cidade"
+ 
++        # Só as cidades da UF escolhida: a postada (formulário preenchido),
++        # ou a do endereço salvo (edição); sem UF, a lista fica vazia.
++        estado_id = None
++        if self.is_bound:
++            estado_id = self.data.get(self.add_prefix("estado")) or None
++        elif self.instance.pk:
++            estado_id = self.instance.cidade.estado_id
++            self.initial["estado"] = estado_id
++
++        try:
++            self.fields["cidade"].queryset = Cidade.objects.filter(
++                estado_id=int(estado_id)
++            ).order_by("nome")
++        except (TypeError, ValueError):
++            self.fields["cidade"].queryset = Cidade.objects.none()
++
+     def clean_cep(self):
+         cep = self.cleaned_data["cep"].strip()
+         if not CEP_RE.match(cep):
+diff --git a/backend/src/apps/localidades/urls.py b/backend/src/apps/localidades/urls.py
+new file mode 100644
+index 0000000..2b4a64a
+--- /dev/null
++++ b/backend/src/apps/localidades/urls.py
+@@ -0,0 +1,9 @@
++from django.urls import path
++
++from . import views
++
++app_name = "localidades"
++
++urlpatterns = [
++    path("cidades/", views.cidades_por_estado, name="cidades"),
++]
+diff --git a/backend/src/apps/localidades/views.py b/backend/src/apps/localidades/views.py
+index 91ea44a..cfbb718 100644
+--- a/backend/src/apps/localidades/views.py
++++ b/backend/src/apps/localidades/views.py
+@@ -1,3 +1,14 @@
+-from django.shortcuts import render
++from django.http import JsonResponse
+ 
+-# Create your views here.
++from .models import Cidade
++
++
++def cidades_por_estado(request):
++    """Cidades de um estado, em JSON: GET ?estado=<id> -> [{"id": 1, "nome": "..."}]."""
++    try:
++        estado_id = int(request.GET.get("estado", ""))
++    except ValueError:
++        return JsonResponse([], safe=False)
++
++    cidades = Cidade.objects.filter(estado_id=estado_id).order_by("nome")
++    return JsonResponse(list(cidades.values("id", "nome")), safe=False)
+diff --git a/backend/src/apps/profissionais/templates/profissionais/_endereco_row.html b/backend/src/apps/profissionais/templates/profissionais/_endereco_row.html
+index 389364b..9e60cd2 100644
+--- a/backend/src/apps/profissionais/templates/profissionais/_endereco_row.html
++++ b/backend/src/apps/profissionais/templates/profissionais/_endereco_row.html
+@@ -15,7 +15,8 @@
+         {% include "partials/_field.html" with field=f.numero label="Número" col="col-md-4" %}
+         {% include "partials/_field.html" with field=f.complemento label="Complemento" col="col-md-6" %}
+         {% include "partials/_field.html" with field=f.bairro label="Bairro" col="col-md-6" %}
+-        {% include "partials/_field.html" with field=f.cidade label="Cidade" col="col-md-8" %}
+-        {% include "partials/_field.html" with field=f.cep label="CEP" col="col-md-4" %}
++        {% include "partials/_field.html" with field=f.estado label="UF" col="col-md-3" %}
++        {% include "partials/_field.html" with field=f.cidade label="Cidade" col="col-md-6" %}
++        {% include "partials/_field.html" with field=f.cep label="CEP" col="col-md-3" %}
+     </div>
+ </div>
+diff --git a/backend/src/apps/profissionais/templates/profissionais/_enderecos_formset.html b/backend/src/apps/profissionais/templates/profissionais/_enderecos_formset.html
+index 7c0bfb6..6a80e3b 100644
+--- a/backend/src/apps/profissionais/templates/profissionais/_enderecos_formset.html
++++ b/backend/src/apps/profissionais/templates/profissionais/_enderecos_formset.html
+@@ -12,7 +12,7 @@
+         <div class="alert alert-danger">{{ endereco_formset.non_form_errors }}</div>
+     {% endif %}
+ 
+-    <div id="endereco-list">
++    <div id="endereco-list" data-cidades-url="{% url 'localidades:cidades' %}">
+         {% for f in endereco_formset %}
+             {% include "profissionais/_endereco_row.html" with f=f %}
+         {% endfor %}
+@@ -42,6 +42,28 @@
+             total.value = index + 1;
+         });
+ 
++        // UF -> cidades: ao trocar a UF, recarrega só as cidades daquele estado.
++        list.addEventListener('change', function (event) {
++            if (!event.target.matches('.endereco-estado')) return;
++            var cidade = event.target.closest('.endereco-row').querySelector('.endereco-cidade');
++            var placeholder = '<option value="">Selecione a cidade</option>';
++            cidade.innerHTML = placeholder;
++            if (!event.target.value) return;
++
++            cidade.disabled = true;
++            fetch(list.dataset.cidadesUrl + '?estado=' + encodeURIComponent(event.target.value))
++                .then(function (response) { return response.json(); })
++                .then(function (cidades) {
++                    cidades.forEach(function (c) {
++                        cidade.add(new Option(c.nome, c.id));
++                    });
++                })
++                .catch(function () {
++                    cidade.innerHTML = '<option value="">Erro ao carregar cidades</option>';
++                })
++                .finally(function () { cidade.disabled = false; });
++        });
++
+         list.addEventListener('click', function (event) {
+             var button = event.target.closest('.remove-endereco');
+             if (!button) return;
+diff --git a/backend/src/urls.py b/backend/src/urls.py
+index 66b9212..ee8af41 100644
+--- a/backend/src/urls.py
++++ b/backend/src/urls.py
+@@ -11,4 +11,5 @@ urlpatterns = [
+     path("salas/", include("salas.urls")),
+     path("enderecos/", include("enderecos.urls")),
+     path("telefones/", include("telefones.urls")),
++    path("localidades/", include("localidades.urls")),
+ ]

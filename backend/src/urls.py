@@ -11,4 +11,5 @@ urlpatterns = [
     path("salas/", include("salas.urls")),
     path("enderecos/", include("enderecos.urls")),
     path("telefones/", include("telefones.urls")),
+    path("localidades/", include("localidades.urls")),
 ]

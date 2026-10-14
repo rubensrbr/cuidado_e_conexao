@@ -12,7 +12,7 @@
         <div class="alert alert-danger">{{ endereco_formset.non_form_errors }}</div>
     {% endif %}
 
-    <div id="endereco-list">
+    <div id="endereco-list" data-cidades-url="{% url 'localidades:cidades' %}">
         {% for f in endereco_formset %}
             {% include "profissionais/_endereco_row.html" with f=f %}
         {% endfor %}
@@ -40,6 +40,28 @@
             var index = parseInt(total.value, 10);
             list.insertAdjacentHTML('beforeend', template.replaceAll('__prefix__', index));
             total.value = index + 1;
+        });
+
+        // UF -> cidades: ao trocar a UF, recarrega só as cidades daquele estado.
+        list.addEventListener('change', function (event) {
+            if (!event.target.matches('.endereco-estado')) return;
+            var cidade = event.target.closest('.endereco-row').querySelector('.endereco-cidade');
+            var placeholder = '<option value="">Selecione a cidade</option>';
+            cidade.innerHTML = placeholder;
+            if (!event.target.value) return;
+
+            cidade.disabled = true;
+            fetch(list.dataset.cidadesUrl + '?estado=' + encodeURIComponent(event.target.value))
+                .then(function (response) { return response.json(); })
+                .then(function (cidades) {
+                    cidades.forEach(function (c) {
+                        cidade.add(new Option(c.nome, c.id));
+                    });
+                })
+                .catch(function () {
+                    cidade.innerHTML = '<option value="">Erro ao carregar cidades</option>';
+                })
+                .finally(function () { cidade.disabled = false; });
         });
 
         list.addEventListener('click', function (event) {
