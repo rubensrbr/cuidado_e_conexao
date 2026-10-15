@@ -57,4 +57,9 @@ urlpatterns = [
         views.ListaEsperaUpdateView.as_view(),
         name="lista_espera_update",
     ),
+    path(
+        "lista-espera/<uuid:uuid>/deletar/",
+        views.ListaEsperaDeleteView.as_view(),
+        name="lista_espera_delete",
+    ),
 ]

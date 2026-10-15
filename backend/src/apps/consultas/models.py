@@ -141,6 +141,33 @@ class ListaEspera(BaseModel):
         ("agendada", "Agendada"),
         ("cancelada", "Cancelada"),
     ]
+    DIAS_SEMANA = [
+        ("segunda", "Segunda-feira"),
+        ("terca", "Terça-feira"),
+        ("quarta", "Quarta-feira"),
+        ("quinta", "Quinta-feira"),
+        ("sexta", "Sexta-feira"),
+        ("sabado", "Sábado"),
+        ("domingo", "Domingo"),
+    ]
+
+    HORARIOS = [
+        ("manha", "Manhã"),
+        ("tarde", "Tarde"),
+        ("noite", "Noite"),
+        ("qualquer", "Qualquer horário"),
+    ]
+
+    dias_preferidos = models.JSONField(
+        default=list,
+        blank=True,
+    )
+
+    horario_preferido = models.CharField(
+        max_length=10,
+        choices=HORARIOS,
+        blank=True,
+    )
 
     paciente = models.ForeignKey(
         "pacientes.Paciente",
@@ -155,12 +182,6 @@ class ListaEspera(BaseModel):
         blank=True,
         related_name="lista_espera",
         verbose_name="Profissional Preferido",
-    )
-    dias_preferidos = models.CharField(
-        max_length=100, blank=True, verbose_name="Dias Preferidos"
-    )
-    horario_preferido = models.CharField(
-        max_length=50, blank=True, verbose_name="Horário Preferido"
     )
     prioridade = models.CharField(
         max_length=20,

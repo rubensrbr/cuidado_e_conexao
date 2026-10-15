@@ -1,3 +1,4 @@
+from django.db.models import Case, IntegerField, When
 from django.urls import reverse_lazy
 from django.views.generic import (
     ListView,
@@ -73,6 +74,22 @@ class ListaEsperaListView(ListView):
     template_name = "consultas/lista_espera_list.html"
     context_object_name = "lista_espera"
 
+    def get_queryset(self):
+        # Fila de atendimento: mais urgente primeiro e, na mesma prioridade, quem espera há mais tempo.
+        ordem_prioridade = Case(
+            When(prioridade="urgente", then=0),
+            When(prioridade="alta", then=1),
+            When(prioridade="normal", then=2),
+            default=3,
+            output_field=IntegerField(),
+        )
+        return (
+            super()
+            .get_queryset()
+            .select_related("paciente", "profissional_preferido")
+            .order_by(ordem_prioridade, "created_at")
+        )
+
 
 class ListaEsperaCreateView(CreateView):
     model = ListaEspera
@@ -101,6 +118,14 @@ class ListaEsperaUpdateView(UpdateView):
         "observacoes",
         "status",
     ]
+    slug_field = "uuid"
+    slug_url_kwarg = "uuid"
+    success_url = reverse_lazy("consultas:lista_espera_list")
+
+
+class ListaEsperaDeleteView(DeleteView):
+    model = ListaEspera
+    template_name = "consultas/lista_espera_confirm_delete.html"
     slug_field = "uuid"
     slug_url_kwarg = "uuid"
     success_url = reverse_lazy("consultas:lista_espera_list")

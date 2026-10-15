@@ -841,3 +841,11 @@ a:hover {
   font-size: .7rem;
   margin-left: .2rem;
 }
+
+
+/* Neutral status badge (e.g. normal/low priority) */
+
+.app-status-neutral {
+  background: var(--sage-100);
+  color: var(--ink-600);
+}

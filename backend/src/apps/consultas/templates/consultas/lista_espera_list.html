@@ -1,0 +1,142 @@
+{% extends 'base.html' %}
+{% load static %}
+
+{% block title %}Lista de Espera | Cuidado & Conexão{% endblock %}
+
+{% block content %}
+
+<div class="app-page">
+
+    <div class="app-card">
+
+        <!-- Header -->
+        {% url 'consultas:lista_espera_create' as create_url %}
+        {% include "partials/_card_header.html" with icon="bi-hourglass-split" title="Lista de Espera" subtitle="Pacientes aguardando uma vaga, por ordem de prioridade" action_url=create_url action_label="Novo na fila" action_icon="bi-plus-lg" %}
+
+        <!-- Table -->
+        <div class="table-responsive">
+
+            <table class="table table-hover app-table">
+
+                <thead>
+                    <tr>
+                        <th>Prioridade</th>
+                        <th>Paciente</th>
+                        <th>Profissional preferido</th>
+                        <th>Preferência de horário</th>
+                        <th>Status</th>
+                        <th>Na fila desde</th>
+                        <th class="text-end">Ações</th>
+                    </tr>
+                </thead>
+
+                <tbody>
+
+                    {% for item in lista_espera %}
+
+                    <tr>
+
+                        <td>
+                            {% if item.prioridade == "urgente" %}
+                                <span class="app-status app-status-inactive">{{ item.get_prioridade_display }}</span>
+                            {% elif item.prioridade == "alta" %}
+                                <span class="app-status app-status-pending">{{ item.get_prioridade_display }}</span>
+                            {% else %}
+                                <span class="app-status app-status-neutral">{{ item.get_prioridade_display }}</span>
+                            {% endif %}
+                        </td>
+
+                        <td>
+                            <span class="app-name">
+                                {{ item.paciente.nome_completo }}
+                            </span>
+                        </td>
+
+                        <td>
+                            {% if item.profissional_preferido %}
+                                {{ item.profissional_preferido.nome_completo }}
+                            {% else %}
+                                <span class="text-muted">Qualquer</span>
+                            {% endif %}
+                        </td>
+
+                        <td>
+                            {% if item.dias_preferidos or item.horario_preferido %}
+                                {{ item.dias_preferidos }}
+                                {% if item.dias_preferidos and item.horario_preferido %}·{% endif %}
+                                {{ item.horario_preferido }}
+                            {% else %}
+                                -
+                            {% endif %}
+                        </td>
+
+                        <td>
+                            {% if item.status == "agendada" %}
+                                <span class="app-status app-status-active">{{ item.get_status_display }}</span>
+                            {% elif item.status == "cancelada" %}
+                                <span class="app-status app-status-inactive">{{ item.get_status_display }}</span>
+                            {% else %}
+                                <span class="app-status app-status-pending">{{ item.get_status_display }}</span>
+                            {% endif %}
+                        </td>
+
+                        <td class="text-nowrap">
+                            {{ item.created_at|date:"d/m/Y"|default:"-" }}
+                        </td>
+
+                        <td class="text-end">
+
+                            <div class="app-actions">
+
+                                <a
+                                    href="{% url 'consultas:lista_espera_update' item.uuid %}"
+                                    class="btn btn-outline-secondary"
+                                    title="Editar"
+                                >
+                                    <i class="bi bi-pencil"></i>
+                                </a>
+
+                                <a
+                                    href="{% url 'consultas:lista_espera_delete' item.uuid %}"
+                                    class="btn btn-outline-danger"
+                                    title="Excluir"
+                                >
+                                    <i class="bi bi-trash"></i>
+                                </a>
+
+                            </div>
+
+                        </td>
+
+                    </tr>
+
+                    {% empty %}
+
+                    <tr>
+                        <td colspan="7">
+
+                            <div class="app-empty">
+                                <i class="bi bi-hourglass d-block mb-3"></i>
+
+                                <div>
+                                    Ninguém na lista de espera.
+                                </div>
+
+                            </div>
+
+                        </td>
+                    </tr>
+
+                    {% endfor %}
+
+                </tbody>
+
+            </table>
+
+        </div>
+
+    </div>
+
+</div>
+
+{% endblock %}

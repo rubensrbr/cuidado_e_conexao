@@ -1,0 +1,105 @@
+{% extends 'base.html' %}
+{% load static %}
+
+{% block title %}
+    {% if object %}
+        Editar Lista de Espera | Cuidado & Conexão
+    {% else %}
+        Novo na Lista de Espera | Cuidado & Conexão
+    {% endif %}
+{% endblock %}
+
+{% block content %}
+
+<div class="app-page app-page--medium">
+
+    <div class="app-card">
+
+        <!-- Header -->
+        {% include "partials/_card_header.html" with icon="bi-hourglass-split" title=object|yesno:"Editar Lista de Espera,Novo na Lista de Espera" subtitle=object|yesno:"Atualize os dados do paciente na fila.,Coloque um paciente na fila de espera." %}
+
+        <!-- Form -->
+        <div class="app-form-body app-form">
+
+            {% include "partials/_form_errors.html" %}
+
+            <form method="post">
+
+                {% csrf_token %}
+
+                <!-- Paciente e profissional -->
+                <div class="app-form-section">
+
+                    <div class="app-form-section-title">
+                        <i class="bi bi-people"></i>
+                        Paciente e profissional
+                    </div>
+
+                    <div class="row g-3">
+
+                        {% include "partials/_field.html" with field=form.paciente label="Paciente" %}
+                        {% include "partials/_field.html" with field=form.profissional_preferido label="Profissional preferido" %}
+                    </div>
+
+                </div>
+
+                <!-- Preferências -->
+                <div class="app-form-section">
+
+                    <div class="app-form-section-title">
+                        <i class="bi bi-clock"></i>
+                        Preferências de atendimento
+                    </div>
+
+                    <div class="row g-3">
+
+                        {% include "partials/_field.html" with field=form.dias_preferidos label="Dias preferidos" %}
+                        {% include "partials/_field.html" with field=form.horario_preferido label="Horário preferido" %}
+                    </div>
+
+                </div>
+
+                <!-- Situação -->
+                <div class="app-form-section">
+
+                    <div class="app-form-section-title">
+                        <i class="bi bi-flag"></i>
+                        Situação
+                    </div>
+
+                    <div class="row g-3">
+
+                        {% include "partials/_field.html" with field=form.prioridade label="Prioridade" %}
+                        {% include "partials/_field.html" with field=form.status label="Status" %}
+                    </div>
+
+                </div>
+
+                <!-- Observações -->
+                <div class="app-form-section">
+
+                    <div class="app-form-section-title">
+                        <i class="bi bi-journal-text"></i>
+                        Observações
+                    </div>
+
+                    <div class="row g-3">
+
+                        {% include "partials/_field.html" with field=form.observacoes label="Observações" col="col-12" %}
+                    </div>
+
+                </div>
+
+                <!-- Actions -->
+                {% url 'consultas:lista_espera_list' as cancel_url %}
+                {% include "partials/_form_actions.html" with cancel_url=cancel_url submit_label=object|yesno:"Salvar alterações,Adicionar à fila" %}
+
+            </form>
+
+        </div>
+
+    </div>
+
+</div>
+
+{% endblock %}

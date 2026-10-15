@@ -1,0 +1,47 @@
+{% extends 'base.html' %}
+
+{% block title %}Remover da Lista de Espera | Cuidado & Conexão{% endblock %}
+
+{% block content %}
+
+<div class="app-page app-page--narrow">
+    <div class="app-card">
+
+        {% include "partials/_card_header.html" with variant="danger" icon="bi-trash3-fill" title="Remover da Lista de Espera" subtitle="Esta ação não pode ser desfeita." %}
+
+        <div class="app-form-body">
+
+            <div class="app-summary">
+                <span class="app-summary-avatar"><i class="bi bi-hourglass-split"></i></span>
+                <div>
+                    <div class="app-summary-name">{{ object.paciente.nome_completo }}</div>
+                    <div class="app-summary-meta">
+                        Prioridade {{ object.get_prioridade_display|lower }}
+                        · {{ object.get_status_display }}
+                        {% if object.created_at %}· na fila desde {{ object.created_at|date:"d/m/Y" }}{% endif %}
+                    </div>
+                </div>
+            </div>
+
+            <p class="text-muted small">
+                Apenas o registro na fila será apagado. O cadastro do paciente e as consultas dele não são afetados.
+            </p>
+
+            <p class="text-muted small mb-0">
+                Se o paciente já foi atendido ou desistiu, prefira
+                <a href="{% url 'consultas:lista_espera_update' object.uuid %}">editar o registro</a>
+                e alterar o status para <strong>Agendada</strong> ou <strong>Cancelada</strong>: o histórico é mantido.
+            </p>
+
+            <form method="post">
+                {% csrf_token %}
+
+                {% url 'consultas:lista_espera_list' as cancel_url %}
+                {% include "partials/_form_actions.html" with cancel_url=cancel_url submit_label="Sim, remover da fila" submit_icon="bi-trash3" submit_class="btn-danger" %}
+            </form>
+
+        </div>
+    </div>
+</div>
+
+{% endblock %}
