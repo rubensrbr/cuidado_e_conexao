@@ -193,3 +193,11 @@ class ListaEspera(BaseModel):
     status = models.CharField(
         max_length=20, choices=STATUS_CHOICES, default="ativa", verbose_name="Status"
     )
+
+    @property
+    def dias_preferidos_display(self):
+        """Dias abreviados para tabelas, ex.: "Seg, Qua, Sáb"."""
+        nomes = dict(self.DIAS_SEMANA)
+        return ", ".join(
+            nomes.get(dia, dia).split("-")[0][:3] for dia in self.dias_preferidos
+        )

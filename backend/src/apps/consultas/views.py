@@ -7,7 +7,7 @@ from django.views.generic import (
     UpdateView,
     DeleteView,
 )
-from .forms import ConsultaForm
+from .forms import ConsultaForm, ListaEsperaForm
 from .models import Consulta, Lembrete, ListaEspera
 
 
@@ -94,30 +94,14 @@ class ListaEsperaListView(ListView):
 class ListaEsperaCreateView(CreateView):
     model = ListaEspera
     template_name = "consultas/lista_espera_form.html"
-    fields = [
-        "paciente",
-        "profissional_preferido",
-        "dias_preferidos",
-        "horario_preferido",
-        "prioridade",
-        "observacoes",
-        "status",
-    ]
+    form_class = ListaEsperaForm
     success_url = reverse_lazy("consultas:lista_espera_list")
 
 
 class ListaEsperaUpdateView(UpdateView):
     model = ListaEspera
     template_name = "consultas/lista_espera_form.html"
-    fields = [
-        "paciente",
-        "profissional_preferido",
-        "dias_preferidos",
-        "horario_preferido",
-        "prioridade",
-        "observacoes",
-        "status",
-    ]
+    form_class = ListaEsperaForm
     slug_field = "uuid"
     slug_url_kwarg = "uuid"
     success_url = reverse_lazy("consultas:lista_espera_list")

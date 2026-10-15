@@ -849,3 +849,13 @@ a:hover {
   background: var(--sage-100);
   color: var(--ink-600);
 }
+
+
+/* Group of checkboxes laid out in a wrapping row (e.g. weekdays) */
+
+.app-check-group {
+  display: flex;
+  flex-wrap: wrap;
+  gap: .6rem 1.4rem;
+  padding: .35rem 0;
+}

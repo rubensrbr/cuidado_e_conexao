@@ -62,9 +62,9 @@
 
                         <td>
                             {% if item.dias_preferidos or item.horario_preferido %}
-                                {{ item.dias_preferidos }}
+                                {{ item.dias_preferidos_display }}
                                 {% if item.dias_preferidos and item.horario_preferido %}·{% endif %}
-                                {{ item.horario_preferido }}
+                                {{ item.get_horario_preferido_display }}
                             {% else %}
                                 -
                             {% endif %}

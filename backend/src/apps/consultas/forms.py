@@ -122,6 +122,15 @@ class LembreteForm(forms.ModelForm):
 
 
 class ListaEsperaForm(forms.ModelForm):
+    # dias_preferidos é um JSONField (lista de chaves, ex.: ["segunda", "quarta"]);
+    # sem este campo explícito o Django mostraria um textarea pedindo JSON cru.
+    dias_preferidos = forms.MultipleChoiceField(
+        label="Dias preferidos",
+        choices=ListaEspera.DIAS_SEMANA,
+        widget=forms.CheckboxSelectMultiple,
+        required=False,
+    )
+
     class Meta:
         model = ListaEspera
         fields = [
@@ -136,8 +145,7 @@ class ListaEsperaForm(forms.ModelForm):
         widgets = {
             "paciente": forms.Select(attrs={"class": "form-select"}),
             "profissional_preferido": forms.Select(attrs={"class": "form-select"}),
-            "dias_preferidos": forms.TextInput(attrs={"class": "form-control"}),
-            "horario_preferido": forms.TextInput(attrs={"class": "form-control"}),
+            "horario_preferido": forms.Select(attrs={"class": "form-select"}),
             "prioridade": forms.Select(attrs={"class": "form-select"}),
             "observacoes": forms.Textarea(attrs={"class": "form-control", "rows": 3}),
             "status": forms.Select(attrs={"class": "form-select"}),
