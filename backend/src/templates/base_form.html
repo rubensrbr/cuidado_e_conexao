@@ -1,0 +1,41 @@
+{% extends 'base.html' %}
+{% comment %}
+Base das páginas de formulário (card + erros gerais + <form> + csrf). Cada formulário preenche:
+   title          -> título da aba
+   form_header    -> {% include "partials/_card_header.html" ... %}
+   form_sections  -> as seções do formulário (campos e formsets)
+   form_actions   -> {% include "partials/_form_actions.html" ... %}
+   form_scripts   -> (opcional) <script> da página, fora do card
+{% endcomment %}
+
+{% block content %}
+
+<div class="app-page app-page--medium">
+
+    <div class="app-card">
+
+        {% block form_header %}{% endblock %}
+
+        <div class="app-form-body app-form">
+
+            {% include "partials/_form_errors.html" %}
+
+            <form method="post">
+
+                {% csrf_token %}
+
+                {% block form_sections %}{% endblock %}
+
+                {% block form_actions %}{% endblock %}
+
+            </form>
+
+        </div>
+
+    </div>
+
+</div>
+
+{% block form_scripts %}{% endblock %}
+
+{% endblock %}

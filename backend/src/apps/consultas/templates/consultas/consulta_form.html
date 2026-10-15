@@ -1,5 +1,4 @@
-{% extends 'base.html' %}
-{% load static %}
+{% extends "base_form.html" %}
 
 {% block title %}
     {% if object %}
@@ -9,115 +8,97 @@
     {% endif %}
 {% endblock %}
 
-{% block content %}
+{% block form_header %}
+    {% include "partials/_card_header.html" with icon=object|yesno:"bi-calendar-check,bi-calendar-plus" title=object|yesno:"Editar Consulta,Nova Consulta" subtitle=object|yesno:"Atualize os dados do agendamento.,Agende uma nova consulta no sistema." %}
+{% endblock %}
 
-<div class="app-page app-page--medium">
+{% block form_sections %}
+    <!-- Participantes -->
+    <div class="app-form-section">
 
-    <div class="app-card">
+        <div class="app-form-section-title">
+            <i class="bi bi-people"></i>
+            Participantes
+        </div>
 
-        <!-- Header -->
-        {% include "partials/_card_header.html" with icon=object|yesno:"bi-calendar-check,bi-calendar-plus" title=object|yesno:"Editar Consulta,Nova Consulta" subtitle=object|yesno:"Atualize os dados do agendamento.,Agende uma nova consulta no sistema." %}
+        <div class="row g-3">
 
-        <!-- Form -->
-        <div class="app-form-body app-form">
-
-            {% include "partials/_form_errors.html" %}
-
-            <form method="post">
-
-                {% csrf_token %}
-
-                <!-- Participantes -->
-                <div class="app-form-section">
-
-                    <div class="app-form-section-title">
-                        <i class="bi bi-people"></i>
-                        Participantes
-                    </div>
-
-                    <div class="row g-3">
-
-                        {% include "partials/_field.html" with field=form.paciente label="Paciente" %}
-                        {% include "partials/_field.html" with field=form.profissional label="Profissional" %}
-                    </div>
-
-                </div>
-
-                <!-- Data e horário -->
-                <div class="app-form-section">
-
-                    <div class="app-form-section-title">
-                        <i class="bi bi-clock"></i>
-                        Data e horário
-                    </div>
-
-                    <div class="row g-3">
-
-                        {% include "partials/_field.html" with field=form.data_consulta label="Data da consulta" col="col-md-4" %}
-                        {% include "partials/_field.html" with field=form.hora_inicio label="Hora de início" col="col-md-4" %}
-                        {% include "partials/_field.html" with field=form.hora_fim label="Hora de fim" col="col-md-4" %}
-                    </div>
-
-                </div>
-
-                <!-- Detalhes -->
-                <div class="app-form-section">
-
-                    <div class="app-form-section-title">
-                        <i class="bi bi-clipboard2-pulse"></i>
-                        Detalhes
-                    </div>
-
-                    <div class="row g-3">
-
-                        {% include "partials/_field.html" with field=form.tipo_consulta label="Tipo de consulta" %}
-                        {% include "partials/_field.html" with field=form.status label="Status" %}
-                    </div>
-
-                </div>
-
-                <!-- Notas da sessão -->
-                <div class="app-form-section">
-
-                    <div class="app-form-section-title">
-                        <i class="bi bi-journal-text"></i>
-                        Notas da sessão
-                    </div>
-
-                    <div class="row g-3">
-
-                        {% include "partials/_field.html" with field=form.notas_sessao label="Notas da sessão" col="col-12" %}
-                    </div>
-
-                </div>
-
-                <!-- Cancelamento (só aparece quando o status é "Cancelada") -->
-                <div class="app-form-section" id="cancelamento-section">
-
-                    <div class="app-form-section-title">
-                        <i class="bi bi-x-circle"></i>
-                        Cancelamento
-                    </div>
-
-                    <div class="row g-3">
-
-                        {% include "partials/_field.html" with field=form.motivo_cancelamento label="Motivo do cancelamento" col="col-12" %}
-                    </div>
-
-                </div>
-
-                <!-- Actions -->
-                {% url 'consultas:consulta_list' as cancel_url %}
-                {% include "partials/_form_actions.html" with cancel_url=cancel_url submit_label=object|yesno:"Salvar alterações,Agendar consulta" %}
-
-            </form>
-
+            {% include "partials/_field.html" with field=form.paciente label="Paciente" %}
+            {% include "partials/_field.html" with field=form.profissional label="Profissional" %}
         </div>
 
     </div>
 
-</div>
+    <!-- Data e horário -->
+    <div class="app-form-section">
 
+        <div class="app-form-section-title">
+            <i class="bi bi-clock"></i>
+            Data e horário
+        </div>
+
+        <div class="row g-3">
+
+            {% include "partials/_field.html" with field=form.data_consulta label="Data da consulta" col="col-md-4" %}
+            {% include "partials/_field.html" with field=form.hora_inicio label="Hora de início" col="col-md-4" %}
+            {% include "partials/_field.html" with field=form.hora_fim label="Hora de fim" col="col-md-4" %}
+        </div>
+
+    </div>
+
+    <!-- Detalhes -->
+    <div class="app-form-section">
+
+        <div class="app-form-section-title">
+            <i class="bi bi-clipboard2-pulse"></i>
+            Detalhes
+        </div>
+
+        <div class="row g-3">
+
+            {% include "partials/_field.html" with field=form.tipo_consulta label="Tipo de consulta" %}
+            {% include "partials/_field.html" with field=form.status label="Status" %}
+        </div>
+
+    </div>
+
+    <!-- Notas da sessão -->
+    <div class="app-form-section">
+
+        <div class="app-form-section-title">
+            <i class="bi bi-journal-text"></i>
+            Notas da sessão
+        </div>
+
+        <div class="row g-3">
+
+            {% include "partials/_field.html" with field=form.notas_sessao label="Notas da sessão" col="col-12" %}
+        </div>
+
+    </div>
+
+    <!-- Cancelamento (só aparece quando o status é "Cancelada") -->
+    <div class="app-form-section" id="cancelamento-section">
+
+        <div class="app-form-section-title">
+            <i class="bi bi-x-circle"></i>
+            Cancelamento
+        </div>
+
+        <div class="row g-3">
+
+            {% include "partials/_field.html" with field=form.motivo_cancelamento label="Motivo do cancelamento" col="col-12" %}
+        </div>
+
+    </div>
+{% endblock %}
+
+{% block form_actions %}
+    {% url 'consultas:consulta_list' as cancel_url %}
+    {% include "partials/_form_actions.html" with cancel_url=cancel_url submit_label=object|yesno:"Salvar alterações,Agendar consulta" %}
+{% endblock %}
+
+{% block form_scripts %}
 <script>
     (function () {
         var status = document.getElementById('{{ form.status.id_for_label }}');
@@ -133,5 +114,4 @@
         toggleCancelamento();
     })();
 </script>
-
 {% endblock %}

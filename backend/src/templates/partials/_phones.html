@@ -1,0 +1,15 @@
+{% comment %}
+Lista de telefones de uma célula de tabela (principal marcado com estrela).
+   Uso: {% include "partials/_phones.html" with telefones=paciente.telefones.all %}
+{% endcomment %}
+{% for telefone in telefones %}
+    <div class="app-phone-item">
+        {{ telefone.numero }}
+        <span class="app-phone-type">{{ telefone.get_tipo_display }}</span>
+        {% if telefone.principal %}
+            <i class="bi bi-star-fill app-phone-main" title="Principal"></i>
+        {% endif %}
+    </div>
+{% empty %}
+    -
+{% endfor %}

@@ -21,8 +21,7 @@
                 </div>
             </div>
 
-            {# Telefone.profissionais usa related_name="profissionais", por isso object.profissionais abaixo. #}
-            {% with consultas=object.consultas.count prontuarios=object.prontuarios.count disponibilidades=object.disponibilidades.count telefones=object.profissionais.count enderecos=object.enderecos.count espera=object.lista_espera.count pacientes=object.pacientes.count %}
+            {% with consultas=object.consultas.count prontuarios=object.prontuarios.count disponibilidades=object.disponibilidades.count telefones=object.telefones.count enderecos=object.enderecos.count espera=object.lista_espera.count pacientes=object.pacientes.count %}
 
                 {% if consultas or prontuarios or disponibilidades or telefones or enderecos %}
                     <div class="app-alert-danger">

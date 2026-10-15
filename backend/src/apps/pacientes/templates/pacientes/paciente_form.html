@@ -1,5 +1,4 @@
-{% extends 'base.html' %}
-{% load static %}
+{% extends "base_form.html" %}
 
 {% block title %}
     {% if object %}
@@ -9,98 +8,77 @@
     {% endif %}
 {% endblock %}
 
-{% block content %}
+{% block form_header %}
+    {% include "partials/_card_header.html" with icon=object|yesno:"bi-pencil-square,bi-person-plus-fill" title=object|yesno:"Editar Paciente,Novo Paciente" subtitle=object|yesno:"Atualize os dados cadastrais do paciente.,Cadastre um novo paciente no sistema." %}
+{% endblock %}
 
-<div class="app-page app-page--medium">
+{% block form_sections %}
+    <!-- Dados pessoais -->
+    <div class="app-form-section">
 
-    <div class="app-card">
+        <div class="app-form-section-title">
+            <i class="bi bi-person"></i>
+            Dados pessoais
+        </div>
 
-        <!-- Header -->
-        {% include "partials/_card_header.html" with icon=object|yesno:"bi-pencil-square,bi-person-plus-fill" title=object|yesno:"Editar Paciente,Novo Paciente" subtitle=object|yesno:"Atualize os dados cadastrais do paciente.,Cadastre um novo paciente no sistema." %}
+        <div class="row g-3">
 
-        <!-- Form -->
-        <div class="app-form-body app-form">
-
-            {% include "partials/_form_errors.html" %}
-
-            <form method="post">
-
-                {% csrf_token %}
-
-                <!-- Dados pessoais -->
-                <div class="app-form-section">
-
-                    <div class="app-form-section-title">
-                        <i class="bi bi-person"></i>
-                        Dados pessoais
-                    </div>
-
-                    <div class="row g-3">
-
-                        {% include "partials/_field.html" with field=form.primeiro_nome label="Primeiro nome" %}
-                        {% include "partials/_field.html" with field=form.sobrenome label="Sobrenome" %}
-                        {% include "partials/_field.html" with field=form.data_nascimento label="Data de nascimento" %}
-                        {% include "partials/_field.html" with field=form.genero label="Gênero" %}
-                    </div>
-
-                </div>
-
-                <!-- Contato -->
-                <div class="app-form-section">
-
-                    <div class="app-form-section-title">
-                        <i class="bi bi-envelope"></i>
-                        Contato
-                    </div>
-
-                    <div class="row g-3">
-
-                        {% include "partials/_field.html" with field=form.email label="E-mail" col="col-12" %}
-                    </div>
-
-                </div>
-
-                <!-- Telefones -->
-                {% include "pacientes/_telefones_formset.html" %}
-
-                <!-- Convênio -->
-                <div class="app-form-section">
-
-                    <div class="app-form-section-title">
-                        <i class="bi bi-credit-card"></i>
-                        Convênio
-                    </div>
-
-                    <div class="row g-3">
-
-                        {% include "partials/_field.html" with field=form.convenio label="Convênio" %}
-                        {% include "partials/_field.html" with field=form.numero_carteirinha label="Número da carteirinha" %}
-                    </div>
-
-                </div>
-
-                <!-- Status -->
-                <div class="app-form-section">
-
-                    <div class="app-form-section-title">
-                        <i class="bi bi-toggle-on"></i>
-                        Status
-                    </div>
-
-                    {% include "partials/_checkbox_field.html" with field=form.ativo label="Paciente ativo" %}
-
-                </div>
-
-                <!-- Actions -->
-                {% url 'pacientes:paciente_list' as cancel_url %}
-                {% include "partials/_form_actions.html" with cancel_url=cancel_url submit_label=object|yesno:"Salvar alterações,Cadastrar paciente" %}
-
-            </form>
-
+            {% include "partials/_field.html" with field=form.primeiro_nome label="Primeiro nome" %}
+            {% include "partials/_field.html" with field=form.sobrenome label="Sobrenome" %}
+            {% include "partials/_field.html" with field=form.data_nascimento label="Data de nascimento" %}
+            {% include "partials/_field.html" with field=form.genero label="Gênero" %}
         </div>
 
     </div>
 
-</div>
+    <!-- Contato -->
+    <div class="app-form-section">
 
+        <div class="app-form-section-title">
+            <i class="bi bi-envelope"></i>
+            Contato
+        </div>
+
+        <div class="row g-3">
+
+            {% include "partials/_field.html" with field=form.email label="E-mail" col="col-12" %}
+        </div>
+
+    </div>
+
+    <!-- Telefones -->
+    {% include "pacientes/_telefones_formset.html" %}
+
+    <!-- Convênio -->
+    <div class="app-form-section">
+
+        <div class="app-form-section-title">
+            <i class="bi bi-credit-card"></i>
+            Convênio
+        </div>
+
+        <div class="row g-3">
+
+            {% include "partials/_field.html" with field=form.convenio label="Convênio" %}
+            {% include "partials/_field.html" with field=form.numero_carteirinha label="Número da carteirinha" %}
+        </div>
+
+    </div>
+
+    <!-- Status -->
+    <div class="app-form-section">
+
+        <div class="app-form-section-title">
+            <i class="bi bi-toggle-on"></i>
+            Status
+        </div>
+
+        {% include "partials/_checkbox_field.html" with field=form.ativo label="Paciente ativo" %}
+
+    </div>
+{% endblock %}
+
+{% block form_actions %}
+    {% url 'pacientes:paciente_list' as cancel_url %}
+    {% include "partials/_form_actions.html" with cancel_url=cancel_url submit_label=object|yesno:"Salvar alterações,Cadastrar paciente" %}
 {% endblock %}

@@ -1,177 +1,66 @@
-{% extends 'base.html' %}
-{% load static %}
+{% extends "base_list.html" %}
 
 {% block title %}Consultas | Cuidado & Conexão{% endblock %}
 
-{% block content %}
-
-<div class="app-page">
-
-    <div class="app-card">
-
-        <!-- Header -->
-        {% url 'consultas:consulta_create' as create_url %}
-        {% include "partials/_card_header.html" with icon="bi-calendar-week-fill" title="Lista de Consultas" subtitle="Consultas agendadas no sistema" action_url=create_url action_label="Nova consulta" action_icon="bi-plus-lg" %}
-
-        <!-- Table -->
-        <div class="table-responsive">
-
-            <table class="table table-hover app-table">
-
-                <thead>
-                    <tr>
-                        <th>Data</th>
-                        <th>Horário</th>
-                        <th>Paciente</th>
-                        <th>Profissional</th>
-                        <th>Tipo</th>
-                        <th>Status</th>
-                        <th class="text-end">Ações</th>
-                    </tr>
-                </thead>
-
-                <tbody>
-
-                    {% for consulta in consultas %}
-
-                    <tr>
-
-                        <td>
-                            {{ consulta.data_consulta|date:"d/m/Y" }}
-                        </td>
-
-                        <td class="text-nowrap">
-                            {{ consulta.hora_inicio|time:"H:i" }} – {{ consulta.hora_fim|time:"H:i" }}
-                        </td>
-
-                        <td>
-                            <span class="app-name">
-                                {{ consulta.paciente.nome_completo }}
-                            </span>
-                        </td>
-
-                        <td>
-                            {{ consulta.profissional.nome_completo }}
-                        </td>
-
-                        <td>
-                            {{ consulta.get_tipo_consulta_display }}
-                        </td>
-
-                        <td>
-                            {% if consulta.status == "confirmada" or consulta.status == "realizada" %}
-                                <span class="app-status app-status-active">{{ consulta.get_status_display }}</span>
-                            {% elif consulta.status == "cancelada" or consulta.status == "falta" %}
-                                <span class="app-status app-status-inactive">{{ consulta.get_status_display }}</span>
-                            {% else %}
-                                <span class="app-status app-status-pending">{{ consulta.get_status_display }}</span>
-                            {% endif %}
-                        </td>
-
-                        <td class="text-end">
-
-                            <div class="app-actions">
-
-                                <a
-                                    href="{% url 'consultas:consulta_update' consulta.uuid %}"
-                                    class="btn btn-outline-secondary"
-                                    title="Editar"
-                                >
-                                    <i class="bi bi-pencil"></i>
-                                </a>
-
-                                <a
-                                    href="{% url 'consultas:consulta_delete' consulta.uuid %}"
-                                    class="btn btn-outline-danger"
-                                    title="Excluir"
-                                >
-                                    <i class="bi bi-trash"></i>
-                                </a>
-
-                            </div>
-
-                        </td>
-
-                    </tr>
-
-                    {% empty %}
-
-                    <tr>
-                        <td colspan="7">
-
-                            <div class="app-empty">
-                                <i class="bi bi-calendar-x d-block mb-3"></i>
-
-                                <div>
-                                    Nenhuma consulta agendada.
-                                </div>
-
-                            </div>
-
-                        </td>
-                    </tr>
-
-                    {% endfor %}
-
-                </tbody>
-
-            </table>
-
-        </div>
-
-        <!-- Pagination -->
-        {% if is_paginated %}
-        <nav class="d-flex justify-content-between align-items-center flex-wrap gap-2 px-3 py-3" aria-label="Paginação">
-
-            <small class="text-muted">
-                Página {{ page_obj.number }} de {{ paginator.num_pages }} · {{ paginator.count }} consultas
-            </small>
-
-            <ul class="pagination pagination-sm mb-0">
-
-                {% if page_obj.has_previous %}
-                    <li class="page-item">
-                        <a class="page-link" href="?page={{ page_obj.previous_page_number }}" aria-label="Anterior">
-                            <i class="bi bi-chevron-left"></i>
-                        </a>
-                    </li>
-                {% else %}
-                    <li class="page-item disabled">
-                        <span class="page-link"><i class="bi bi-chevron-left"></i></span>
-                    </li>
-                {% endif %}
-
-                {% for num in paginator.page_range %}
-                    {% if num == page_obj.number %}
-                        <li class="page-item active" aria-current="page">
-                            <span class="page-link">{{ num }}</span>
-                        </li>
-                    {% elif num >= page_obj.number|add:"-2" and num <= page_obj.number|add:"2" %}
-                        <li class="page-item">
-                            <a class="page-link" href="?page={{ num }}">{{ num }}</a>
-                        </li>
-                    {% endif %}
-                {% endfor %}
-
-                {% if page_obj.has_next %}
-                    <li class="page-item">
-                        <a class="page-link" href="?page={{ page_obj.next_page_number }}" aria-label="Próxima">
-                            <i class="bi bi-chevron-right"></i>
-                        </a>
-                    </li>
-                {% else %}
-                    <li class="page-item disabled">
-                        <span class="page-link"><i class="bi bi-chevron-right"></i></span>
-                    </li>
-                {% endif %}
-
-            </ul>
-
-        </nav>
-        {% endif %}
-
-    </div>
-
-</div>
-
+{% block list_header %}
+    {% url 'consultas:consulta_create' as create_url %}
+    {% include "partials/_card_header.html" with icon="bi-calendar-week-fill" title="Lista de Consultas" subtitle="Consultas agendadas no sistema" action_url=create_url action_label="Nova consulta" action_icon="bi-plus-lg" %}
 {% endblock %}
+
+{% block table_head %}
+    <th>Data</th>
+    <th>Horário</th>
+    <th>Paciente</th>
+    <th>Profissional</th>
+    <th>Tipo</th>
+    <th>Status</th>
+    <th class="text-end">Ações</th>
+{% endblock %}
+
+{% block table_body %}
+    {% for consulta in consultas %}
+    <tr>
+        <td>
+            {{ consulta.data_consulta|date:"d/m/Y" }}
+        </td>
+
+        <td class="text-nowrap">
+            {{ consulta.hora_inicio|time:"H:i" }} – {{ consulta.hora_fim|time:"H:i" }}
+        </td>
+
+        <td>
+            <span class="app-name">
+                {{ consulta.paciente.nome_completo }}
+            </span>
+        </td>
+
+        <td>
+            {{ consulta.profissional.nome_completo }}
+        </td>
+
+        <td>
+            {{ consulta.get_tipo_consulta_display }}
+        </td>
+
+        <td>
+            {% if consulta.status == "confirmada" or consulta.status == "realizada" %}
+                <span class="app-status app-status-active">{{ consulta.get_status_display }}</span>
+            {% elif consulta.status == "cancelada" or consulta.status == "falta" %}
+                <span class="app-status app-status-inactive">{{ consulta.get_status_display }}</span>
+            {% else %}
+                <span class="app-status app-status-pending">{{ consulta.get_status_display }}</span>
+            {% endif %}
+        </td>
+
+        <td class="text-end">
+            {% url 'consultas:consulta_update' consulta.uuid as edit_url %}
+            {% url 'consultas:consulta_delete' consulta.uuid as delete_url %}
+            {% include "partials/_row_actions.html" %}
+        </td>
+    </tr>
+    {% empty %}
+        {% include "partials/_empty_row.html" with colspan=7 icon="bi-calendar-x" message="Nenhuma consulta agendada." %}
+    {% endfor %}
+{% endblock %}
+
+{% block pagination %}{% include "partials/_pagination.html" with noun="consultas" %}{% endblock %}

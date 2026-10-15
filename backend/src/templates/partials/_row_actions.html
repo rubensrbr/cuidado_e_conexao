@@ -1,0 +1,24 @@
+{% comment %}
+Botões de ação de uma linha de tabela (editar + excluir).
+   Uso: {% url 'app:x_update' obj.uuid as edit_url %}{% url 'app:x_delete' obj.uuid as delete_url %}
+        {% include "partials/_row_actions.html" %}
+{% endcomment %}
+<div class="app-actions">
+
+    <a
+        href="{{ edit_url }}"
+        class="btn btn-outline-secondary"
+        title="Editar"
+    >
+        <i class="bi bi-pencil"></i>
+    </a>
+
+    <a
+        href="{{ delete_url }}"
+        class="btn btn-outline-danger"
+        title="Excluir"
+    >
+        <i class="bi bi-trash"></i>
+    </a>
+
+</div>

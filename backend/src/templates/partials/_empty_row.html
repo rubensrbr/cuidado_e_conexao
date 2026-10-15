@@ -1,0 +1,18 @@
+{% comment %}
+Linha exibida quando a tabela está vazia.
+   Uso: {% include "partials/_empty_row.html" with colspan=5 icon="bi-people" message="Nenhum paciente cadastrado." %}
+{% endcomment %}
+<tr>
+    <td colspan="{{ colspan }}">
+
+        <div class="app-empty">
+            <i class="bi {{ icon }} d-block mb-3"></i>
+
+            <div>
+                {{ message }}
+            </div>
+
+        </div>
+
+    </td>
+</tr>
