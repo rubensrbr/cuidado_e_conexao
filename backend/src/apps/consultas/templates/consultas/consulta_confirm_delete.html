@@ -1,0 +1,66 @@
+{% extends 'base.html' %}
+
+{% block title %}Excluir Consulta | Cuidado & Conexão{% endblock %}
+
+{% block content %}
+
+<div class="app-page app-page--narrow">
+    <div class="app-card">
+
+        {% include "partials/_card_header.html" with variant="danger" icon="bi-trash3-fill" title="Excluir Consulta" subtitle="Esta ação não pode ser desfeita." %}
+
+        <div class="app-form-body">
+
+            <div class="app-summary">
+                <span class="app-summary-avatar"><i class="bi bi-calendar2-heart-fill"></i></span>
+                <div>
+                    <div class="app-summary-name">{{ object.paciente.nome_completo }}</div>
+                    <div class="app-summary-meta">
+                        {{ object.data_consulta|date:"d/m/Y" }}
+                        · {{ object.hora_inicio|time:"H:i" }}&ndash;{{ object.hora_fim|time:"H:i" }}
+                        · com {{ object.profissional.nome_completo }}
+                        · {{ object.get_status_display }}
+                    </div>
+                </div>
+            </div>
+
+            {# Lembrete.consulta é CASCADE; Faturamento.consulta é SET_NULL (o faturamento é mantido). #}
+            {% with lembretes=object.lembretes.count faturamentos=object.faturamentos.count %}
+
+                {% if lembretes or object.notas_sessao %}
+                    <div class="app-alert-danger">
+                        <strong><i class="bi bi-exclamation-triangle-fill me-1"></i> Ao excluir, também serão apagados:</strong>
+                        <ul>
+                            {% if lembretes %}<li>{{ lembretes }} lembrete{{ lembretes|pluralize }}</li>{% endif %}
+                            {% if object.notas_sessao %}<li>as anotações da sessão registradas nesta consulta</li>{% endif %}
+                        </ul>
+                    </div>
+                {% endif %}
+
+                {% if faturamentos %}
+                    <p class="text-muted small">
+                        {{ faturamentos }} faturamento{{ faturamentos|pluralize }} vinculado{{ faturamentos|pluralize }}
+                        ser{{ faturamentos|pluralize:"á,ão" }} mantido{{ faturamentos|pluralize }}, mas ficar{{ faturamentos|pluralize:"á,ão" }} sem consulta associada.
+                    </p>
+                {% endif %}
+
+            {% endwith %}
+
+            <p class="text-muted small mb-0">
+                Se a consulta apenas não aconteceu, prefira
+                <a href="{% url 'consultas:consulta_update' object.uuid %}">editar a consulta</a>
+                e alterar o status para <strong>Cancelada</strong> ou <strong>Falta</strong>: o histórico é mantido.
+            </p>
+
+            <form method="post">
+                {% csrf_token %}
+
+                {% url 'consultas:consulta_list' as cancel_url %}
+                {% include "partials/_form_actions.html" with cancel_url=cancel_url submit_label="Sim, excluir consulta" submit_icon="bi-trash3" submit_class="btn-danger" %}
+            </form>
+
+        </div>
+    </div>
+</div>
+
+{% endblock %}
