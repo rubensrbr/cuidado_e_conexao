@@ -1,46 +1,9 @@
-{# Seção "Endereços" do formulário de profissional (inline formset dinâmico). #}
-<div class="app-form-section">
-
-    <div class="app-form-section-title">
-        <i class="bi bi-geo-alt"></i>
-        Endereços
-    </div>
-
-    {{ endereco_formset.management_form }}
-
-    {% if endereco_formset.non_form_errors %}
-        <div class="alert alert-danger">{{ endereco_formset.non_form_errors }}</div>
-    {% endif %}
-
-    <div id="endereco-list" data-cidades-url="{% url 'localidades:cidades' %}">
-        {% for f in endereco_formset %}
-            {% include "profissionais/_endereco_row.html" with f=f %}
-        {% endfor %}
-    </div>
-
-    {# Molde para novas linhas; __prefix__ é trocado pelo índice no JS. #}
-    <template id="endereco-empty">
-        {% include "profissionais/_endereco_row.html" with f=endereco_formset.empty_form %}
-    </template>
-
-    <button type="button" id="add-endereco" class="btn btn-outline-primary btn-sm">
-        <i class="bi bi-plus-lg me-1"></i>
-        Adicionar endereço
-    </button>
-
-</div>
+{# Seção "Endereços" do formulário de profissional: inline formset + cascata UF -> cidades. #}
+{% include "partials/_inline_formset.html" with formset=endereco_formset row_template="profissionais/_endereco_row.html" item="endereco" icon="bi-geo-alt" title="Endereços" add_label="Adicionar endereço" %}
 
 <script>
     (function () {
         var list = document.getElementById('endereco-list');
-        var total = document.getElementById('id_enderecos-TOTAL_FORMS');
-        var template = document.getElementById('endereco-empty').innerHTML;
-
-        document.getElementById('add-endereco').addEventListener('click', function () {
-            var index = parseInt(total.value, 10);
-            list.insertAdjacentHTML('beforeend', template.replaceAll('__prefix__', index));
-            total.value = index + 1;
-        });
 
         // UF -> cidades: ao trocar a UF, recarrega só as cidades daquele estado.
         list.addEventListener('change', function (event) {
@@ -51,7 +14,7 @@
             if (!event.target.value) return;
 
             cidade.disabled = true;
-            fetch(list.dataset.cidadesUrl + '?estado=' + encodeURIComponent(event.target.value))
+            fetch("{% url 'localidades:cidades' %}?estado=" + encodeURIComponent(event.target.value))
                 .then(function (response) { return response.json(); })
                 .then(function (cidades) {
                     cidades.forEach(function (c) {
@@ -62,14 +25,6 @@
                     cidade.innerHTML = '<option value="">Erro ao carregar cidades</option>';
                 })
                 .finally(function () { cidade.disabled = false; });
-        });
-
-        list.addEventListener('click', function (event) {
-            var button = event.target.closest('.remove-endereco');
-            if (!button) return;
-            var row = button.closest('.endereco-row');
-            row.querySelector('input[name$="-DELETE"]').checked = true;
-            row.classList.add('d-none');
         });
     })();
 </script>

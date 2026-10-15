@@ -1,0 +1,6 @@
+{% comment %}
+Cabeçalho (vermelho) das páginas de exclusão.
+   Uso: {% include "partials/_delete_header.html" with title="Excluir Paciente" %}
+   Opcional: subtitle (padrão: "Esta ação não pode ser desfeita.")
+{% endcomment %}
+{% include "partials/_card_header.html" with variant="danger" icon="bi-trash3-fill" title=title subtitle=subtitle|default:"Esta ação não pode ser desfeita." %}

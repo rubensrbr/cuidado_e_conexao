@@ -1,0 +1,517 @@
+diff --git a/backend/src/apps/pacientes/templates/pacientes/_telefones_formset.html b/backend/src/apps/pacientes/templates/pacientes/_telefones_formset.html
+deleted file mode 100644
+index 3affbcb..0000000
+--- a/backend/src/apps/pacientes/templates/pacientes/_telefones_formset.html
++++ /dev/null
+@@ -1,54 +0,0 @@
+-{# Seção "Telefones" do formulário de paciente (inline formset dinâmico). #}
+-<div class="app-form-section">
+-
+-    <div class="app-form-section-title">
+-        <i class="bi bi-telephone"></i>
+-        Telefones
+-    </div>
+-
+-    {{ telefone_formset.management_form }}
+-
+-    {% if telefone_formset.non_form_errors %}
+-        <div class="alert alert-danger">{{ telefone_formset.non_form_errors }}</div>
+-    {% endif %}
+-
+-    <div id="telefone-list">
+-        {% for f in telefone_formset %}
+-            {% include "pacientes/_telefone_row.html" with f=f %}
+-        {% endfor %}
+-    </div>
+-
+-    {# Molde para novas linhas; __prefix__ é trocado pelo índice no JS. #}
+-    <template id="telefone-empty">
+-        {% include "pacientes/_telefone_row.html" with f=telefone_formset.empty_form %}
+-    </template>
+-
+-    <button type="button" id="add-telefone" class="btn btn-outline-primary btn-sm">
+-        <i class="bi bi-plus-lg me-1"></i>
+-        Adicionar telefone
+-    </button>
+-
+-</div>
+-
+-<script>
+-    (function () {
+-        var list = document.getElementById('telefone-list');
+-        var total = document.getElementById('id_telefones-TOTAL_FORMS');
+-        var template = document.getElementById('telefone-empty').innerHTML;
+-
+-        document.getElementById('add-telefone').addEventListener('click', function () {
+-            var index = parseInt(total.value, 10);
+-            list.insertAdjacentHTML('beforeend', template.replaceAll('__prefix__', index));
+-            total.value = index + 1;
+-        });
+-
+-        list.addEventListener('click', function (event) {
+-            var button = event.target.closest('.remove-telefone');
+-            if (!button) return;
+-            var row = button.closest('.telefone-row');
+-            // O Django ignora (e apaga, se já existir) formulários com DELETE marcado.
+-            row.querySelector('input[name$="-DELETE"]').checked = true;
+-            row.classList.add('d-none');
+-        });
+-    })();
+-</script>
+diff --git a/backend/src/apps/pacientes/templates/pacientes/paciente_confirm_delete.html b/backend/src/apps/pacientes/templates/pacientes/paciente_confirm_delete.html
+index ce7eb50..9a3d004 100644
+--- a/backend/src/apps/pacientes/templates/pacientes/paciente_confirm_delete.html
++++ b/backend/src/apps/pacientes/templates/pacientes/paciente_confirm_delete.html
+@@ -1,57 +1,26 @@
+-{% extends 'base.html' %}
++{% extends "base_delete.html" %}
+ 
+ {% block title %}Excluir Paciente | Cuidado & Conexão{% endblock %}
+ 
+-{% block content %}
++{% block delete_header %}{% include "partials/_delete_header.html" with title="Excluir Paciente" %}{% endblock %}
+ 
+-<div class="app-page app-page--narrow">
+-    <div class="app-card">
++{% block delete_icon %}bi-person-fill{% endblock %}
++{% block delete_name %}{{ object.nome_completo }}{% endblock %}
++{% block delete_meta %}{% if object.email %}{{ object.email }}{% else %}Sem e-mail cadastrado{% endif %}{% endblock %}
+ 
+-        {% include "partials/_card_header.html" with variant="danger" icon="bi-trash3-fill" title="Excluir Paciente" subtitle="Esta ação não pode ser desfeita." %}
+-
+-        <div class="app-form-body">
+-
+-            <div class="app-summary">
+-                <span class="app-summary-avatar"><i class="bi bi-person-fill"></i></span>
+-                <div>
+-                    <div class="app-summary-name">{{ object.nome_completo }}</div>
+-                    <div class="app-summary-meta">
+-                        {% if object.email %}{{ object.email }}{% else %}Sem e-mail cadastrado{% endif %}
+-                    </div>
+-                </div>
+-            </div>
+-
+-            {% with consultas=object.consultas.count prontuarios=object.prontuarios.count faturamentos=object.faturamentos.count espera=object.lista_espera.count telefones=object.telefones.count enderecos=object.enderecos.count %}
+-                {% if consultas or prontuarios or faturamentos or espera or telefones or enderecos %}
+-                    <div class="app-alert-danger">
+-                        <strong><i class="bi bi-exclamation-triangle-fill me-1"></i> Ao excluir, também serão apagados:</strong>
+-                        <ul>
+-                            {% if consultas %}<li>{{ consultas }} consulta{{ consultas|pluralize }}</li>{% endif %}
+-                            {% if prontuarios %}<li>{{ prontuarios }} prontuário{{ prontuarios|pluralize }}</li>{% endif %}
+-                            {% if faturamentos %}<li>{{ faturamentos }} faturamento{{ faturamentos|pluralize }}</li>{% endif %}
+-                            {% if espera %}<li>{{ espera }} registro{{ espera|pluralize }} na lista de espera</li>{% endif %}
+-                            {% if telefones %}<li>{{ telefones }} telefone{{ telefones|pluralize }}</li>{% endif %}
+-                            {% if enderecos %}<li>{{ enderecos }} endereço{{ enderecos|pluralize }}</li>{% endif %}
+-                        </ul>
+-                    </div>
+-                {% endif %}
+-            {% endwith %}
+-
+-            <p class="text-muted small mb-0">
+-                Se o paciente apenas deixou de ser atendido, prefira
+-                <a href="{% url 'pacientes:paciente_update' object.uuid %}">editar o cadastro</a>
+-                e desmarcar <strong>Ativo</strong>: o histórico é mantido.
+-            </p>
+-
+-            <form method="post">
+-                {% csrf_token %}
+-
+-                {% url 'pacientes:paciente_list' as cancel_url %}
+-                {% include "partials/_form_actions.html" with cancel_url=cancel_url submit_label="Sim, excluir paciente" submit_icon="bi-trash3" submit_class="btn-danger" %}
+-            </form>
++{% block delete_warnings %}
++    {% include "partials/_delete_cascade.html" with consultas=object.consultas.count prontuarios=object.prontuarios.count faturamentos=object.faturamentos.count espera=object.lista_espera.count telefones=object.telefones.count enderecos=object.enderecos.count %}
++{% endblock %}
+ 
+-        </div>
+-    </div>
+-</div>
++{% block delete_hint %}
++    <p class="text-muted small mb-0">
++        Se o paciente apenas deixou de ser atendido, prefira
++        <a href="{% url 'pacientes:paciente_update' object.uuid %}">editar o cadastro</a>
++        e desmarcar <strong>Ativo</strong>: o histórico é mantido.
++    </p>
++{% endblock %}
+ 
++{% block delete_actions %}
++    {% url 'pacientes:paciente_list' as cancel_url %}
++    {% include "partials/_delete_actions.html" with cancel_url=cancel_url submit_label="Sim, excluir paciente" %}
+ {% endblock %}
+diff --git a/backend/src/apps/pacientes/templates/pacientes/paciente_form.html b/backend/src/apps/pacientes/templates/pacientes/paciente_form.html
+index 4995a2b..74a6d8a 100644
+--- a/backend/src/apps/pacientes/templates/pacientes/paciente_form.html
++++ b/backend/src/apps/pacientes/templates/pacientes/paciente_form.html
+@@ -47,7 +47,7 @@
+     </div>
+ 
+     <!-- Telefones -->
+-    {% include "pacientes/_telefones_formset.html" %}
++    {% include "partials/_telefones_formset.html" %}
+ 
+     <!-- Convênio -->
+     <div class="app-form-section">
+diff --git a/backend/src/apps/profissionais/templates/profissionais/_enderecos_formset.html b/backend/src/apps/profissionais/templates/profissionais/_enderecos_formset.html
+index 6a80e3b..9e480da 100644
+--- a/backend/src/apps/profissionais/templates/profissionais/_enderecos_formset.html
++++ b/backend/src/apps/profissionais/templates/profissionais/_enderecos_formset.html
+@@ -1,46 +1,9 @@
+-{# Seção "Endereços" do formulário de profissional (inline formset dinâmico). #}
+-<div class="app-form-section">
+-
+-    <div class="app-form-section-title">
+-        <i class="bi bi-geo-alt"></i>
+-        Endereços
+-    </div>
+-
+-    {{ endereco_formset.management_form }}
+-
+-    {% if endereco_formset.non_form_errors %}
+-        <div class="alert alert-danger">{{ endereco_formset.non_form_errors }}</div>
+-    {% endif %}
+-
+-    <div id="endereco-list" data-cidades-url="{% url 'localidades:cidades' %}">
+-        {% for f in endereco_formset %}
+-            {% include "profissionais/_endereco_row.html" with f=f %}
+-        {% endfor %}
+-    </div>
+-
+-    {# Molde para novas linhas; __prefix__ é trocado pelo índice no JS. #}
+-    <template id="endereco-empty">
+-        {% include "profissionais/_endereco_row.html" with f=endereco_formset.empty_form %}
+-    </template>
+-
+-    <button type="button" id="add-endereco" class="btn btn-outline-primary btn-sm">
+-        <i class="bi bi-plus-lg me-1"></i>
+-        Adicionar endereço
+-    </button>
+-
+-</div>
++{# Seção "Endereços" do formulário de profissional: inline formset + cascata UF -> cidades. #}
++{% include "partials/_inline_formset.html" with formset=endereco_formset row_template="profissionais/_endereco_row.html" item="endereco" icon="bi-geo-alt" title="Endereços" add_label="Adicionar endereço" %}
+ 
+ <script>
+     (function () {
+         var list = document.getElementById('endereco-list');
+-        var total = document.getElementById('id_enderecos-TOTAL_FORMS');
+-        var template = document.getElementById('endereco-empty').innerHTML;
+-
+-        document.getElementById('add-endereco').addEventListener('click', function () {
+-            var index = parseInt(total.value, 10);
+-            list.insertAdjacentHTML('beforeend', template.replaceAll('__prefix__', index));
+-            total.value = index + 1;
+-        });
+ 
+         // UF -> cidades: ao trocar a UF, recarrega só as cidades daquele estado.
+         list.addEventListener('change', function (event) {
+@@ -51,7 +14,7 @@
+             if (!event.target.value) return;
+ 
+             cidade.disabled = true;
+-            fetch(list.dataset.cidadesUrl + '?estado=' + encodeURIComponent(event.target.value))
++            fetch("{% url 'localidades:cidades' %}?estado=" + encodeURIComponent(event.target.value))
+                 .then(function (response) { return response.json(); })
+                 .then(function (cidades) {
+                     cidades.forEach(function (c) {
+@@ -63,13 +26,5 @@
+                 })
+                 .finally(function () { cidade.disabled = false; });
+         });
+-
+-        list.addEventListener('click', function (event) {
+-            var button = event.target.closest('.remove-endereco');
+-            if (!button) return;
+-            var row = button.closest('.endereco-row');
+-            row.querySelector('input[name$="-DELETE"]').checked = true;
+-            row.classList.add('d-none');
+-        });
+     })();
+ </script>
+diff --git a/backend/src/apps/profissionais/templates/profissionais/profissional_confirm_delete.html b/backend/src/apps/profissionais/templates/profissionais/profissional_confirm_delete.html
+index 3c28a10..0315c68 100644
+--- a/backend/src/apps/profissionais/templates/profissionais/profissional_confirm_delete.html
++++ b/backend/src/apps/profissionais/templates/profissionais/profissional_confirm_delete.html
+@@ -1,65 +1,36 @@
+-{% extends 'base.html' %}
++{% extends "base_delete.html" %}
+ 
+ {% block title %}Excluir Profissional | Cuidado & Conexão{% endblock %}
+ 
+-{% block content %}
++{% block delete_header %}{% include "partials/_delete_header.html" with title="Excluir Profissional" %}{% endblock %}
+ 
+-<div class="app-page app-page--narrow">
+-    <div class="app-card">
++{% block delete_icon %}bi-person-badge-fill{% endblock %}
++{% block delete_name %}{{ object.nome_completo }}{% endblock %}
++{% block delete_meta %}{{ object.tipo_profissional }} · {{ object.numero_registro }}{% endblock %}
+ 
+-        {% include "partials/_card_header.html" with variant="danger" icon="bi-trash3-fill" title="Excluir Profissional" subtitle="Esta ação não pode ser desfeita." %}
++{% block delete_warnings %}
++    {% include "partials/_delete_cascade.html" with consultas=object.consultas.count prontuarios=object.prontuarios.count disponibilidades=object.disponibilidades.count telefones=object.telefones.count enderecos=object.enderecos.count %}
+ 
+-        <div class="app-form-body">
+-
+-            <div class="app-summary">
+-                <span class="app-summary-avatar"><i class="bi bi-person-badge-fill"></i></span>
+-                <div>
+-                    <div class="app-summary-name">{{ object.nome_completo }}</div>
+-                    <div class="app-summary-meta">
+-                        {{ object.tipo_profissional }} · {{ object.numero_registro }}
+-                    </div>
+-                </div>
+-            </div>
+-
+-            {% with consultas=object.consultas.count prontuarios=object.prontuarios.count disponibilidades=object.disponibilidades.count telefones=object.telefones.count enderecos=object.enderecos.count espera=object.lista_espera.count pacientes=object.pacientes.count %}
+-
+-                {% if consultas or prontuarios or disponibilidades or telefones or enderecos %}
+-                    <div class="app-alert-danger">
+-                        <strong><i class="bi bi-exclamation-triangle-fill me-1"></i> Ao excluir, também serão apagados:</strong>
+-                        <ul>
+-                            {% if consultas %}<li>{{ consultas }} consulta{{ consultas|pluralize }}</li>{% endif %}
+-                            {% if prontuarios %}<li>{{ prontuarios }} prontuário{{ prontuarios|pluralize }}</li>{% endif %}
+-                            {% if disponibilidades %}<li>{{ disponibilidades }} disponibilidade{{ disponibilidades|pluralize }}</li>{% endif %}
+-                            {% if telefones %}<li>{{ telefones }} telefone{{ telefones|pluralize }}</li>{% endif %}
+-                            {% if enderecos %}<li>{{ enderecos }} endereço{{ enderecos|pluralize }}</li>{% endif %}
+-                        </ul>
+-                    </div>
+-                {% endif %}
+-
+-                {% if espera or pacientes %}
+-                    <p class="text-muted small">
+-                        {% if pacientes %}O vínculo com {{ pacientes }} paciente{{ pacientes|pluralize }} será removido (os pacientes são mantidos).{% endif %}
+-                        {% if espera %}{{ espera }} registro{{ espera|pluralize }} da lista de espera ficará{{ espera|pluralize:"ão" }} sem profissional preferido.{% endif %}
+-                    </p>
+-                {% endif %}
+-
+-            {% endwith %}
+-
+-            <p class="text-muted small mb-0">
+-                Se o profissional apenas deixou de atender, prefira
+-                <a href="{% url 'profissionais:profissional_update' object.uuid %}">editar o cadastro</a>
+-                e desmarcar <strong>Ativo</strong>: o histórico é mantido.
++    {# Estes não são apagados: só perdem o vínculo com o profissional. #}
++    {% with espera=object.lista_espera.count pacientes=object.pacientes.count %}
++        {% if espera or pacientes %}
++            <p class="text-muted small">
++                {% if pacientes %}O vínculo com {{ pacientes }} paciente{{ pacientes|pluralize }} será removido (os pacientes são mantidos).{% endif %}
++                {% if espera %}{{ espera }} registro{{ espera|pluralize }} da lista de espera ficará{{ espera|pluralize:"ão" }} sem profissional preferido.{% endif %}
+             </p>
++        {% endif %}
++    {% endwith %}
++{% endblock %}
+ 
+-            <form method="post">
+-                {% csrf_token %}
+-
+-                {% url 'profissionais:profissional_list' as cancel_url %}
+-                {% include "partials/_form_actions.html" with cancel_url=cancel_url submit_label="Sim, excluir profissional" submit_icon="bi-trash3" submit_class="btn-danger" %}
+-            </form>
+-
+-        </div>
+-    </div>
+-</div>
++{% block delete_hint %}
++    <p class="text-muted small mb-0">
++        Se o profissional apenas deixou de atender, prefira
++        <a href="{% url 'profissionais:profissional_update' object.uuid %}">editar o cadastro</a>
++        e desmarcar <strong>Ativo</strong>: o histórico é mantido.
++    </p>
++{% endblock %}
+ 
++{% block delete_actions %}
++    {% url 'profissionais:profissional_list' as cancel_url %}
++    {% include "partials/_delete_actions.html" with cancel_url=cancel_url submit_label="Sim, excluir profissional" %}
+ {% endblock %}
+diff --git a/backend/src/apps/profissionais/templates/profissionais/profissional_form.html b/backend/src/apps/profissionais/templates/profissionais/profissional_form.html
+index 2c02648..51d3df6 100644
+--- a/backend/src/apps/profissionais/templates/profissionais/profissional_form.html
++++ b/backend/src/apps/profissionais/templates/profissionais/profissional_form.html
+@@ -48,7 +48,7 @@
+     </div>
+ 
+     <!-- Telefones (reaproveita o partial de pacientes) -->
+-    {% include "pacientes/_telefones_formset.html" %}
++    {% include "partials/_telefones_formset.html" %}
+ 
+     <!-- Endereços -->
+     {% include "profissionais/_enderecos_formset.html" %}
+diff --git a/backend/src/templates/base_delete.html b/backend/src/templates/base_delete.html
+new file mode 100644
+index 0000000..e28a94c
+--- /dev/null
++++ b/backend/src/templates/base_delete.html
+@@ -0,0 +1,47 @@
++{% extends 'base.html' %}
++{% comment %}
++Base das páginas de confirmação de exclusão. Cada página preenche os blocos:
++   title            -> título da aba
++   delete_header    -> {% include "partials/_delete_header.html" with title="Excluir X" %}
++   delete_icon      -> classe do ícone do resumo (ex.: bi-person-fill)
++   delete_name      -> nome do registro
++   delete_meta      -> linha de detalhe do registro
++   delete_warnings  -> avisos do que será apagado (veja partials/_delete_cascade.html)
++   delete_hint      -> sugestão de alternativa (ex.: desativar em vez de excluir)
++   delete_actions   -> {% include "partials/_delete_actions.html" with cancel_url=... submit_label="..." %}
++{% endcomment %}
++
++{% block content %}
++
++<div class="app-page app-page--narrow">
++    <div class="app-card">
++
++        {% block delete_header %}{% endblock %}
++
++        <div class="app-form-body">
++
++            <div class="app-summary">
++                <span class="app-summary-avatar"><i class="bi {% block delete_icon %}bi-trash3{% endblock %}"></i></span>
++                <div>
++                    <div class="app-summary-name">{% block delete_name %}{{ object }}{% endblock %}</div>
++                    <div class="app-summary-meta">
++                        {% block delete_meta %}{% endblock %}
++                    </div>
++                </div>
++            </div>
++
++            {% block delete_warnings %}{% endblock %}
++
++            {% block delete_hint %}{% endblock %}
++
++            <form method="post">
++                {% csrf_token %}
++
++                {% block delete_actions %}{% endblock %}
++            </form>
++
++        </div>
++    </div>
++</div>
++
++{% endblock %}
+diff --git a/backend/src/templates/partials/_delete_actions.html b/backend/src/templates/partials/_delete_actions.html
+new file mode 100644
+index 0000000..62c518e
+--- /dev/null
++++ b/backend/src/templates/partials/_delete_actions.html
+@@ -0,0 +1,5 @@
++{% comment %}
++Rodapé das páginas de exclusão: Cancelar + botão vermelho.
++   Uso: {% url 'app:x_list' as cancel_url %}{% include "partials/_delete_actions.html" with cancel_url=cancel_url submit_label="Sim, excluir X" %}
++{% endcomment %}
++{% include "partials/_form_actions.html" with cancel_url=cancel_url submit_label=submit_label submit_icon="bi-trash3" submit_class="btn-danger" %}
+diff --git a/backend/src/templates/partials/_delete_cascade.html b/backend/src/templates/partials/_delete_cascade.html
+new file mode 100644
+index 0000000..15b05ad
+--- /dev/null
++++ b/backend/src/templates/partials/_delete_cascade.html
+@@ -0,0 +1,20 @@
++{% comment %}
++Aviso "Ao excluir, também serão apagados: ..." (só aparece se algum contador for > 0).
++   Uso: {% include "partials/_delete_cascade.html" with consultas=object.consultas.count telefones=object.telefones.count %}
++   Contadores aceitos (passe só os que se aplicam): consultas, prontuarios, faturamentos,
++   disponibilidades, espera, telefones, enderecos.
++{% endcomment %}
++{% if consultas or prontuarios or faturamentos or disponibilidades or espera or telefones or enderecos %}
++    <div class="app-alert-danger">
++        <strong><i class="bi bi-exclamation-triangle-fill me-1"></i> Ao excluir, também serão apagados:</strong>
++        <ul>
++            {% if consultas %}<li>{{ consultas }} consulta{{ consultas|pluralize }}</li>{% endif %}
++            {% if prontuarios %}<li>{{ prontuarios }} prontuário{{ prontuarios|pluralize }}</li>{% endif %}
++            {% if faturamentos %}<li>{{ faturamentos }} faturamento{{ faturamentos|pluralize }}</li>{% endif %}
++            {% if disponibilidades %}<li>{{ disponibilidades }} disponibilidade{{ disponibilidades|pluralize }}</li>{% endif %}
++            {% if espera %}<li>{{ espera }} registro{{ espera|pluralize }} na lista de espera</li>{% endif %}
++            {% if telefones %}<li>{{ telefones }} telefone{{ telefones|pluralize }}</li>{% endif %}
++            {% if enderecos %}<li>{{ enderecos }} endereço{{ enderecos|pluralize }}</li>{% endif %}
++        </ul>
++    </div>
++{% endif %}
+diff --git a/backend/src/templates/partials/_delete_header.html b/backend/src/templates/partials/_delete_header.html
+new file mode 100644
+index 0000000..0847775
+--- /dev/null
++++ b/backend/src/templates/partials/_delete_header.html
+@@ -0,0 +1,6 @@
++{% comment %}
++Cabeçalho (vermelho) das páginas de exclusão.
++   Uso: {% include "partials/_delete_header.html" with title="Excluir Paciente" %}
++   Opcional: subtitle (padrão: "Esta ação não pode ser desfeita.")
++{% endcomment %}
++{% include "partials/_card_header.html" with variant="danger" icon="bi-trash3-fill" title=title subtitle=subtitle|default:"Esta ação não pode ser desfeita." %}
+diff --git a/backend/src/templates/partials/_inline_formset.html b/backend/src/templates/partials/_inline_formset.html
+new file mode 100644
+index 0000000..c55ae7e
+--- /dev/null
++++ b/backend/src/templates/partials/_inline_formset.html
+@@ -0,0 +1,59 @@
++{% comment %}
++Seção de inline formset dinâmico (adicionar/remover linhas sem recarregar a página).
++   Uso: {% include "partials/_inline_formset.html" with formset=telefone_formset row_template="partials/_telefone_row.html" item="telefone" icon="bi-telephone" title="Telefones" add_label="Adicionar telefone" %}
++   A linha (row_template) recebe `f` e precisa ter: a classe "<item>-row", um botão
++   com a classe "remove-<item>" e o campo {{ f.DELETE }} dentro de um elemento .d-none.
++{% endcomment %}
++<div class="app-form-section">
++
++    <div class="app-form-section-title">
++        <i class="bi {{ icon }}"></i>
++        {{ title }}
++    </div>
++
++    {{ formset.management_form }}
++
++    {% if formset.non_form_errors %}
++        <div class="alert alert-danger">{{ formset.non_form_errors }}</div>
++    {% endif %}
++
++    <div id="{{ item }}-list">
++        {% for f in formset %}
++            {% include row_template with f=f %}
++        {% endfor %}
++    </div>
++
++    {# Molde para novas linhas; __prefix__ é trocado pelo índice no JS. #}
++    <template id="{{ item }}-empty">
++        {% include row_template with f=formset.empty_form %}
++    </template>
++
++    <button type="button" id="add-{{ item }}" class="btn btn-outline-primary btn-sm">
++        <i class="bi bi-plus-lg me-1"></i>
++        {{ add_label }}
++    </button>
++
++</div>
++
++<script>
++    (function () {
++        var list = document.getElementById('{{ item }}-list');
++        var total = document.getElementById('id_{{ formset.prefix }}-TOTAL_FORMS');
++        var template = document.getElementById('{{ item }}-empty').innerHTML;
++
++        document.getElementById('add-{{ item }}').addEventListener('click', function () {
++            var index = parseInt(total.value, 10);
++            list.insertAdjacentHTML('beforeend', template.replaceAll('__prefix__', index));
++            total.value = index + 1;
++        });
++
++        list.addEventListener('click', function (event) {
++            var button = event.target.closest('.remove-{{ item }}');
++            if (!button) return;
++            var row = button.closest('.{{ item }}-row');
++            // O Django ignora (e apaga, se já existir) formulários com DELETE marcado.
++            row.querySelector('input[name$="-DELETE"]').checked = true;
++            row.classList.add('d-none');
++        });
++    })();
++</script>
+diff --git a/backend/src/apps/pacientes/templates/pacientes/_telefone_row.html b/backend/src/templates/partials/_telefone_row.html
+similarity index 100%
+rename from backend/src/apps/pacientes/templates/pacientes/_telefone_row.html
+rename to backend/src/templates/partials/_telefone_row.html
+diff --git a/backend/src/templates/partials/_telefones_formset.html b/backend/src/templates/partials/_telefones_formset.html
+new file mode 100644
+index 0000000..5890bd8
+--- /dev/null
++++ b/backend/src/templates/partials/_telefones_formset.html
+@@ -0,0 +1,2 @@
++{# Seção "Telefones" (paciente e profissional): usa o contexto `telefone_formset`. #}
++{% include "partials/_inline_formset.html" with formset=telefone_formset row_template="partials/_telefone_row.html" item="telefone" icon="bi-telephone" title="Telefones" add_label="Adicionar telefone" %}

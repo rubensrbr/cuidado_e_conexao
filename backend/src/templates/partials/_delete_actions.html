@@ -1,0 +1,5 @@
+{% comment %}
+Rodapé das páginas de exclusão: Cancelar + botão vermelho.
+   Uso: {% url 'app:x_list' as cancel_url %}{% include "partials/_delete_actions.html" with cancel_url=cancel_url submit_label="Sim, excluir X" %}
+{% endcomment %}
+{% include "partials/_form_actions.html" with cancel_url=cancel_url submit_label=submit_label submit_icon="bi-trash3" submit_class="btn-danger" %}

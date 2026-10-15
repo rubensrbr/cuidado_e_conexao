@@ -1,0 +1,47 @@
+{% extends 'base.html' %}
+{% comment %}
+Base das páginas de confirmação de exclusão. Cada página preenche os blocos:
+   title            -> título da aba
+   delete_header    -> {% include "partials/_delete_header.html" with title="Excluir X" %}
+   delete_icon      -> classe do ícone do resumo (ex.: bi-person-fill)
+   delete_name      -> nome do registro
+   delete_meta      -> linha de detalhe do registro
+   delete_warnings  -> avisos do que será apagado (veja partials/_delete_cascade.html)
+   delete_hint      -> sugestão de alternativa (ex.: desativar em vez de excluir)
+   delete_actions   -> {% include "partials/_delete_actions.html" with cancel_url=... submit_label="..." %}
+{% endcomment %}
+
+{% block content %}
+
+<div class="app-page app-page--narrow">
+    <div class="app-card">
+
+        {% block delete_header %}{% endblock %}
+
+        <div class="app-form-body">
+
+            <div class="app-summary">
+                <span class="app-summary-avatar"><i class="bi {% block delete_icon %}bi-trash3{% endblock %}"></i></span>
+                <div>
+                    <div class="app-summary-name">{% block delete_name %}{{ object }}{% endblock %}</div>
+                    <div class="app-summary-meta">
+                        {% block delete_meta %}{% endblock %}
+                    </div>
+                </div>
+            </div>
+
+            {% block delete_warnings %}{% endblock %}
+
+            {% block delete_hint %}{% endblock %}
+
+            <form method="post">
+                {% csrf_token %}
+
+                {% block delete_actions %}{% endblock %}
+            </form>
+
+        </div>
+    </div>
+</div>
+
+{% endblock %}

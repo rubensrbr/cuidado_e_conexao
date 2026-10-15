@@ -1,57 +1,26 @@
-{% extends 'base.html' %}
+{% extends "base_delete.html" %}
 
 {% block title %}Excluir Paciente | Cuidado & Conexão{% endblock %}
 
-{% block content %}
+{% block delete_header %}{% include "partials/_delete_header.html" with title="Excluir Paciente" %}{% endblock %}
 
-<div class="app-page app-page--narrow">
-    <div class="app-card">
+{% block delete_icon %}bi-person-fill{% endblock %}
+{% block delete_name %}{{ object.nome_completo }}{% endblock %}
+{% block delete_meta %}{% if object.email %}{{ object.email }}{% else %}Sem e-mail cadastrado{% endif %}{% endblock %}
 
-        {% include "partials/_card_header.html" with variant="danger" icon="bi-trash3-fill" title="Excluir Paciente" subtitle="Esta ação não pode ser desfeita." %}
+{% block delete_warnings %}
+    {% include "partials/_delete_cascade.html" with consultas=object.consultas.count prontuarios=object.prontuarios.count faturamentos=object.faturamentos.count espera=object.lista_espera.count telefones=object.telefones.count enderecos=object.enderecos.count %}
+{% endblock %}
 
-        <div class="app-form-body">
+{% block delete_hint %}
+    <p class="text-muted small mb-0">
+        Se o paciente apenas deixou de ser atendido, prefira
+        <a href="{% url 'pacientes:paciente_update' object.uuid %}">editar o cadastro</a>
+        e desmarcar <strong>Ativo</strong>: o histórico é mantido.
+    </p>
+{% endblock %}
 
-            <div class="app-summary">
-                <span class="app-summary-avatar"><i class="bi bi-person-fill"></i></span>
-                <div>
-                    <div class="app-summary-name">{{ object.nome_completo }}</div>
-                    <div class="app-summary-meta">
-                        {% if object.email %}{{ object.email }}{% else %}Sem e-mail cadastrado{% endif %}
-                    </div>
-                </div>
-            </div>
-
-            {% with consultas=object.consultas.count prontuarios=object.prontuarios.count faturamentos=object.faturamentos.count espera=object.lista_espera.count telefones=object.telefones.count enderecos=object.enderecos.count %}
-                {% if consultas or prontuarios or faturamentos or espera or telefones or enderecos %}
-                    <div class="app-alert-danger">
-                        <strong><i class="bi bi-exclamation-triangle-fill me-1"></i> Ao excluir, também serão apagados:</strong>
-                        <ul>
-                            {% if consultas %}<li>{{ consultas }} consulta{{ consultas|pluralize }}</li>{% endif %}
-                            {% if prontuarios %}<li>{{ prontuarios }} prontuário{{ prontuarios|pluralize }}</li>{% endif %}
-                            {% if faturamentos %}<li>{{ faturamentos }} faturamento{{ faturamentos|pluralize }}</li>{% endif %}
-                            {% if espera %}<li>{{ espera }} registro{{ espera|pluralize }} na lista de espera</li>{% endif %}
-                            {% if telefones %}<li>{{ telefones }} telefone{{ telefones|pluralize }}</li>{% endif %}
-                            {% if enderecos %}<li>{{ enderecos }} endereço{{ enderecos|pluralize }}</li>{% endif %}
-                        </ul>
-                    </div>
-                {% endif %}
-            {% endwith %}
-
-            <p class="text-muted small mb-0">
-                Se o paciente apenas deixou de ser atendido, prefira
-                <a href="{% url 'pacientes:paciente_update' object.uuid %}">editar o cadastro</a>
-                e desmarcar <strong>Ativo</strong>: o histórico é mantido.
-            </p>
-
-            <form method="post">
-                {% csrf_token %}
-
-                {% url 'pacientes:paciente_list' as cancel_url %}
-                {% include "partials/_form_actions.html" with cancel_url=cancel_url submit_label="Sim, excluir paciente" submit_icon="bi-trash3" submit_class="btn-danger" %}
-            </form>
-
-        </div>
-    </div>
-</div>
-
+{% block delete_actions %}
+    {% url 'pacientes:paciente_list' as cancel_url %}
+    {% include "partials/_delete_actions.html" with cancel_url=cancel_url submit_label="Sim, excluir paciente" %}
 {% endblock %}

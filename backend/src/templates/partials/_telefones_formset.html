@@ -1,0 +1,2 @@
+{# Seção "Telefones" (paciente e profissional): usa o contexto `telefone_formset`. #}
+{% include "partials/_inline_formset.html" with formset=telefone_formset row_template="partials/_telefone_row.html" item="telefone" icon="bi-telephone" title="Telefones" add_label="Adicionar telefone" %}
