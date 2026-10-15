@@ -65,7 +65,7 @@ class Consulta(BaseModel):
     class Meta:
         verbose_name = "Consulta"
         verbose_name_plural = "Consultas"
-        ordering = ["-data_consulta", "-hora_inicio"]
+        ordering = ["data_consulta", "-hora_inicio"]
         indexes = [
             models.Index(fields=["data_consulta"]),
             models.Index(fields=["paciente", "profissional"]),

@@ -1,3 +1,4 @@
+from django.contrib import messages
 from django.db import transaction
 from django.db.models import Prefetch
 from django.shortcuts import redirect
@@ -25,8 +26,14 @@ class PacienteListView(ListView):
     def get_queryset(self):
         # Uma query extra para todos os telefones da página (evita N+1),
         # com o telefone principal primeiro.
-        return super().get_queryset().prefetch_related(
-            Prefetch("telefones", queryset=Telefone.objects.order_by("-principal", "id"))
+        return (
+            super()
+            .get_queryset()
+            .prefetch_related(
+                Prefetch(
+                    "telefones", queryset=Telefone.objects.order_by("-principal", "id")
+                )
+            )
         )
 
 
@@ -44,11 +51,12 @@ class PacienteFormsetMixin:
     form_class = PacienteForm
     template_name = "pacientes/paciente_form.html"
     success_url = reverse_lazy("pacientes:paciente_list")
+    success_message = "Paciente salvo com sucesso!"
 
     def get_telefone_formset(self):
         return TelefoneFormSet(
             self.request.POST or None,
-            instance=self.object,  # None ao criar
+            instance=self.object,
             prefix="telefones",
         )
 
@@ -68,6 +76,9 @@ class PacienteFormsetMixin:
             self.object = form.save()
             telefone_formset.instance = self.object
             telefone_formset.save()
+
+        messages.success(self.request, self.success_message)
+
         return redirect(self.get_success_url())
 
     def form_invalid(self, form):
@@ -86,6 +97,7 @@ class PacienteCreateView(PacienteFormsetMixin, CreateView):
 class PacienteUpdateView(PacienteFormsetMixin, UpdateView):
     slug_field = "uuid"
     slug_url_kwarg = "uuid"
+    success_message = "Paciente atualizado com sucesso!"
 
 
 class PacienteDeleteView(DeleteView):
