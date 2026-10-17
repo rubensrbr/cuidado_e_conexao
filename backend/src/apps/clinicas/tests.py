@@ -1,8 +1,18 @@
+from django.contrib.auth import get_user_model
+from django.contrib.auth.models import Group
 from django.core.exceptions import ValidationError
-from django.db import IntegrityError, transaction
+from django.db import IntegrityError, connection, models, transaction
+from django.db.models import ProtectedError
+from django.forms import modelform_factory
 from django.test import SimpleTestCase, TestCase
 
-from .models import Clinica
+from .models import Clinica, Membro, TenantModel
+from .tenancy import (
+    ClinicaIncorreta,
+    SemClinicaAtual,
+    clinica_atual,
+    get_clinica_atual,
+)
 from .validators import validar_cnpj, validar_slug_nao_reservado
 
 CNPJ_VALIDO = "11222333000181"
@@ -89,3 +99,154 @@ class ClinicaModelTests(TestCase):
         self.criar(nome="Zeta", slug="zeta")
         self.criar(nome="Alfa", cnpj=OUTRO_CNPJ_VALIDO, slug="alfa")
         self.assertEqual([c.nome for c in Clinica.objects.all()], ["Alfa", "Zeta"])
+
+
+class MembroTests(TestCase):
+    @classmethod
+    def setUpTestData(cls):
+        cls.user = get_user_model().objects.create_user("maria", password="x")
+        cls.vida = Clinica.objects.create(
+            nome="Vida", cnpj=CNPJ_VALIDO, slug="vida"
+        )
+        cls.sol = Clinica.objects.create(
+            nome="Sol", cnpj=OUTRO_CNPJ_VALIDO, slug="sol"
+        )
+        cls.recepcao = Group.objects.create(name="Recepção")
+        cls.admin = Group.objects.create(name="Administração")
+
+    def test_str(self):
+        membro = Membro.objects.create(
+            user=self.user, clinica=self.vida, grupo=self.recepcao
+        )
+        self.assertEqual(str(membro), "maria @ Vida (Recepção)")
+        self.assertTrue(membro.ativo)
+
+    def test_usuario_pode_ter_papeis_diferentes_em_clinicas_diferentes(self):
+        Membro.objects.create(user=self.user, clinica=self.vida, grupo=self.admin)
+        Membro.objects.create(user=self.user, clinica=self.sol, grupo=self.recepcao)
+        papeis = {m.clinica.slug: m.grupo.name for m in self.user.membros.all()}
+        self.assertEqual(papeis, {"vida": "Administração", "sol": "Recepção"})
+
+    def test_um_vinculo_por_usuario_e_clinica(self):
+        Membro.objects.create(user=self.user, clinica=self.vida, grupo=self.admin)
+        with self.assertRaises(IntegrityError), transaction.atomic():
+            Membro.objects.create(
+                user=self.user, clinica=self.vida, grupo=self.recepcao
+            )
+
+    def test_grupo_em_uso_nao_pode_ser_apagado(self):
+        Membro.objects.create(user=self.user, clinica=self.vida, grupo=self.admin)
+        with self.assertRaises(ProtectedError):
+            self.admin.delete()
+
+    def test_apagar_usuario_ou_clinica_remove_o_vinculo(self):
+        Membro.objects.create(user=self.user, clinica=self.vida, grupo=self.admin)
+        self.user.delete()
+        self.assertEqual(Membro.objects.count(), 0)
+
+
+class Nota(TenantModel):
+    """Modelo só para os testes: representa qualquer tabela de uma clínica."""
+
+    texto = models.CharField(max_length=50)
+
+    class Meta:
+        app_label = "clinicas"
+
+
+class TenantModelTests(TestCase):
+    @classmethod
+    def setUpClass(cls):
+        # A tabela do modelo de teste não vem de migração; criamos fora da
+        # transação do TestCase (o schema editor do SQLite exige isso).
+        with connection.schema_editor() as editor:
+            editor.create_model(Nota)
+        super().setUpClass()
+
+    @classmethod
+    def tearDownClass(cls):
+        super().tearDownClass()
+        with connection.schema_editor() as editor:
+            editor.delete_model(Nota)
+
+    @classmethod
+    def setUpTestData(cls):
+        cls.vida = Clinica.objects.create(
+            nome="Vida", cnpj=CNPJ_VALIDO, slug="vida"
+        )
+        cls.sol = Clinica.objects.create(
+            nome="Sol", cnpj=OUTRO_CNPJ_VALIDO, slug="sol"
+        )
+        with clinica_atual(cls.vida):
+            cls.nota_vida = Nota.objects.create(texto="da Vida")
+        with clinica_atual(cls.sol):
+            cls.nota_sol = Nota.objects.create(texto="do Sol")
+
+    def test_sem_clinica_atual_nao_devolve_nada(self):
+        self.assertIsNone(get_clinica_atual())
+        self.assertEqual(Nota.objects.count(), 0)
+        self.assertEqual(Nota.todas.count(), 2)
+
+    def test_cada_clinica_ve_so_os_proprios_dados(self):
+        with clinica_atual(self.vida):
+            self.assertEqual([n.texto for n in Nota.objects.all()], ["da Vida"])
+        with clinica_atual(self.sol):
+            self.assertEqual([n.texto for n in Nota.objects.all()], ["do Sol"])
+
+    def test_objeto_de_outra_clinica_nao_e_encontrado(self):
+        # É o que vira 404 nas views: acertar o uuid de outra clínica não adianta.
+        with clinica_atual(self.vida):
+            with self.assertRaises(Nota.DoesNotExist):
+                Nota.objects.get(uuid=self.nota_sol.uuid)
+            self.assertFalse(Nota.objects.filter(pk=self.nota_sol.pk).exists())
+
+    def test_manager_padrao_e_o_filtrado(self):
+        # ModelForms e relações reversas usam _default_manager.
+        with clinica_atual(self.vida):
+            self.assertEqual(Nota._default_manager.count(), 1)
+
+    def test_clinica_atual_e_restaurada_ao_sair_do_bloco(self):
+        with clinica_atual(self.vida):
+            with clinica_atual(self.sol):
+                self.assertEqual(get_clinica_atual(), self.sol)
+            self.assertEqual(get_clinica_atual(), self.vida)
+        self.assertIsNone(get_clinica_atual())
+
+    def test_clinica_atual_e_restaurada_mesmo_com_erro(self):
+        with self.assertRaises(RuntimeError):
+            with clinica_atual(self.vida):
+                raise RuntimeError("falha")
+        self.assertIsNone(get_clinica_atual())
+
+    def test_save_preenche_a_clinica_atual(self):
+        with clinica_atual(self.vida):
+            nota = Nota(texto="nova")
+            nota.save()
+        self.assertEqual(nota.clinica, self.vida)
+
+    def test_save_sem_clinica_atual_falha(self):
+        with self.assertRaises(SemClinicaAtual):
+            Nota(texto="solta").save()
+
+    def test_nao_grava_dado_de_outra_clinica(self):
+        with clinica_atual(self.vida):
+            with self.assertRaises(ClinicaIncorreta):
+                Nota(texto="invasão", clinica=self.sol).save()
+            # nem alterando um objeto que veio de outra clínica
+            with self.assertRaises(ClinicaIncorreta):
+                self.nota_sol.save()
+        self.assertEqual(Nota.todas.filter(texto="invasão").count(), 0)
+
+    def test_bulk_create_preenche_a_clinica_atual(self):
+        with clinica_atual(self.sol):
+            Nota.objects.bulk_create([Nota(texto="a"), Nota(texto="b")])
+        self.assertEqual(Nota.todas.filter(clinica=self.sol).count(), 3)
+        self.assertEqual(Nota.todas.filter(clinica=self.vida).count(), 1)
+
+    def test_campo_clinica_nao_aparece_em_formularios(self):
+        Formulario = modelform_factory(Nota, fields="__all__")
+        self.assertNotIn("clinica", Formulario.base_fields)
+
+    def test_clinica_com_dados_nao_pode_ser_apagada(self):
+        with self.assertRaises(ProtectedError):
+            self.vida.delete()

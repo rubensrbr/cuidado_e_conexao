@@ -1,7 +1,10 @@
+from django.conf import settings
+from django.contrib.auth.models import Group
 from django.db import models
 
 from core.models import BaseModel
 
+from .tenancy import TenantModel  # noqa: F401  (reexportado: `from clinicas.models import TenantModel`)
 from .validators import (
     somente_digitos,
     validar_cnpj,
@@ -67,3 +70,50 @@ class Clinica(BaseModel):
         if len(c) != 14:
             return c
         return f"{c[:2]}.{c[2:5]}.{c[5:8]}/{c[8:12]}-{c[12:]}"
+
+
+class Membro(BaseModel):
+    """
+    Vínculo de um usuário com uma clínica, com o papel que ele exerce nela.
+
+    Um usuário pode ter vários vínculos (um por clínica); o papel é um
+    `Group` do Django, cujas permissões valem apenas dentro daquela clínica.
+    """
+
+    user = models.ForeignKey(
+        settings.AUTH_USER_MODEL,
+        on_delete=models.CASCADE,
+        related_name="membros",
+        verbose_name="Usuário",
+    )
+    clinica = models.ForeignKey(
+        Clinica,
+        on_delete=models.CASCADE,
+        related_name="membros",
+        verbose_name="Clínica",
+    )
+    grupo = models.ForeignKey(
+        Group,
+        on_delete=models.PROTECT,
+        related_name="membros",
+        verbose_name="Papel",
+        help_text="Grupo de permissões que o usuário tem nesta clínica.",
+    )
+    ativo = models.BooleanField(
+        default=True,
+        verbose_name="Ativo",
+        help_text="Desmarque para remover o acesso sem apagar o vínculo.",
+    )
+
+    class Meta:
+        verbose_name = "Membro"
+        verbose_name_plural = "Membros"
+        ordering = ["clinica__nome", "user__username"]
+        constraints = [
+            models.UniqueConstraint(
+                fields=["user", "clinica"], name="membro_unico_por_clinica"
+            )
+        ]
+
+    def __str__(self):
+        return f"{self.user} @ {self.clinica} ({self.grupo})"

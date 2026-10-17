@@ -1,6 +1,13 @@
 from django.contrib import admin
 
-from .models import Clinica
+from .models import Clinica, Membro
+
+
+class MembroInline(admin.TabularInline):
+    model = Membro
+    extra = 0
+    fields = ("user", "grupo", "ativo")
+    raw_id_fields = ("user",)
 
 
 @admin.register(Clinica)
@@ -10,6 +17,7 @@ class ClinicaAdmin(admin.ModelAdmin):
     search_fields = ("nome", "razao_social", "cnpj", "slug")
     prepopulated_fields = {"slug": ("nome",)}
     readonly_fields = ("uuid", "created_at", "modified_at")
+    inlines = [MembroInline]
     fieldsets = (
         ("Identificação", {"fields": ("nome", "razao_social", "cnpj", "slug")}),
         ("Contato", {"fields": ("email",)}),
@@ -20,3 +28,12 @@ class ClinicaAdmin(admin.ModelAdmin):
     @admin.display(description="CNPJ")
     def cnpj_formatado(self, obj):
         return obj.cnpj_formatado
+
+
+@admin.register(Membro)
+class MembroAdmin(admin.ModelAdmin):
+    list_display = ("user", "clinica", "grupo", "ativo")
+    list_filter = ("ativo", "clinica", "grupo")
+    search_fields = ("user__username", "user__email", "clinica__nome")
+    raw_id_fields = ("user",)
+    readonly_fields = ("uuid", "created_at", "modified_at")
