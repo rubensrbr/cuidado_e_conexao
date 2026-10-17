@@ -1,0 +1,11 @@
+services:
+  web:
+    build:
+      context: .
+      target: prod
+    command: gunicorn src.wsgi:application --bind 0.0.0.0:8000 --workers 3
+    restart: always
+    environment:
+      DJANGO_SETTINGS_MODULE: src.settings
+    ports:
+      - "8000:8000"

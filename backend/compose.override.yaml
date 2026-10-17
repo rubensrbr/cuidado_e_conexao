@@ -1,0 +1,17 @@
+services:
+  db:
+    ports:
+      - "5433:5432"
+
+  web:
+    build:
+      context: .
+      target: dev
+    command: python manage.py runserver 0.0.0.0:8000
+    environment:
+      DJANGO_SETTINGS_MODULE: src.settings
+    volumes:
+      - .:/app
+      - /opt/venv
+    ports:
+      - "8000:8000"
