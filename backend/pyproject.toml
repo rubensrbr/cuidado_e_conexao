@@ -9,3 +9,8 @@ dependencies = [
     "django-extensions>=4.1",
     "psycopg[binary]>=3.3.6",
 ]
+
+[dependency-groups]
+dev = [
+    "django-stubs>=6.1.2",
+]
