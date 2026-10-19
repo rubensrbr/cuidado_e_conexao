@@ -4,7 +4,7 @@ from django.db import models
 
 from core.models import BaseModel
 
-from .tenancy import TenantModel  # noqa: F401  (reexportado: `from clinicas.models import TenantModel`)
+from .tenancy import TenantModel
 from .validators import (
     somente_digitos,
     validar_cnpj,
