@@ -1,0 +1,179 @@
+version: "3"
+
+# Usage: `task` lists everything. Pass extra args after `--`, e.g.:
+#   task startapp -- agendamentos
+#   task manage -- shell
+#   task add -- django-extensions
+
+vars:
+  DC: docker compose
+  EXEC: docker compose exec web
+  MANAGE: docker compose exec web python manage.py
+
+tasks:
+  default:
+    desc: List available tasks
+    silent: true
+    cmds:
+      - task --list
+
+  # ---------- environment ----------
+  setup:
+    desc: First-time setup (.env, build, start, migrate)
+    cmds:
+      - task: env
+      - task: build
+      - task: up
+      - task: migrate
+      - echo "Ready at http://localhost:8000 — run 'task createsuperuser' next."
+
+  env:
+    desc: Create .env from .env.example if it does not exist
+    status:
+      - test -f .env
+    cmds:
+      - cp .env.example .env
+      - echo "Created .env — review the values before continuing."
+
+  build:
+    desc: Build the images
+    cmds:
+      - "{{.DC}} build"
+
+  rebuild:
+    desc: Rebuild and recreate containers (also renews the /opt/venv volume after dependency changes)
+    cmds:
+      - "{{.DC}} up -d --build -V"
+
+  up:
+    desc: Start db and web in the background
+    cmds:
+      - "{{.DC}} up -d"
+
+  runserver:
+    desc: Start the stack in the foreground (logs attached, Ctrl+C to stop)
+    cmds:
+      - "{{.DC}} up"
+
+  down:
+    desc: Stop and remove containers (keeps the database volume)
+    cmds:
+      - "{{.DC}} down"
+
+
+  stop:
+    desc: Stop containers without removing them
+    cmds:
+      - "{{.DC}} stop"
+
+  start:
+    desc: Start previously stopped containers
+    cmds:
+      - "{{.DC}} start"
+
+  restart:
+    desc: Restart the web service
+    cmds:
+      - "{{.DC}} restart web"
+
+  ps:
+    desc: Show running services
+    cmds:
+      - "{{.DC}} ps"
+
+  logs:
+    desc: Follow logs (optionally for one service, e.g. task logs -- web)
+    cmds:
+      - "{{.DC}} logs -f {{.CLI_ARGS}}"
+
+  reset-db:
+    desc: DANGER — drop the database volume and start fresh
+    prompt: This deletes all database data. Continue?
+    cmds:
+      - "{{.DC}} down -v"
+      - task: up
+      - task: migrate
+
+  # ---------- django ----------
+  manage:
+    desc: Run any manage.py command (task manage -- <args>)
+    interactive: true
+    cmds:
+      - "{{.MANAGE}} {{.CLI_ARGS}}"
+
+  migrate:
+    desc: Apply migrations
+    cmds:
+      - "{{.MANAGE}} migrate"
+
+  makemigrations:
+    desc: Create migrations (optionally for an app, task makemigrations -- profissionais)
+    cmds:
+      - "{{.MANAGE}} makemigrations {{.CLI_ARGS}}"
+
+  showmigrations:
+    desc: Show migration status
+    cmds:
+      - "{{.MANAGE}} showmigrations"
+
+  createsuperuser:
+    desc: Create a Django superuser
+    interactive: true
+    cmds:
+      - "{{.MANAGE}} createsuperuser"
+
+  startapp:
+    desc: Create a new app (task startapp -- <name>), files owned by your user
+    preconditions:
+      - sh: test -n "{{.CLI_ARGS}}"
+        msg: "Usage: task startapp -- <app_name>"
+    cmds:
+      - docker compose exec --user "$(id -u):$(id -g)" web python manage.py startapp {{.CLI_ARGS}}
+
+  shell:
+    desc: Django shell with django-extensions (auto-imports all models)
+    interactive: true
+    cmds:
+      - "{{.MANAGE}} shell_plus"
+  check:
+    desc: Run Django system checks
+    cmds:
+      - "{{.MANAGE}} check"
+
+  test:
+    desc: Run tests (optionally pass labels, task test -- core)
+    cmds:
+      - "{{.MANAGE}} test {{.CLI_ARGS}}"
+
+  bash:
+    desc: Open a bash shell in the web container
+    interactive: true
+    cmds:
+      - "{{.EXEC}} bash"
+
+  # ---------- database ----------
+  dbshell:
+    desc: Open psql inside the db container
+    interactive: true
+    cmds:
+      - docker compose exec db sh -c 'psql -U "$POSTGRES_USER" -d "$POSTGRES_DB"'
+
+  # ---------- dependencies (uv) ----------
+  add:
+    desc: Add a dependency with uv (task add -- <package>)
+    preconditions:
+      - sh: test -n "{{.CLI_ARGS}}"
+        msg: "Usage: task add -- <package>"
+    cmds:
+      - "{{.EXEC}} uv add {{.CLI_ARGS}}"
+
+  sync:
+    desc: Sync dependencies from uv.lock
+    cmds:
+      - "{{.EXEC}} uv sync --frozen"
+
+  lock:
+    desc: Update uv.lock
+    cmds:
+      - "{{.EXEC}} uv lock"
+

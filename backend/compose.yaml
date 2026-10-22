@@ -1,3 +1,6 @@
+# Base: what is shared by every environment.
+# Dev extras live in compose.override.yml (loaded automatically).
+# Prod: docker compose -f compose.yml -f compose.prod.yaml up -d
 services:
   db:
     image: postgres:17-alpine
@@ -5,10 +8,9 @@ services:
     env_file: .env
     volumes:
       - postgres_data:/var/lib/postgresql/data
-    ports:
-      - "5433:5432"
     healthcheck:
-      test: ["CMD-SHELL", "pg_isready -U postgres"]
+      # $$ makes the container's shell expand the variable, not Compose
+      test: ["CMD-SHELL", "pg_isready -U $${POSTGRES_USER:-postgres} -d $${POSTGRES_DB:-postgres}"]
       interval: 5s
       timeout: 5s
       retries: 10
@@ -16,18 +18,12 @@ services:
   web:
     build:
       context: .
-      target: dev
-    command: python manage.py runserver 0.0.0.0:8000
     restart: unless-stopped
     env_file: .env
-    volumes:
-      - .:/app
-      - /opt/venv   
-    ports:
-      - "8000:8000"
     depends_on:
       db:
         condition: service_healthy
 
 volumes:
   postgres_data:
+
