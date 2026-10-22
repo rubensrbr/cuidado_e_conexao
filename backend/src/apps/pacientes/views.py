@@ -11,7 +11,7 @@ from django.views.generic import (
     DeleteView,
 )
 
-from .forms import PacienteForm, TelefoneFormSet
+from .forms import PacienteForm, ProntuarioForm, TelefoneFormSet
 from telefones.models import Telefone
 
 from .models import Paciente, Prontuario
@@ -119,18 +119,9 @@ class ProntuarioDetailView(DetailView):
 class ProntuarioCreateView(CreateView):
     model = Prontuario
     template_name = "pacientes/prontuario_form.html"
-    fields = [
-        "paciente",
-        "profissional",
-        "consulta",
-        "data_registro",
-        "codigo_cid",
-        "queixa_principal",
-        "plano_tratamento",
-        "evolucao",
-        "medicamentos",
-        "avaliacao_risco",
-    ]
+    # form_class (e não `fields`) para usar o TenantFormMixin: só pacientes da
+    # clínica atual aparecem e são aceitos.
+    form_class = ProntuarioForm
 
     def get_success_url(self):
         return reverse_lazy(

@@ -1,8 +1,8 @@
 from django.db import models
-from core.models import BaseModel
+from clinicas.tenancy import TenantModel
 
 
-class Paciente(BaseModel):
+class Paciente(TenantModel):
     """Informações dos pacientes"""
 
     GENERO_CHOICES = [
@@ -75,7 +75,7 @@ class Paciente(BaseModel):
     #     return
 
 
-class Prontuario(BaseModel):
+class Prontuario(TenantModel):
     """Prontuário médico/psicológico do paciente"""
 
     paciente = models.ForeignKey(

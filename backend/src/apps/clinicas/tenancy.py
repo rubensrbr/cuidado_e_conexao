@@ -10,9 +10,12 @@ Regras importantes:
 - Sem clínica atual o manager devolve NADA (falha fechada), nunca "tudo".
 - `Modelo.todas` é o manager SEM filtro: use só em admin da plataforma,
   comandos de manutenção e testes.
-- `Model.objects` é o manager padrão (`_default_manager`), então ModelForms
-  (ModelChoiceField) e relações reversas (`paciente.consultas`) já são
-  filtrados por clínica sem código extra.
+- `Model.objects` é o manager padrão (`_default_manager`), então views
+  genéricas, consultas e relações reversas (`paciente.consultas`) já são
+  filtradas por clínica sem código extra.
+- ModelForms são a exceção: o Django monta o queryset dos campos de escolha na
+  importação da classe, sem clínica atual (ficariam vazios). Formulários com
+  FK/M2M para modelos de clínica devem usar `clinicas.forms.TenantFormMixin`.
 """
 
 from contextlib import contextmanager

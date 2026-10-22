@@ -1,6 +1,8 @@
 from django import forms
 from django.utils import timezone
 
+from clinicas.forms import TenantFormMixin
+
 from .models import Paciente, Prontuario
 from telefones.forms import TelefoneForm
 from telefones.models import Telefone
@@ -43,7 +45,7 @@ class PacienteForm(forms.ModelForm):
             "genero": "Gênero",
             "contato_emergencia_nome": "Contato de Emergência - Nome",
             "contato_emergencia_telefone": "Contato de Emergência - Telefone",
-            "convenio": "convênio",
+            "convenio": "Convênio",
             "numero_carteirinha": "Número da Carteirinha",
         }
 
@@ -56,7 +58,7 @@ class PacienteForm(forms.ModelForm):
         return data_nascimento
 
 
-class ProntuarioForm(forms.ModelForm):
+class ProntuarioForm(TenantFormMixin, forms.ModelForm):
     class Meta:
         model = Prontuario
         fields = [
