@@ -2,6 +2,7 @@ from decimal import Decimal
 
 from django import forms
 
+from clinicas.forms import TenantFormMixin
 from enderecos.forms import EnderecoForm
 from enderecos.models import Endereco
 from telefones.forms import TelefoneForm
@@ -19,7 +20,7 @@ class TipoProfissionalForm(forms.ModelForm):
         }
 
 
-class ProfissionalForm(forms.ModelForm):
+class ProfissionalForm(TenantFormMixin, forms.ModelForm):
     class Meta:
         model = Profissional
         fields = [
@@ -54,7 +55,7 @@ class ProfissionalForm(forms.ModelForm):
         return valor_hora
 
 
-class DisponibilidadeForm(forms.ModelForm):
+class DisponibilidadeForm(TenantFormMixin, forms.ModelForm):
     class Meta:
         model = Disponibilidade
         fields = [

@@ -58,15 +58,15 @@ class PacienteTenantModelTests(TestCase):
             self.beto.save()
 
     def test_prontuario_segue_a_clinica_e_fica_isolado(self):
-        profissional = Profissional.objects.create(
-            primeiro_nome="Dra",
-            sobrenome="Lima",
-            email="lima@example.com",
-            tipo_profissional=TipoProfissional.objects.first(),
-            numero_registro="123",
-            valor_hora="100.00",
-        )
         with clinica_atual(self.vida):
+            profissional = Profissional.objects.create(
+                primeiro_nome="Dra",
+                sobrenome="Lima",
+                email="lima@example.com",
+                tipo_profissional=TipoProfissional.objects.first(),
+                numero_registro="123",
+                valor_hora="100.00",
+            )
             prontuario = Prontuario.objects.create(
                 paciente=self.ana,
                 profissional=profissional,

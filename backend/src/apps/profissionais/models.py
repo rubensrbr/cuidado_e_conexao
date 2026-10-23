@@ -1,8 +1,9 @@
 from django.db import models
+from clinicas.tenancy import TenantModel
 from core.models import BaseModel
 
 
-class Profissional(BaseModel):
+class Profissional(TenantModel):
     """Profissionais da clínica (psicólogos, médicos, etc)"""
 
     user = models.OneToOneField(
@@ -26,7 +27,6 @@ class Profissional(BaseModel):
 
     email = models.EmailField(
         max_length=150,
-        unique=True,
         verbose_name="E-mail",
     )
 
@@ -65,6 +65,13 @@ class Profissional(BaseModel):
         verbose_name = "Profissional"
         verbose_name_plural = "Profissionais"
         ordering = ["sobrenome", "primeiro_nome"]
+        constraints = [
+            models.UniqueConstraint(
+                fields=["clinica", "email"],
+                name="profissional_email_unico_por_clinica",
+                violation_error_message="Já existe um profissional com este e-mail nesta clínica.",
+            ),
+        ]
 
     def __str__(self):
         return f"{self.primeiro_nome} {self.sobrenome} - {self.tipo_profissional}"
@@ -74,7 +81,7 @@ class Profissional(BaseModel):
         return f"{self.primeiro_nome} {self.sobrenome}"
 
 
-class Disponibilidade(BaseModel):
+class Disponibilidade(TenantModel):
     """Horários disponíveis dos profissionais"""
 
     DIA_SEMANA_CHOICES = [

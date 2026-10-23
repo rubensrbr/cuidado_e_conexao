@@ -2,10 +2,12 @@ from django import forms
 
 from src.apps import pacientes
 
+from clinicas.forms import TenantFormMixin
+
 from .models import Consulta, Lembrete, ListaEspera
 
 
-class ConsultaForm(forms.ModelForm):
+class ConsultaForm(TenantFormMixin, forms.ModelForm):
     class Meta:
         model = Consulta
         fields = [
@@ -121,7 +123,7 @@ class LembreteForm(forms.ModelForm):
         return cleaned_data
 
 
-class ListaEsperaForm(forms.ModelForm):
+class ListaEsperaForm(TenantFormMixin, forms.ModelForm):
     # dias_preferidos é um JSONField (lista de chaves, ex.: ["segunda", "quarta"]);
     # sem este campo explícito o Django mostraria um textarea pedindo JSON cru.
     dias_preferidos = forms.MultipleChoiceField(

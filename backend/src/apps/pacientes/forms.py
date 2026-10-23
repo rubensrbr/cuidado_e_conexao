@@ -8,7 +8,7 @@ from telefones.forms import TelefoneForm
 from telefones.models import Telefone
 
 
-class PacienteForm(forms.ModelForm):
+class PacienteForm(TenantFormMixin, forms.ModelForm):
     class Meta:
         model = Paciente
         fields = [
@@ -45,7 +45,7 @@ class PacienteForm(forms.ModelForm):
             "genero": "Gênero",
             "contato_emergencia_nome": "Contato de Emergência - Nome",
             "contato_emergencia_telefone": "Contato de Emergência - Telefone",
-            "convenio": "Convênio",
+            "convenio": "convênio",
             "numero_carteirinha": "Número da Carteirinha",
         }
 

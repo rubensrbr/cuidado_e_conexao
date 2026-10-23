@@ -6,6 +6,7 @@ from django.views.generic import (
     UpdateView,
     DeleteView,
 )
+from .forms import FaturamentoForm
 from .models import Faturamento
 
 
@@ -26,36 +27,14 @@ class FaturamentoDetailView(DetailView):
 class FaturamentoCreateView(CreateView):
     model = Faturamento
     template_name = "faturamentos/faturamento_form.html"
-    fields = [
-        "paciente",
-        "consulta",
-        "data_servico",
-        "valor_cobrado",
-        "valor_pago",
-        "valor_convenio",
-        "metodo_pagamento",
-        "status_pagamento",
-        "numero_nota",
-        "observacoes",
-    ]
+    form_class = FaturamentoForm
     success_url = reverse_lazy("faturamentos:faturamento_list")
 
 
 class FaturamentoUpdateView(UpdateView):
     model = Faturamento
     template_name = "faturamentos/faturamento_form.html"
-    fields = [
-        "paciente",
-        "consulta",
-        "data_servico",
-        "valor_cobrado",
-        "valor_pago",
-        "valor_convenio",
-        "metodo_pagamento",
-        "status_pagamento",
-        "numero_nota",
-        "observacoes",
-    ]
+    form_class = FaturamentoForm
     slug_field = "uuid"
     slug_url_kwarg = "uuid"
     success_url = reverse_lazy("faturamentos:faturamento_list")

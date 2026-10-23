@@ -2,10 +2,12 @@ from decimal import Decimal
 
 from django import forms
 
+from clinicas.forms import TenantFormMixin
+
 from .models import Faturamento
 
 
-class FaturamentoForm(forms.ModelForm):
+class FaturamentoForm(TenantFormMixin, forms.ModelForm):
     class Meta:
         model = Faturamento
         fields = [
