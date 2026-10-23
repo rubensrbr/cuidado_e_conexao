@@ -40,6 +40,7 @@ class ProfissionalFormsetMixin:
     form_class = ProfissionalForm
     template_name = "profissionais/profissional_form.html"
     success_url = reverse_lazy("profissionais:profissional_list")
+    success_message = "Profissional salvo com sucesso!"
 
     def get_formsets(self):
         data = self.request.POST if self.request.method == "POST" else None
@@ -89,6 +90,7 @@ class ProfissionalCreateView(ProfissionalFormsetMixin, CreateView):
 class ProfissionalUpdateView(ProfissionalFormsetMixin, UpdateView):
     slug_field = "uuid"
     slug_url_kwarg = "uuid"
+    success_message = "Profissional atualizado com sucesso!"
 
 
 class ProfissionalDeleteView(DeleteView):
