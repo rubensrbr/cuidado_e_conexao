@@ -7,7 +7,7 @@ from django.views.generic import (
     UpdateView,
     DeleteView,
 )
-from .forms import ConsultaForm, ListaEsperaForm
+from .forms import ConsultaForm, LembreteForm, ListaEsperaForm
 from .models import Consulta, Lembrete, ListaEspera
 
 
@@ -64,7 +64,9 @@ class LembreteListView(ListView):
 class LembreteCreateView(CreateView):
     model = Lembrete
     template_name = "consultas/lembrete_form.html"
-    fields = ["consulta", "tipo_lembrete", "data_hora_envio", "enviado_em", "status"]
+    # form_class (e não `fields`) para usar o TenantFormMixin: só consultas da
+    # clínica atual aparecem e são aceitas.
+    form_class = LembreteForm
     success_url = reverse_lazy("consultas:lembrete_list")
 
 

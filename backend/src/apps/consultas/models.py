@@ -1,8 +1,8 @@
 from django.db import models
-from core.models import BaseModel
+from clinicas.tenancy import TenantModel
 
 
-class Consulta(BaseModel):
+class Consulta(TenantModel):
     """Consultas agendadas"""
 
     TIPO_CHOICES = [
@@ -75,7 +75,7 @@ class Consulta(BaseModel):
         return f"{self.paciente.nome_completo} - {self.profissional.nome_completo} - {self.data_consulta}"
 
 
-class Lembrete(BaseModel):
+class Lembrete(TenantModel):
     """Lembretes de consultas"""
 
     TIPO_CHOICES = [
@@ -126,7 +126,7 @@ class Lembrete(BaseModel):
         return f"Lembrete {self.get_tipo_lembrete_display()} - {self.consulta}"
 
 
-class ListaEspera(BaseModel):
+class ListaEspera(TenantModel):
     """Lista de espera para consultas"""
 
     PRIORIDADE_CHOICES = [

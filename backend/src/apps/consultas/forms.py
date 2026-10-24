@@ -90,7 +90,7 @@ class ConsultaForm(TenantFormMixin, forms.ModelForm):
         return cleaned_data
 
 
-class LembreteForm(forms.ModelForm):
+class LembreteForm(TenantFormMixin, forms.ModelForm):
     class Meta:
         model = Lembrete
         fields = [
