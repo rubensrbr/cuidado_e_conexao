@@ -1,0 +1,381 @@
+diff --git a/backend/src/apps/enderecos/migrations/0004_endereco_clinica.py b/backend/src/apps/enderecos/migrations/0004_endereco_clinica.py
+new file mode 100644
+index 0000000..090e431
+--- /dev/null
++++ b/backend/src/apps/enderecos/migrations/0004_endereco_clinica.py
+@@ -0,0 +1,27 @@
++# Passo 1 de 3 (multi-tenancy): cria a coluna `clinica` ainda NULA, para que as
++# linhas já existentes continuem válidas até a 0005 preenchê-las.
++
++import django.db.models.deletion
++from django.db import migrations, models
++
++
++class Migration(migrations.Migration):
++
++    dependencies = [
++        ("clinicas", "0002_membro"),
++        ("enderecos", "0003_remove_endereco_estado_alter_endereco_cidade"),
++    ]
++
++    operations = [
++        migrations.AddField(
++            model_name="endereco",
++            name="clinica",
++            field=models.ForeignKey(
++                editable=False,
++                null=True,
++                on_delete=django.db.models.deletion.PROTECT,
++                to="clinicas.clinica",
++                verbose_name="Clínica",
++            ),
++        ),
++    ]
+diff --git a/backend/src/apps/enderecos/migrations/0005_preencher_clinica.py b/backend/src/apps/enderecos/migrations/0005_preencher_clinica.py
+new file mode 100644
+index 0000000..0afbff8
+--- /dev/null
++++ b/backend/src/apps/enderecos/migrations/0005_preencher_clinica.py
+@@ -0,0 +1,58 @@
++# Passo 2 de 3 (multi-tenancy): preenche `clinica` nas linhas já existentes.
++#
++# Migração separada das de esquema de propósito: no PostgreSQL, alterar uma
++# tabela na mesma transação em que se atualizam linhas com FK pendente falha.
++#
++# Regra: todo endereço pertence a um paciente OU a um profissional (garantido
++# pela constraint `endereco_com_um_unico_dono`), e ambos já têm clínica. O
++# endereço herda a clínica do dono, então funciona com qualquer número de
++# clínicas cadastradas.
++
++from django.db import migrations
++from django.db.models import OuterRef, Subquery
++
++
++def preencher_clinica(apps, schema_editor):
++    db = schema_editor.connection.alias
++    Endereco = apps.get_model("enderecos", "Endereco")
++    Paciente = apps.get_model("pacientes", "Paciente")
++    Profissional = apps.get_model("profissionais", "Profissional")
++
++    sem_clinica = Endereco.objects.using(db).filter(clinica__isnull=True)
++
++    sem_clinica.filter(pacientes__isnull=False).update(
++        clinica=Subquery(
++            Paciente.objects.using(db)
++            .filter(pk=OuterRef("pacientes_id"))
++            .values("clinica_id")[:1]
++        )
++    )
++    sem_clinica.filter(profissionais__isnull=False).update(
++        clinica=Subquery(
++            Profissional.objects.using(db)
++            .filter(pk=OuterRef("profissionais_id"))
++            .values("clinica_id")[:1]
++        )
++    )
++
++    restantes = sem_clinica.count()
++    if restantes:
++        raise RuntimeError(
++            f"{restantes} endereço(s) continuam sem clínica porque o dono "
++            "(paciente/profissional) também não tem clínica. Corrija os "
++            "donos e rode `migrate` novamente."
++        )
++
++
++class Migration(migrations.Migration):
++
++    dependencies = [
++        ("enderecos", "0004_endereco_clinica"),
++        ("pacientes", "0005_clinica_obrigatoria"),
++        ("profissionais", "0005_clinica_obrigatoria_email_por_clinica"),
++    ]
++
++    operations = [
++        # Reverter não precisa desfazer o preenchimento.
++        migrations.RunPython(preencher_clinica, migrations.RunPython.noop),
++    ]
+diff --git a/backend/src/apps/enderecos/migrations/0006_clinica_obrigatoria.py b/backend/src/apps/enderecos/migrations/0006_clinica_obrigatoria.py
+new file mode 100644
+index 0000000..acce164
+--- /dev/null
++++ b/backend/src/apps/enderecos/migrations/0006_clinica_obrigatoria.py
+@@ -0,0 +1,24 @@
++# Passo 3 de 3 (multi-tenancy): `clinica` passa a ser obrigatória.
++
++import django.db.models.deletion
++from django.db import migrations, models
++
++
++class Migration(migrations.Migration):
++
++    dependencies = [
++        ("enderecos", "0005_preencher_clinica"),
++    ]
++
++    operations = [
++        migrations.AlterField(
++            model_name="endereco",
++            name="clinica",
++            field=models.ForeignKey(
++                editable=False,
++                on_delete=django.db.models.deletion.PROTECT,
++                to="clinicas.clinica",
++                verbose_name="Clínica",
++            ),
++        ),
++    ]
+diff --git a/backend/src/apps/enderecos/models.py b/backend/src/apps/enderecos/models.py
+index afe5870..4c17087 100644
+--- a/backend/src/apps/enderecos/models.py
++++ b/backend/src/apps/enderecos/models.py
+@@ -1,8 +1,8 @@
+ from django.db import models
+-from core.models import BaseModel
++from clinicas.tenancy import TenantModel
+ 
+ 
+-class Endereco(BaseModel):
++class Endereco(TenantModel):
+     """Endereços para pacientes e profissionais"""
+ 
+     logradouro = models.CharField(max_length=255, verbose_name="Logradouro")
+diff --git a/backend/src/apps/enderecos/test_migrations.py b/backend/src/apps/enderecos/test_migrations.py
+new file mode 100644
+index 0000000..697c9b6
+--- /dev/null
++++ b/backend/src/apps/enderecos/test_migrations.py
+@@ -0,0 +1,110 @@
++from datetime import date
++
++from django.db import connection
++from django.db.migrations.executor import MigrationExecutor
++from django.test import TransactionTestCase
++
++# Estado "antes": endereços sem clínica preenchida, mas pacientes e
++# profissionais (os donos) já com clínica obrigatória.
++ANTES = [
++    ("enderecos", "0004_endereco_clinica"),
++    ("pacientes", "0005_clinica_obrigatoria"),
++    ("profissionais", "0005_clinica_obrigatoria_email_por_clinica"),
++]
++PREENCHIDA = [("enderecos", "0005_preencher_clinica")]
++
++
++class PreencherClinicaMigrationTests(TransactionTestCase):
++    """Roda a migração de dados 0005 contra linhas criadas no estado da 0004."""
++
++    def migrar(self, alvo):
++        executor = MigrationExecutor(connection)
++        executor.migrate(alvo)
++        return executor.loader.project_state(alvo).apps
++
++    def setUp(self):
++        self.apps_antes = self.migrar(ANTES)
++
++    def tearDown(self):
++        # Limpa o que os testes criaram e volta ao estado final.
++        apps = self.apps_antes
++        for app, modelo in (
++            ("enderecos", "Endereco"),
++            ("localidades", "Cidade"),
++            ("localidades", "Estado"),
++            ("pacientes", "Paciente"),
++            ("profissionais", "Profissional"),
++            ("profissionais", "TipoProfissional"),
++            ("clinicas", "Clinica"),
++        ):
++            apps.get_model(app, modelo).objects.all().delete()
++        executor = MigrationExecutor(connection)
++        executor.migrate(executor.loader.graph.leaf_nodes())
++
++    def criar_clinica(self, slug, cnpj):
++        return self.apps_antes.get_model("clinicas", "Clinica").objects.create(
++            nome=slug, slug=slug, cnpj=cnpj
++        )
++
++    def criar_cidade(self):
++        estado = self.apps_antes.get_model("localidades", "Estado").objects.create(
++            codigo_ibge=52, sigla="GO", nome="Goiás"
++        )
++        return self.apps_antes.get_model("localidades", "Cidade").objects.create(
++            codigo_ibge=5208707, nome="Goiânia", estado=estado
++        )
++
++    def criar_paciente(self, clinica):
++        return self.apps_antes.get_model("pacientes", "Paciente").objects.create(
++            primeiro_nome="Ana",
++            sobrenome="Silva",
++            data_nascimento=date(2000, 1, 1),
++            genero="outro",
++            clinica=clinica,
++        )
++
++    def criar_profissional(self, clinica):
++        tipo = self.apps_antes.get_model(
++            "profissionais", "TipoProfissional"
++        ).objects.create(descricao="Psicólogo")
++        return self.apps_antes.get_model("profissionais", "Profissional").objects.create(
++            primeiro_nome="Beto",
++            sobrenome="Lima",
++            email="beto@example.com",
++            tipo_profissional=tipo,
++            numero_registro="123",
++            valor_hora="100.00",
++            clinica=clinica,
++        )
++
++    def criar_endereco(self, cidade, **dono):
++        return self.apps_antes.get_model("enderecos", "Endereco").objects.create(
++            logradouro="Rua A",
++            numero="10",
++            bairro="Centro",
++            cidade=cidade,
++            cep="70000-000",
++            **dono,
++        )
++
++    def test_endereco_herda_a_clinica_do_dono_com_varias_clinicas(self):
++        vida = self.criar_clinica("vida", "11222333000181")
++        sol = self.criar_clinica("sol", "11444777000161")
++        cidade = self.criar_cidade()
++        end_paciente = self.criar_endereco(
++            cidade, pacientes=self.criar_paciente(vida)
++        )
++        end_profissional = self.criar_endereco(
++            cidade, profissionais=self.criar_profissional(sol)
++        )
++
++        apps_depois = self.migrar(PREENCHIDA)
++
++        Endereco = apps_depois.get_model("enderecos", "Endereco")
++        self.assertEqual(Endereco.objects.get(pk=end_paciente.pk).clinica_id, vida.pk)
++        self.assertEqual(
++            Endereco.objects.get(pk=end_profissional.pk).clinica_id, sol.pk
++        )
++
++    def test_banco_sem_enderecos_migra_sem_erro(self):
++        self.migrar(PREENCHIDA)
+diff --git a/backend/src/apps/enderecos/test_tenancy.py b/backend/src/apps/enderecos/test_tenancy.py
+new file mode 100644
+index 0000000..6fdfc4c
+--- /dev/null
++++ b/backend/src/apps/enderecos/test_tenancy.py
+@@ -0,0 +1,117 @@
++from datetime import date
++
++from django.test import TestCase
++from django.urls import NoReverseMatch, reverse
++
++from clinicas.models import Clinica
++from clinicas.tenancy import ClinicaIncorreta, SemClinicaAtual, clinica_atual
++from localidades.models import Cidade, Estado
++from pacientes.models import Paciente
++from profissionais.models import Profissional, TipoProfissional
++
++from .models import Endereco
++
++CNPJ_VIDA = "11222333000181"
++CNPJ_SOL = "11444777000161"
++
++
++def criar_paciente(nome):
++    return Paciente.objects.create(
++        primeiro_nome=nome,
++        sobrenome="Silva",
++        data_nascimento=date(2000, 1, 1),
++        genero="outro",
++    )
++
++
++def criar_profissional(nome):
++    return Profissional.objects.create(
++        primeiro_nome=nome,
++        sobrenome="Lima",
++        email=f"{nome.lower()}@example.com",
++        tipo_profissional=TipoProfissional.objects.first(),
++        numero_registro="123",
++        valor_hora="100.00",
++    )
++
++
++def criar_endereco(cidade, **dono):
++    return Endereco.objects.create(
++        logradouro="Rua A",
++        numero="10",
++        bairro="Centro",
++        cidade=cidade,
++        cep="70000-000",
++        **dono,
++    )
++
++
++class EnderecoTenantModelTests(TestCase):
++    @classmethod
++    def setUpTestData(cls):
++        estado = Estado.objects.create(codigo_ibge=52, sigla="GO", nome="Goiás")
++        cls.cidade = Cidade.objects.create(
++            codigo_ibge=5208707, nome="Goiânia", estado=estado
++        )
++        cls.vida = Clinica.objects.create(nome="Vida", cnpj=CNPJ_VIDA, slug="vida")
++        cls.sol = Clinica.objects.create(nome="Sol", cnpj=CNPJ_SOL, slug="sol")
++        with clinica_atual(cls.vida):
++            cls.dra_ana = criar_profissional("Ana")
++            cls.end_ana = criar_endereco(cls.cidade, profissionais=cls.dra_ana)
++        with clinica_atual(cls.sol):
++            cls.beto = criar_paciente("Beto")
++            cls.end_beto = criar_endereco(cls.cidade, pacientes=cls.beto)
++
++    def test_endereco_recebe_a_clinica_atual(self):
++        self.assertEqual(self.end_ana.clinica, self.vida)
++        self.assertEqual(self.end_beto.clinica, self.sol)
++
++    def test_cada_clinica_ve_so_os_proprios_enderecos(self):
++        with clinica_atual(self.vida):
++            self.assertEqual(list(Endereco.objects.all()), [self.end_ana])
++        with clinica_atual(self.sol):
++            self.assertEqual(list(Endereco.objects.all()), [self.end_beto])
++
++    def test_sem_clinica_atual_nao_ve_nem_grava(self):
++        self.assertEqual(Endereco.objects.count(), 0)
++        with self.assertRaises(SemClinicaAtual):
++            criar_endereco(self.cidade, pacientes=self.beto)
++
++    def test_nao_altera_endereco_de_outra_clinica(self):
++        with clinica_atual(self.vida), self.assertRaises(ClinicaIncorreta):
++            self.end_beto.save()
++
++    def test_endereco_de_outra_clinica_nao_e_encontrado_por_uuid(self):
++        with clinica_atual(self.vida):
++            with self.assertRaises(Endereco.DoesNotExist):
++                Endereco.objects.get(uuid=self.end_beto.uuid)
++
++    def test_relacao_reversa_do_profissional_e_filtrada(self):
++        with clinica_atual(self.vida):
++            self.assertEqual(list(self.dra_ana.enderecos.all()), [self.end_ana])
++        with clinica_atual(self.sol):
++            self.assertEqual(list(self.dra_ana.enderecos.all()), [])
++
++    def test_manager_todas_nao_filtra(self):
++        self.assertEqual(Endereco.todas.count(), 2)
++
++    def test_cidade_continua_global(self):
++        # Estado/Cidade são dados de referência compartilhados por todas as clínicas.
++        with clinica_atual(self.vida):
++            self.assertEqual(Cidade.objects.count(), 1)
++        with clinica_atual(self.sol):
++            self.assertEqual(Cidade.objects.count(), 1)
++
++
++class EnderecoRotasAvulsasRemovidasTests(TestCase):
++    """Endereços só são editados dentro do profissional (formset)."""
++
++    def test_nomes_de_url_nao_existem_mais(self):
++        for nome in ("endereco_list", "endereco_create", "endereco_update"):
++            with self.subTest(nome=nome), self.assertRaises(NoReverseMatch):
++                reverse(f"enderecos:{nome}")
++
++    def test_caminho_antigo_devolve_404(self):
++        for caminho in ("/enderecos/", "/enderecos/nova/"):
++            with self.subTest(caminho=caminho):
++                self.assertEqual(self.client.get(caminho).status_code, 404)
