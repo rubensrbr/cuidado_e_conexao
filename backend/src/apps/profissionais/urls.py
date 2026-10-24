@@ -8,6 +8,11 @@ urlpatterns = [
     path("", views.ProfissionalListView.as_view(), name="profissional_list"),
     path("novo/", views.ProfissionalCreateView.as_view(), name="profissional_create"),
     path(
+        "relatorio/pdf/",
+        views.ProfissionalPdfReportView.as_view(),
+        name="profissional_report_pdf",
+    ),
+    path(
         "<uuid:uuid>/",
         views.ProfissionalDetailView.as_view(),
         name="profissional_detail",

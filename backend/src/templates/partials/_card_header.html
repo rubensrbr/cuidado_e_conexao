@@ -2,6 +2,8 @@
 Cabeçalho do card.
    Uso: {% include "partials/_card_header.html" with icon="bi-people-fill" title="Pacientes" subtitle="..." %}
    Opcionais: variant="danger", action_url / action_label / action_icon (botão à direita)
+              secondary_url / secondary_label / secondary_icon (botão secundário, em contorno,
+              ao lado do principal; só aparece junto com action_url)
 {% endcomment %}
 <div class="app-card-header{% if variant %} app-card-header--{{ variant }}{% endif %}{% if action_url %} d-flex justify-content-between align-items-center{% endif %}">
     {% if action_url %}<div>{% endif %}
@@ -16,9 +18,17 @@ Cabeçalho do card.
     {% if action_url %}</div>{% endif %}
 
     {% if action_url %}
-        <a href="{{ action_url }}" class="btn btn-sm fw-semibold">
-            {% if action_icon %}<i class="bi {{ action_icon }} me-1"></i>{% endif %}
-            {{ action_label }}
-        </a>
+        <div class="app-card-header-actions">
+            {% if secondary_url %}
+                <a href="{{ secondary_url }}" class="btn btn-sm fw-semibold btn-header-outline">
+                    {% if secondary_icon %}<i class="bi {{ secondary_icon }} me-1"></i>{% endif %}
+                    {{ secondary_label }}
+                </a>
+            {% endif %}
+            <a href="{{ action_url }}" class="btn btn-sm fw-semibold">
+                {% if action_icon %}<i class="bi {{ action_icon }} me-1"></i>{% endif %}
+                {{ action_label }}
+            </a>
+        </div>
     {% endif %}
 </div>

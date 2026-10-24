@@ -1,13 +1,21 @@
+from django.conf import settings
+from django.contrib.auth.mixins import LoginRequiredMixin
 from django.db import transaction
+from django.db.models import Prefetch
+from django.http import HttpResponse
 from django.shortcuts import redirect
+from django.template.loader import render_to_string
 from django.urls import reverse_lazy
+from django.utils import timezone
 from django.views.generic import (
     ListView,
     DetailView,
     CreateView,
     UpdateView,
     DeleteView,
+    View,
 )
+from telefones.models import Telefone
 from .models import Profissional, Disponibilidade
 from .forms import (
     DisponibilidadeForm,
@@ -99,6 +107,57 @@ class ProfissionalDeleteView(DeleteView):
     slug_field = "uuid"
     slug_url_kwarg = "uuid"
     success_url = reverse_lazy("profissionais:profissional_list")
+
+
+class ProfissionalPdfReportView(LoginRequiredMixin, View):
+    """Relatório em PDF (WeasyPrint) com todos os profissionais da clínica atual.
+
+    Usa o manager padrão de `Profissional`, que já filtra pela clínica da
+    requisição; sem clínica atual o relatório sai vazio (falha fechada).
+    Não é paginado: o PDF traz a lista completa, não só a página da tela.
+    """
+
+    template_name = "profissionais/profissional_report_pdf.html"
+
+    def get_queryset(self):
+        return Profissional.objects.select_related("tipo_profissional").prefetch_related(
+            Prefetch(
+                "telefones",
+                queryset=Telefone.objects.order_by("-principal", "pk"),
+            )
+        )
+
+    def get(self, request, *args, **kwargs):
+        # Import tardio: o WeasyPrint carrega bibliotecas nativas (Pango). Assim,
+        # um ambiente sem elas só afeta esta tela, não a inicialização do Django.
+        from weasyprint import HTML, URLFetcher
+
+        profissionais = list(self.get_queryset())
+        agora = timezone.localtime()
+        ativos = sum(1 for profissional in profissionais if profissional.ativo)
+        contexto = {
+            "profissionais": profissionais,
+            "total": len(profissionais),
+            "total_ativos": ativos,
+            "total_inativos": len(profissionais) - ativos,
+            "clinica": request.clinica,
+            "gerado_em": agora,
+            "gerado_por": request.user.get_full_name() or request.user.get_username(),
+        }
+        html = render_to_string(self.template_name, contexto, request=request)
+
+        # O documento é autocontido (CSS e logo embutidos): só `data:` é permitido,
+        # então o WeasyPrint nunca faz requisições de rede ao renderizar.
+        pdf = HTML(
+            string=html,
+            base_url=str(settings.BASE_DIR),
+            url_fetcher=URLFetcher(allowed_protocols={"data"}),
+        ).write_pdf()
+
+        resposta = HttpResponse(pdf, content_type="application/pdf")
+        nome_arquivo = f"profissionais_{agora:%Y%m%d}.pdf"
+        resposta["Content-Disposition"] = f'attachment; filename="{nome_arquivo}"'
+        return resposta
 
 
 # --- Disponibilidade Views ---

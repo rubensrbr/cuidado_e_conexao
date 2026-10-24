@@ -1,3 +1,5 @@
+from decimal import Decimal, InvalidOperation
+
 from django import template
 from django.urls import NoReverseMatch, reverse
 
@@ -18,3 +20,20 @@ def maybe_url(name, *args, **kwargs):
         return reverse(name, args=args, kwargs=kwargs)
     except NoReverseMatch:
         return None
+
+
+@register.filter
+def brl(value):
+    """Formata um número como moeda brasileira: 1234.5 -> "R$ 1.234,50".
+
+    Valores vazios ou inválidos viram "-" (mesma convenção das listas).
+    """
+    if value in (None, ""):
+        return "-"
+    try:
+        numero = Decimal(str(value))
+    except InvalidOperation:
+        return "-"
+    # Formata no padrão en-US ("1,234.50") e troca os separadores.
+    texto = f"{numero:,.2f}".replace(",", "_").replace(".", ",").replace("_", ".")
+    return f"R$ {texto}"

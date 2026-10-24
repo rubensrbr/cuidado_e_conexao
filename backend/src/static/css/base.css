@@ -422,6 +422,24 @@ a:hover {
   color: var(--pine-900);
 }
 
+/* Grupo de botões à direita do cabeçalho (ex.: "Gerar PDF" + "Novo ...") */
+.app-card-header-actions {
+  display: flex;
+  align-items: center;
+  gap: .5rem;
+}
+
+.app-card-header .btn-header-outline {
+  background: transparent;
+  color: #fff;
+  border: 1px solid rgba(255, 255, 255, .55);
+}
+
+.app-card-header .btn-header-outline:hover {
+  background: rgba(255, 255, 255, .14);
+  color: #fff;
+}
+
 
 /* Application tables */
 
@@ -665,6 +683,14 @@ a:hover {
 
   .app-card-header .btn {
     width: 100%;
+  }
+
+  .app-card-header-actions {
+    width: 100%;
+  }
+
+  .app-card-header-actions .btn {
+    flex: 1;
   }
 
 }
