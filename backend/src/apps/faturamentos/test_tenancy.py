@@ -1,3 +1,11 @@
+# ruff: noqa: E402
+from unittest import SkipTest
+
+from django.apps import apps
+
+if not apps.is_installed("faturamentos"):
+    raise SkipTest("app 'faturamentos' não está em INSTALLED_APPS neste release")
+
 from datetime import date, time
 from decimal import Decimal
 

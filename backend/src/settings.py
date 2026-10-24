@@ -49,9 +49,13 @@ INSTALLED_APPS = [
     "telefones",
     "enderecos",
     "localidades",
-    "salas",
-    "faturamentos",
 ]
+
+# Apps fora do release 1. Para liberar no release 2, adicione "salas" e/ou
+# "faturamentos" aqui e rode `manage.py migrate`. O código e as migrações
+# continuam no repositório; só não são carregados nem expostos.
+OPTIONAL_APPS = []
+INSTALLED_APPS += OPTIONAL_APPS
 
 MIDDLEWARE = [
     "django.middleware.security.SecurityMiddleware",

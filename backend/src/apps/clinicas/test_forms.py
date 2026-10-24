@@ -1,13 +1,16 @@
 from datetime import date
 
+from django.apps import apps
 from django.test import TestCase
 
 from clinicas.models import Clinica
 from clinicas.tenancy import clinica_atual
 from consultas.forms import ConsultaForm, ListaEsperaForm
-from faturamentos.forms import FaturamentoForm
 from pacientes.models import Paciente
 from profissionais.models import Profissional, TipoProfissional
+
+if apps.is_installed("faturamentos"):
+    from faturamentos.forms import FaturamentoForm
 
 
 class TenantFormMixinTests(TestCase):
@@ -46,8 +49,9 @@ class TenantFormMixinTests(TestCase):
             (ConsultaForm, "paciente"),
             (ConsultaForm, "profissional"),
             (ListaEsperaForm, "paciente"),
-            (FaturamentoForm, "paciente"),
         ]
+        if apps.is_installed("faturamentos"):
+            casos.append((FaturamentoForm, "paciente"))
         for form_class, campo in casos:
             with self.subTest(form=form_class.__name__, campo=campo):
                 self.assertEqual(self.nomes(form_class, campo, self.vida), ["Ana"])
