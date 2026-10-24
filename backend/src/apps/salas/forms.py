@@ -1,9 +1,11 @@
 from django import forms
 
+from clinicas.forms import TenantFormMixin
+
 from .models import AgendaSala, Sala
 
 
-class SalaForm(forms.ModelForm):
+class SalaForm(TenantFormMixin, forms.ModelForm):
     class Meta:
         model = Sala
         fields = ["numero_sala", "nome", "capacidade", "ativa"]
@@ -21,7 +23,7 @@ class SalaForm(forms.ModelForm):
         return capacidade
 
 
-class AgendaSalaForm(forms.ModelForm):
+class AgendaSalaForm(TenantFormMixin, forms.ModelForm):
     class Meta:
         model = AgendaSala
         fields = ["sala", "consulta", "data", "hora_inicio", "hora_fim"]
