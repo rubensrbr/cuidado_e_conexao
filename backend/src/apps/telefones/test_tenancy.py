@@ -98,3 +98,10 @@ class TelefoneRotasAvulsasRemovidasTests(TestCase):
         for caminho in ("/telefones/", "/telefones/nova/"):
             with self.subTest(caminho=caminho):
                 self.assertEqual(self.client.get(caminho).status_code, 404)
+
+
+class TelefoneForaDoAdminTests(TestCase):
+    def test_telefone_nao_esta_registrado_no_admin(self):
+        from django.contrib import admin
+
+        self.assertFalse(admin.site.is_registered(Telefone))

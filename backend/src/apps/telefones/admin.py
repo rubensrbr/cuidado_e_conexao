@@ -1,13 +1,3 @@
-from django.contrib import admin
-
-from .forms import TelefoneForm
-from .models import Telefone
-
-
-@admin.register(Telefone)
-class TelefoneAdmin(admin.ModelAdmin):
-    form = TelefoneForm
-    list_display = ("numero", "tipo", "principal")
-    list_filter = ("tipo", "principal")
-    search_fields = ("numero",)
-    readonly_fields = ("uuid", "created_at", "modified_at")
+# Telefone não é registrado no admin de propósito: ele só é editado dentro do
+# paciente/profissional (inline formsets), e o formulário avulso não tem como
+# informar o dono exigido pela constraint `telefone_com_um_unico_dono`.

@@ -1,8 +1,8 @@
 from django.db import models
-from core.models import BaseModel
+from clinicas.tenancy import TenantModel
 
 
-class Endereco(BaseModel):
+class Endereco(TenantModel):
     """Endereços para pacientes e profissionais"""
 
     logradouro = models.CharField(max_length=255, verbose_name="Logradouro")
