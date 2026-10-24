@@ -1,10 +1,12 @@
+from django.core.exceptions import ValidationError
 from django.db import models
+
+from clinicas.tenancy import TenantModel
 from consultas.models import Consulta
 from pacientes.models import Paciente
-from core.models import BaseModel
 
 
-class Faturamento(BaseModel):
+class Faturamento(TenantModel):
     """Controle de faturamento e pagamentos"""
 
     METODO_PAGAMENTO_CHOICES = [
@@ -81,6 +83,16 @@ class Faturamento(BaseModel):
 
     def __str__(self):
         return f"Faturamento {self.paciente.nome_completo} - {self.data_servico} - R$ {self.valor_cobrado}"
+
+    def clean(self):
+        super().clean()
+        # O formulário já limita as opções à clínica atual; esta checagem
+        # protege também quem grava fora de formulários (shell, comandos).
+        if self.paciente_id and self.consulta_id:
+            if self.paciente.clinica_id != self.consulta.clinica_id:
+                raise ValidationError(
+                    {"consulta": "A consulta pertence a outra clínica."}
+                )
 
     @property
     def valor_pendente(self):
