@@ -1,9 +1,9 @@
 from django.db import models
 from django.core.validators import RegexValidator
-from core.models import BaseModel
+from clinicas.tenancy import TenantModel
 
 
-class Telefone(BaseModel):
+class Telefone(TenantModel):
     """Telefones para pacientes e profissionais"""
 
     TIPO_CHOICES = [
