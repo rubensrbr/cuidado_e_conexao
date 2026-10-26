@@ -108,7 +108,7 @@ class Membro(BaseModel):
     class Meta:
         verbose_name = "Membro"
         verbose_name_plural = "Membros"
-        ordering = ["clinica__nome", "user__username"]
+        ordering = ["clinica__nome", "user__email"]
         constraints = [
             models.UniqueConstraint(
                 fields=["user", "clinica"], name="membro_unico_por_clinica"

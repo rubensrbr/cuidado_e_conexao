@@ -1,5 +1,6 @@
 from django import forms
 from django.contrib.auth.forms import AdminUserCreationForm as BaseUserCreationForm
+from django.contrib.auth.forms import AuthenticationForm, PasswordChangeForm
 from django.contrib.auth.forms import UserChangeForm as BaseUserChangeForm
 
 from .models import User
@@ -13,11 +14,9 @@ class UserCreationForm(BaseUserCreationForm):
     stock UserAdmin.add_fieldsets expects.
     """
 
-    email = forms.EmailField(required=False, label="E-mail")
-
     class Meta(BaseUserCreationForm.Meta):
         model = User
-        fields = ("username", "email", "first_name", "last_name")
+        fields = ("email", "first_name", "last_name")
 
 
 class UserChangeForm(BaseUserChangeForm):
@@ -26,13 +25,31 @@ class UserChangeForm(BaseUserChangeForm):
     class Meta(BaseUserChangeForm.Meta):
         model = User
         fields = (
-            "username",
             "email",
             "first_name",
             "last_name",
             "is_active",
             "is_staff",
             "is_superuser",
+            "change_password",
             "groups",
             "user_permissions",
         )
+
+
+class LoginForm(AuthenticationForm):
+    """Login por e-mail (o campo continua se chamando `username` por dentro)."""
+
+    error_messages = {
+        **AuthenticationForm.error_messages,
+        "invalid_login": "E-mail ou senha inválidos.",
+    }
+
+
+class TrocaDeSenhaForm(PasswordChangeForm):
+    """Troca de senha com o visual dos demais formulários do sistema."""
+
+    def __init__(self, *args, **kwargs):
+        super().__init__(*args, **kwargs)
+        for campo in self.fields.values():
+            campo.widget.attrs["class"] = "form-control"

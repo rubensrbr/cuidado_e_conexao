@@ -34,6 +34,6 @@ class ClinicaAdmin(admin.ModelAdmin):
 class MembroAdmin(admin.ModelAdmin):
     list_display = ("user", "clinica", "grupo", "ativo")
     list_filter = ("ativo", "clinica", "grupo")
-    search_fields = ("user__username", "user__email", "clinica__nome")
+    search_fields = ("user__email", "clinica__nome")
     raw_id_fields = ("user",)
     readonly_fields = ("uuid", "created_at", "modified_at")

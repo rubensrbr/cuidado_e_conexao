@@ -76,6 +76,7 @@
             <span class="avatar">{{ request.user.get_username|slice:":1"|upper }}</span>
             <span>{{ request.user.get_username }}</span>
           </div>
+          <a class="btn btn-sm btn-outline-secondary" href="{% url 'alterar_senha' %}">Alterar senha</a>
           <form action="{% url 'logout' %}" method="post" class="d-inline">
             {% csrf_token %}
             <button class="btn btn-sm btn-outline-secondary" type="submit">Sair</button>

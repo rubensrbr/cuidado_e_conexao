@@ -108,7 +108,7 @@
 
     {% if form.errors %}
       <div class="alert alert-danger py-2" role="alert">
-        Usuário ou senha inválidos. Tente novamente.
+        E-mail ou senha inválidos. Tente novamente.
       </div>
     {% endif %}
 
@@ -124,12 +124,12 @@
       {% csrf_token %}
 
       <div class="mb-3">
-        <label for="{{ form.username.id_for_label }}" class="form-label">Usuário</label>
-        <input type="text"
+        <label for="{{ form.username.id_for_label }}" class="form-label">E-mail</label>
+        <input type="email"
                name="{{ form.username.html_name }}"
                id="{{ form.username.id_for_label }}"
                class="form-control"
-               placeholder="Digite seu usuário"
+               placeholder="Digite seu e-mail"
                autocomplete="username"
                autofocus
                required>

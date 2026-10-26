@@ -4,6 +4,13 @@ from django.contrib.auth.base_user import BaseUserManager
 class UserManager(BaseUserManager):
     use_in_migrations = True
 
+    def get_by_natural_key(self, email):
+        """Busca para o login: sem diferenciar maiúsculas e ignorando espaços."""
+        email = (email or "").strip()
+        if not email:
+            raise self.model.DoesNotExist
+        return self.get(email__iexact=email)
+
     def _create_user(self, email, password, **extra_fields):
         if not email:
             raise ValueError("The email must be set")
