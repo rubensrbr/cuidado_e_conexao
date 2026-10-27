@@ -2,11 +2,11 @@ from datetime import date, datetime, time, timezone
 from decimal import Decimal
 
 from django.contrib.auth import get_user_model
-from django.contrib.auth.models import Group
 from django.test import TestCase
 from django.urls import reverse
 
 from clinicas.models import Clinica, Membro
+from clinicas.helpers_de_teste import grupo_com_todas_as_permissoes
 from clinicas.tenancy import SemClinicaAtual, clinica_atual
 from pacientes.models import Paciente
 from profissionais.models import Profissional, TipoProfissional
@@ -160,7 +160,7 @@ class ConsultasViewsTenantTests(ConsultasTenantBase):
     def setUpTestData(cls):
         super().setUpTestData()
         cls.maria = get_user_model().objects.create_user("maria", password="x")
-        grupo = Group.objects.create(name="Recepção")
+        grupo = grupo_com_todas_as_permissoes("Recepção")
         Membro.objects.create(user=cls.maria, clinica=cls.vida, grupo=grupo)
 
     def setUp(self):

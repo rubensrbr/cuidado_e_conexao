@@ -1,8 +1,10 @@
+from django.contrib.auth.decorators import login_required
 from django.http import JsonResponse
 
 from .models import Cidade
 
 
+@login_required
 def cidades_por_estado(request):
     """Cidades de um estado, em JSON: GET ?estado=<id> -> [{"id": 1, "nome": "..."}]."""
     try:

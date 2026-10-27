@@ -3,7 +3,7 @@
 {% block title %}Lista de Espera | Cuidado & Conexão{% endblock %}
 
 {% block list_header %}
-    {% url 'consultas:lista_espera_create' as create_url %}
+    {% if "consultas.add_listaespera" in perms %}{% url 'consultas:lista_espera_create' as create_url %}{% endif %}
     {% include "partials/_card_header.html" with icon="bi-hourglass-split" title="Lista de Espera" subtitle="Pacientes aguardando uma vaga, por ordem de prioridade" action_url=create_url action_label="Novo na fila" action_icon="bi-plus-lg" %}
 {% endblock %}
 
@@ -71,7 +71,7 @@
         <td class="text-end">
             {% url 'consultas:lista_espera_update' item.uuid as edit_url %}
             {% url 'consultas:lista_espera_delete' item.uuid as delete_url %}
-            {% include "partials/_row_actions.html" %}
+            {% include "partials/_row_actions.html" with edit_perm="consultas.change_listaespera" delete_perm="consultas.delete_listaespera" %}
         </td>
     </tr>
     {% empty %}

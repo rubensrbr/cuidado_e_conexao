@@ -15,9 +15,15 @@ from .forms import PacienteForm, ProntuarioForm, TelefoneFormSet
 from telefones.models import Telefone
 
 from .models import Paciente, Prontuario
+from clinicas.permissions import (
+    PermissaoAdicionar,
+    PermissaoAlterar,
+    PermissaoExcluir,
+    PermissaoVer,
+)
 
 
-class PacienteListView(ListView):
+class PacienteListView(PermissaoVer, ListView):
     model = Paciente
     template_name = "pacientes/paciente_list.html"
     context_object_name = "pacientes"
@@ -37,7 +43,7 @@ class PacienteListView(ListView):
         )
 
 
-class PacienteDetailView(DetailView):
+class PacienteDetailView(PermissaoVer, DetailView):
     model = Paciente
     template_name = "pacientes/paciente_detail.html"
     slug_field = "uuid"
@@ -90,17 +96,17 @@ class PacienteFormsetMixin:
         )
 
 
-class PacienteCreateView(PacienteFormsetMixin, CreateView):
+class PacienteCreateView(PermissaoAdicionar, PacienteFormsetMixin, CreateView):
     pass
 
 
-class PacienteUpdateView(PacienteFormsetMixin, UpdateView):
+class PacienteUpdateView(PermissaoAlterar, PacienteFormsetMixin, UpdateView):
     slug_field = "uuid"
     slug_url_kwarg = "uuid"
     success_message = "Paciente atualizado com sucesso!"
 
 
-class PacienteDeleteView(DeleteView):
+class PacienteDeleteView(PermissaoExcluir, DeleteView):
     model = Paciente
     template_name = "pacientes/paciente_confirm_delete.html"
     slug_field = "uuid"
@@ -109,14 +115,14 @@ class PacienteDeleteView(DeleteView):
 
 
 # --- Prontuario Views ---
-class ProntuarioDetailView(DetailView):
+class ProntuarioDetailView(PermissaoVer, DetailView):
     model = Prontuario
     template_name = "pacientes/prontuario_detail.html"
     slug_field = "uuid"
     slug_url_kwarg = "uuid"
 
 
-class ProntuarioCreateView(CreateView):
+class ProntuarioCreateView(PermissaoAdicionar, CreateView):
     model = Prontuario
     template_name = "pacientes/prontuario_form.html"
     # form_class (e não `fields`) para usar o TenantFormMixin: só pacientes da

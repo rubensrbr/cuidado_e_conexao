@@ -22,27 +22,37 @@
           <i class="bi bi-grid-1x2-fill"></i><span>Painel</span>
         </a>
 
+        {% if "pacientes.view_paciente" in perms or "profissionais.view_profissional" in perms or "consultas.view_consulta" in perms or "consultas.view_listaespera" in perms %}
         <div class="sidebar-section">Atendimento</div>
+        {% endif %}
+        {% if "pacientes.view_paciente" in perms %}
         {% maybe_url 'pacientes:paciente_list' as pacientes_url %}
         <a class="nav-link{% if request.resolver_match.namespace == 'pacientes' %} active{% endif %}{% if not pacientes_url %} disabled{% endif %}"
            href="{{ pacientes_url|default:'#' }}"{% if not pacientes_url %} aria-disabled="true" tabindex="-1" title="Em construção"{% endif %}>
           <i class="bi bi-people-fill"></i><span>Pacientes</span>
         </a>
+        {% endif %}
+        {% if "profissionais.view_profissional" in perms %}
         {% maybe_url 'profissionais:profissional_list' as profissionais_url %}
         <a class="nav-link{% if request.resolver_match.namespace == 'profissionais' %} active{% endif %}{% if not profissionais_url %} disabled{% endif %}"
            href="{{ profissionais_url|default:'#' }}"{% if not profissionais_url %} aria-disabled="true" tabindex="-1" title="Em construção"{% endif %}>
           <i class="bi bi-person-badge-fill"></i><span>Profissionais</span>
         </a>
+        {% endif %}
+        {% if "consultas.view_consulta" in perms %}
         {% maybe_url 'consultas:consulta_list' as consultas_url %}
         <a class="nav-link{% if request.resolver_match.namespace == 'consultas' and request.resolver_match.url_name == 'consulta_list' %} active{% endif %}{% if not consultas_url %} disabled{% endif %}"
            href="{{ consultas_url|default:'#' }}"{% if not consultas_url %} aria-disabled="true" tabindex="-1" title="Em construção"{% endif %}>
           <i class="bi bi-calendar2-heart-fill"></i><span>Consultas</span>
         </a>
+        {% endif %}
+        {% if "consultas.view_listaespera" in perms %}
         {% maybe_url 'consultas:lista_espera_list' as lista_espera_url %}
         <a class="nav-link{% if request.resolver_match.url_name == 'lista_espera_list' %} active{% endif %}{% if not lista_espera_url %} disabled{% endif %}"
            href="{{ lista_espera_url|default:'#' }}"{% if not lista_espera_url %} aria-disabled="true" tabindex="-1" title="Em construção"{% endif %}>
           <i class="bi bi-hourglass-split"></i><span>Lista de espera</span>
         </a>
+        {% endif %}
 
         {% comment %}
         <div class="sidebar-section">Estrutura</div>

@@ -1,5 +1,4 @@
 from django.conf import settings
-from django.contrib.auth.mixins import LoginRequiredMixin
 from django.db import transaction
 from django.db.models import Prefetch
 from django.http import HttpResponse
@@ -23,17 +22,23 @@ from .forms import (
     ProfissionalForm,
     TelefoneFormSet,
 )
+from clinicas.permissions import (
+    PermissaoAdicionar,
+    PermissaoAlterar,
+    PermissaoExcluir,
+    PermissaoVer,
+)
 
 
 # --- Profissional Views ---
-class ProfissionalListView(ListView):
+class ProfissionalListView(PermissaoVer, ListView):
     model = Profissional
     template_name = "profissionais/profissional_list.html"
     context_object_name = "profissionais"
     paginate_by = 10
 
 
-class ProfissionalDetailView(DetailView):
+class ProfissionalDetailView(PermissaoVer, DetailView):
     model = Profissional
     template_name = "profissionais/profissional_detail.html"
     slug_field = "uuid"
@@ -91,17 +96,17 @@ class ProfissionalFormsetMixin:
         return self.render_to_response(self.get_context_data(form=form, **formsets))
 
 
-class ProfissionalCreateView(ProfissionalFormsetMixin, CreateView):
+class ProfissionalCreateView(PermissaoAdicionar, ProfissionalFormsetMixin, CreateView):
     pass
 
 
-class ProfissionalUpdateView(ProfissionalFormsetMixin, UpdateView):
+class ProfissionalUpdateView(PermissaoAlterar, ProfissionalFormsetMixin, UpdateView):
     slug_field = "uuid"
     slug_url_kwarg = "uuid"
     success_message = "Profissional atualizado com sucesso!"
 
 
-class ProfissionalDeleteView(DeleteView):
+class ProfissionalDeleteView(PermissaoExcluir, DeleteView):
     model = Profissional
     template_name = "profissionais/profissional_confirm_delete.html"
     slug_field = "uuid"
@@ -109,7 +114,7 @@ class ProfissionalDeleteView(DeleteView):
     success_url = reverse_lazy("profissionais:profissional_list")
 
 
-class ProfissionalPdfReportView(LoginRequiredMixin, View):
+class ProfissionalPdfReportView(PermissaoVer, View):
     """Relatório em PDF (WeasyPrint) com todos os profissionais da clínica atual.
 
     Usa o manager padrão de `Profissional`, que já filtra pela clínica da
@@ -117,6 +122,7 @@ class ProfissionalPdfReportView(LoginRequiredMixin, View):
     Não é paginado: o PDF traz a lista completa, não só a página da tela.
     """
 
+    model = Profissional  # usado só para montar a permissão (view_profissional)
     template_name = "profissionais/profissional_report_pdf.html"
 
     def get_queryset(self):
@@ -161,7 +167,7 @@ class ProfissionalPdfReportView(LoginRequiredMixin, View):
 
 
 # --- Disponibilidade Views ---
-class DisponibilidadeCreateView(CreateView):
+class DisponibilidadeCreateView(PermissaoAdicionar, CreateView):
     model = Disponibilidade
     template_name = "profissionais/disponibilidade_form.html"
     form_class = DisponibilidadeForm

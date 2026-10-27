@@ -9,10 +9,16 @@ from django.views.generic import (
 )
 from .forms import ConsultaForm, LembreteForm, ListaEsperaForm
 from .models import Consulta, Lembrete, ListaEspera
+from clinicas.permissions import (
+    PermissaoAdicionar,
+    PermissaoAlterar,
+    PermissaoExcluir,
+    PermissaoVer,
+)
 
 
 # --- Consulta Views ---
-class ConsultaListView(ListView):
+class ConsultaListView(PermissaoVer, ListView):
     model = Consulta
     template_name = "consultas/consulta_list.html"
     context_object_name = "consultas"
@@ -23,21 +29,21 @@ class ConsultaListView(ListView):
         return super().get_queryset().select_related("paciente", "profissional")
 
 
-class ConsultaDetailView(DetailView):
+class ConsultaDetailView(PermissaoVer, DetailView):
     model = Consulta
     template_name = "consultas/consulta_detail.html"
     slug_field = "uuid"
     slug_url_kwarg = "uuid"
 
 
-class ConsultaCreateView(CreateView):
+class ConsultaCreateView(PermissaoAdicionar, CreateView):
     model = Consulta
     template_name = "consultas/consulta_form.html"
     form_class = ConsultaForm
     success_url = reverse_lazy("consultas:consulta_list")
 
 
-class ConsultaUpdateView(UpdateView):
+class ConsultaUpdateView(PermissaoAlterar, UpdateView):
     model = Consulta
     template_name = "consultas/consulta_form.html"
     form_class = ConsultaForm
@@ -46,7 +52,7 @@ class ConsultaUpdateView(UpdateView):
     success_url = reverse_lazy("consultas:consulta_list")
 
 
-class ConsultaDeleteView(DeleteView):
+class ConsultaDeleteView(PermissaoExcluir, DeleteView):
     model = Consulta
     template_name = "consultas/consulta_confirm_delete.html"
     slug_field = "uuid"
@@ -55,13 +61,13 @@ class ConsultaDeleteView(DeleteView):
 
 
 # --- Lembrete Views ---
-class LembreteListView(ListView):
+class LembreteListView(PermissaoVer, ListView):
     model = Lembrete
     template_name = "consultas/lembrete_list.html"
     context_object_name = "lembretes"
 
 
-class LembreteCreateView(CreateView):
+class LembreteCreateView(PermissaoAdicionar, CreateView):
     model = Lembrete
     template_name = "consultas/lembrete_form.html"
     # form_class (e não `fields`) para usar o TenantFormMixin: só consultas da
@@ -71,7 +77,7 @@ class LembreteCreateView(CreateView):
 
 
 # --- ListaEspera Views ---
-class ListaEsperaListView(ListView):
+class ListaEsperaListView(PermissaoVer, ListView):
     model = ListaEspera
     template_name = "consultas/lista_espera_list.html"
     context_object_name = "lista_espera"
@@ -93,14 +99,14 @@ class ListaEsperaListView(ListView):
         )
 
 
-class ListaEsperaCreateView(CreateView):
+class ListaEsperaCreateView(PermissaoAdicionar, CreateView):
     model = ListaEspera
     template_name = "consultas/lista_espera_form.html"
     form_class = ListaEsperaForm
     success_url = reverse_lazy("consultas:lista_espera_list")
 
 
-class ListaEsperaUpdateView(UpdateView):
+class ListaEsperaUpdateView(PermissaoAlterar, UpdateView):
     model = ListaEspera
     template_name = "consultas/lista_espera_form.html"
     form_class = ListaEsperaForm
@@ -109,7 +115,7 @@ class ListaEsperaUpdateView(UpdateView):
     success_url = reverse_lazy("consultas:lista_espera_list")
 
 
-class ListaEsperaDeleteView(DeleteView):
+class ListaEsperaDeleteView(PermissaoExcluir, DeleteView):
     model = ListaEspera
     template_name = "consultas/lista_espera_confirm_delete.html"
     slug_field = "uuid"

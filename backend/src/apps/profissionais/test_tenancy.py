@@ -2,12 +2,12 @@ from datetime import time
 from decimal import Decimal
 
 from django.contrib.auth import get_user_model
-from django.contrib.auth.models import Group
 from django.db import IntegrityError, transaction
 from django.test import TestCase
 from django.urls import reverse
 
 from clinicas.models import Clinica, Membro
+from clinicas.helpers_de_teste import grupo_com_todas_as_permissoes
 from clinicas.tenancy import clinica_atual
 
 from .forms import ProfissionalForm
@@ -114,7 +114,7 @@ class ProfissionalViewsTenantTests(TestCase):
         cls.vida = Clinica.objects.create(nome="Vida", cnpj=CNPJ_VIDA, slug="vida")
         cls.sol = Clinica.objects.create(nome="Sol", cnpj=CNPJ_SOL, slug="sol")
         cls.maria = get_user_model().objects.create_user("maria", password="x")
-        grupo = Group.objects.create(name="Recepção")
+        grupo = grupo_com_todas_as_permissoes("Recepção")
         Membro.objects.create(user=cls.maria, clinica=cls.vida, grupo=grupo)
         with clinica_atual(cls.vida):
             cls.ana = criar_profissional("Ana", "ana@example.com")

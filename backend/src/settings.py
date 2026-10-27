@@ -162,6 +162,10 @@ DEFAULT_AUTO_FIELD = "django.db.models.BigAutoField"
 
 AUTH_USER_MODEL = "core.User"
 
+# Permissões vêm do papel (`Membro.grupo`) na clínica atual, não do usuário.
+# Veja clinicas/backends.py. (Herda do ModelBackend, então o login continua igual.)
+AUTHENTICATION_BACKENDS = ["clinicas.backends.MembroBackend"]
+
 LOGIN_URL = "/login/"
 LOGIN_REDIRECT_URL = "/"
 LOGOUT_REDIRECT_URL = LOGIN_URL

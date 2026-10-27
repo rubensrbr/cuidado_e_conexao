@@ -10,13 +10,13 @@ from datetime import date, time
 from decimal import Decimal
 
 from django.contrib.auth import get_user_model
-from django.contrib.auth.models import Group
 from django.core.exceptions import ValidationError
 from django.db import IntegrityError, transaction
 from django.test import RequestFactory, TestCase
 from django.urls import reverse
 
 from clinicas.models import Clinica, Membro
+from clinicas.helpers_de_teste import grupo_com_todas_as_permissoes
 from clinicas.tenancy import ClinicaIncorreta, SemClinicaAtual, clinica_atual
 from consultas.models import Consulta
 from pacientes.models import Paciente
@@ -234,7 +234,7 @@ class SalasViewsTenantTests(SalasTenantBase):
     def setUpTestData(cls):
         super().setUpTestData()
         cls.maria = get_user_model().objects.create_user("maria", password="x")
-        grupo = Group.objects.create(name="Recepção")
+        grupo = grupo_com_todas_as_permissoes("Recepção")
         Membro.objects.create(user=cls.maria, clinica=cls.vida, grupo=grupo)
 
     def setUp(self):

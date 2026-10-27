@@ -3,10 +3,12 @@ Cabeçalho do card.
    Uso: {% include "partials/_card_header.html" with icon="bi-people-fill" title="Pacientes" subtitle="..." %}
    Opcionais: variant="danger", action_url / action_label / action_icon (botão à direita)
               secondary_url / secondary_label / secondary_icon (botão secundário, em contorno,
-              ao lado do principal; só aparece junto com action_url)
+              ao lado do principal)
+   Passe action_url só se o usuário puder criar; sem URL, o botão não aparece:
+   {% if "app.add_model" in perms %}{% url ... as create_url %}{% endif %}
 {% endcomment %}
-<div class="app-card-header{% if variant %} app-card-header--{{ variant }}{% endif %}{% if action_url %} d-flex justify-content-between align-items-center{% endif %}">
-    {% if action_url %}<div>{% endif %}
+<div class="app-card-header{% if variant %} app-card-header--{{ variant }}{% endif %}{% if action_url or secondary_url %} d-flex justify-content-between align-items-center{% endif %}">
+    {% if action_url or secondary_url %}<div>{% endif %}
         <h4>
             <i class="bi {{ icon }} me-2"></i>
             {{ title }}
@@ -15,9 +17,9 @@ Cabeçalho do card.
         {% if subtitle %}
             <div class="subtitle">{{ subtitle }}</div>
         {% endif %}
-    {% if action_url %}</div>{% endif %}
+    {% if action_url or secondary_url %}</div>{% endif %}
 
-    {% if action_url %}
+    {% if action_url or secondary_url %}
         <div class="app-card-header-actions">
             {% if secondary_url %}
                 <a href="{{ secondary_url }}" class="btn btn-sm fw-semibold btn-header-outline">
@@ -25,10 +27,12 @@ Cabeçalho do card.
                     {{ secondary_label }}
                 </a>
             {% endif %}
-            <a href="{{ action_url }}" class="btn btn-sm fw-semibold">
-                {% if action_icon %}<i class="bi {{ action_icon }} me-1"></i>{% endif %}
-                {{ action_label }}
-            </a>
+            {% if action_url %}
+                <a href="{{ action_url }}" class="btn btn-sm fw-semibold">
+                    {% if action_icon %}<i class="bi {{ action_icon }} me-1"></i>{% endif %}
+                    {{ action_label }}
+                </a>
+            {% endif %}
         </div>
     {% endif %}
 </div>

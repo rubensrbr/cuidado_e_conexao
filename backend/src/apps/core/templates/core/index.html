@@ -6,6 +6,7 @@
   <p class="text-muted mb-4">Bem-vindo(a), {{ request.user.get_username }}. Aqui está um resumo da clínica.</p>
 
   <div class="row g-3 mb-4">
+    {% if "pacientes.view_paciente" in perms %}
     <div class="col-sm-6 col-lg-3">
       <div class="card h-100 p-3">
         <div class="d-flex align-items-center gap-3">
@@ -20,7 +21,9 @@
         </div>
       </div>
     </div>
+    {% endif %}
 
+    {% if "consultas.view_consulta" in perms %}
     <div class="col-sm-6 col-lg-3">
       <div class="card h-100 p-3">
         <div class="d-flex align-items-center gap-3">
@@ -35,7 +38,9 @@
         </div>
       </div>
     </div>
+    {% endif %}
 
+    {% if "consultas.view_listaespera" in perms %}
     <div class="col-sm-6 col-lg-3">
       <div class="card h-100 p-3">
         <div class="d-flex align-items-center gap-3">
@@ -50,6 +55,7 @@
         </div>
       </div>
     </div>
+    {% endif %}
 
     {% comment %}
     <div class="col-sm-6 col-lg-3">

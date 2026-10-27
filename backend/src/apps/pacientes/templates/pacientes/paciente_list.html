@@ -3,7 +3,7 @@
 {% block title %}Pacientes | Cuidado & Conexão{% endblock %}
 
 {% block list_header %}
-    {% url 'pacientes:paciente_create' as create_url %}
+    {% if "pacientes.add_paciente" in perms %}{% url 'pacientes:paciente_create' as create_url %}{% endif %}
     {% include "partials/_card_header.html" with icon="bi-people-fill" title="Lista de Pacientes" subtitle="Pacientes cadastrados no sistema" action_url=create_url action_label="Novo paciente" action_icon="bi-plus-lg" %}
 {% endblock %}
 
@@ -39,7 +39,7 @@
         <td class="text-end">
             {% url 'pacientes:paciente_update' paciente.uuid as edit_url %}
             {% url 'pacientes:paciente_delete' paciente.uuid as delete_url %}
-            {% include "partials/_row_actions.html" %}
+            {% include "partials/_row_actions.html" with edit_perm="pacientes.change_paciente" delete_perm="pacientes.delete_paciente" %}
         </td>
     </tr>
     {% empty %}

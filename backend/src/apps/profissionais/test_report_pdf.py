@@ -2,11 +2,11 @@ from decimal import Decimal
 from unittest import mock
 
 from django.contrib.auth import get_user_model
-from django.contrib.auth.models import Group
 from django.test import TestCase
 from django.urls import reverse
 
 from clinicas.models import Clinica, Membro
+from clinicas.helpers_de_teste import grupo_com_todas_as_permissoes
 from clinicas.tenancy import clinica_atual
 from telefones.models import Telefone
 
@@ -33,7 +33,7 @@ class RelatorioPdfProfissionaisTests(TestCase):
             nome="Vida", cnpj="11222333000181", slug="vida"
         )
         cls.sol = Clinica.objects.create(nome="Sol", cnpj="11444777000161", slug="sol")
-        grupo = Group.objects.create(name="Recepção")
+        grupo = grupo_com_todas_as_permissoes("Recepção")
         Usuario = get_user_model()
         cls.maria = Usuario.objects.create_user("maria", password="x")
         Membro.objects.create(user=cls.maria, clinica=cls.vida, grupo=grupo)
@@ -99,13 +99,12 @@ class RelatorioPdfProfissionaisTests(TestCase):
         self.assertIn("principal", html)
         self.assertIn("Inativo", html)
 
-    def test_usuario_sem_clinica_recebe_relatorio_vazio(self):
+    def test_usuario_sem_clinica_nao_gera_o_relatorio(self):
+        # Sem vínculo com clínica ativa não há papel, logo não há permissão.
         self.client.force_login(self.sem_clinica)
         resposta, html = self.gerar()
-        self.assertEqual(resposta.status_code, 200)
-        self.assertIn("Nenhum profissional cadastrado.", html)
-        self.assertNotIn("Ana", html)
-        self.assertNotIn("Beto", html)
+        self.assertEqual(resposta.status_code, 403)
+        self.assertEqual(html, "")  # nem chegou a montar o relatório
 
     def test_lista_tem_botao_gerar_pdf(self):
         self.client.force_login(self.maria)

@@ -3,7 +3,7 @@
 {% block title %}Consultas | Cuidado & Conexão{% endblock %}
 
 {% block list_header %}
-    {% url 'consultas:consulta_create' as create_url %}
+    {% if "consultas.add_consulta" in perms %}{% url 'consultas:consulta_create' as create_url %}{% endif %}
     {% include "partials/_card_header.html" with icon="bi-calendar-week-fill" title="Lista de Consultas" subtitle="Consultas agendadas no sistema" action_url=create_url action_label="Nova consulta" action_icon="bi-plus-lg" %}
 {% endblock %}
 
@@ -55,7 +55,7 @@
         <td class="text-end">
             {% url 'consultas:consulta_update' consulta.uuid as edit_url %}
             {% url 'consultas:consulta_delete' consulta.uuid as delete_url %}
-            {% include "partials/_row_actions.html" %}
+            {% include "partials/_row_actions.html" with edit_perm="consultas.change_consulta" delete_perm="consultas.delete_consulta" %}
         </td>
     </tr>
     {% empty %}
