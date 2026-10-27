@@ -111,17 +111,17 @@ DATABASES = {
 
 AUTH_PASSWORD_VALIDATORS = [
     {
-        "NAME": "django.contrib.auth.password_validation.UserAttributeSimilarityValidator",
+        "NAME": "core.validators.SimilaridadeComUsuarioValidator",
     },
     {
-        "NAME": "django.contrib.auth.password_validation.MinimumLengthValidator",
+        "NAME": "core.validators.TamanhoMinimoValidator",
         "OPTIONS": {"min_length": 8},
     },
     {
-        "NAME": "django.contrib.auth.password_validation.CommonPasswordValidator",
+        "NAME": "core.validators.SenhaComumValidator",
     },
     {
-        "NAME": "django.contrib.auth.password_validation.NumericPasswordValidator",
+        "NAME": "core.validators.SenhaNumericaValidator",
     },
     {
         "NAME": "core.validators.ComplexityValidator",
@@ -138,14 +138,16 @@ PASSWORD_HASHERS = [
 # Internationalization
 # https://docs.djangoproject.com/en/5.2/topics/i18n/
 
-LANGUAGE_CODE = "en-us"
-
-TIME_ZONE = "UTC"
-
+# LANGUAGE_CODE = "en-us"
+# TIME_ZONE = "UTC"
+# USE_I18N = True
+#
+# USE_TZ = True
+LANGUAGE_CODE = "pt-br"  # or "pt" for European Portuguese
+TIME_ZONE = "America/Sao_Paulo"  # adjust to your timezone
 USE_I18N = True
-
+USE_L10N = True  # only needed on older Django versions
 USE_TZ = True
-
 
 # Static files (CSS, JavaScript, Images)
 # https://docs.djangoproject.com/en/5.2/howto/static-files/

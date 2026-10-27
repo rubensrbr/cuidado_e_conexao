@@ -49,7 +49,17 @@ class LoginForm(AuthenticationForm):
 class TrocaDeSenhaForm(PasswordChangeForm):
     """Troca de senha com o visual dos demais formulários do sistema."""
 
+    error_messages = {
+        **PasswordChangeForm.error_messages,
+        "password_incorrect": "Sua senha atual está incorreta. Digite-a novamente.",
+        "password_mismatch": "As duas senhas digitadas não são iguais.",
+    }
+
     def __init__(self, *args, **kwargs):
         super().__init__(*args, **kwargs)
         for campo in self.fields.values():
             campo.widget.attrs["class"] = "form-control"
+            campo.error_messages["required"] = "Este campo é obrigatório."
+        self.fields["new_password2"].help_text = (
+            "Digite a mesma senha novamente, para confirmação."
+        )

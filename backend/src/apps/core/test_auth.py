@@ -147,7 +147,7 @@ class PasswordValidatorsTests(TestCase):
             self.assertIn(esperado, texto)
 
     def test_senha_so_numerica_e_comum_continuam_barradas(self):
-        self.assertIn("entirely numeric", self.mensagens("123456789012"))
+        self.assertIn("totalmente numérica", self.mensagens("123456789012"))
 
 
 class PasswordChangeTests(TestCase):
