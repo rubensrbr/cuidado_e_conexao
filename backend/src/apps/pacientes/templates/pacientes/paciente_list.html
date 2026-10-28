@@ -15,11 +15,8 @@
             {% include "partials/_field.html" with field=filtro.form.busca col="col-12 col-lg-4" %}
             {% include "partials/_field.html" with field=filtro.form.genero col="col-sm-6 col-lg-2" %}
             {% include "partials/_field.html" with field=filtro.form.status col="col-sm-6 col-lg-2" %}
-            {% include "partials/_field.html" with field=filtro.form.convenio col="col-12 col-lg-4" %}
 
             {% include "partials/_field.html" with field=filtro.form.profissional col="col-12 col-lg-4" %}
-            {% include "partials/_field.html" with field=filtro.form.idade_min col="col-6 col-lg-2" %}
-            {% include "partials/_field.html" with field=filtro.form.idade_max col="col-6 col-lg-2" %}
 
             {% include "partials/_filtro_acoes.html" with clear_url=list_url active=filtros_ativos total=paginator.count col="col-12 col-lg-4" %}
 
@@ -57,9 +54,13 @@
         </td>
 
         <td class="text-end">
-            {% url 'pacientes:paciente_update' paciente.uuid as edit_url %}
-            {% url 'pacientes:paciente_delete' paciente.uuid as delete_url %}
-            {% include "partials/_row_actions.html" with edit_perm="pacientes.change_paciente" delete_perm="pacientes.delete_paciente" %}
+          {% url 'pacientes:paciente_update' paciente.uuid as edit_base %}
+          {% url 'pacientes:paciente_delete' paciente.uuid as delete_base %}
+          {% with next=request.get_full_path|urlencode %}
+              {% with edit_url=edit_base|add:"?next="|add:next delete_url=delete_base|add:"?next="|add:next %}
+                  {% include "partials/_row_actions.html" with edit_perm="pacientes.change_paciente" delete_perm="pacientes.delete_paciente" %}
+              {% endwith %}
+          {% endwith %}
         </td>
     </tr>
     {% empty %}

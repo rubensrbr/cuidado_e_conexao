@@ -14,7 +14,8 @@ from django.views.generic import (
 from .filters import PacienteFilter
 from .forms import PacienteForm, ProntuarioForm, TelefoneFormSet
 from telefones.models import Telefone
-
+from django.urls import reverse
+from django.utils.http import url_has_allowed_host_and_scheme
 from .models import Paciente, Prontuario
 from clinicas.permissions import (
     PermissaoAdicionar,
@@ -22,6 +23,30 @@ from clinicas.permissions import (
     PermissaoExcluir,
     PermissaoVer,
 )
+
+
+class VoltarParaListaMixin:
+    """Mantém filtros e página da lista ao ir para editar/excluir e voltar."""
+
+    lista_url_name = "pacientes:paciente_list"
+
+    def get_next_url(self):
+        url = self.request.POST.get("next") or self.request.GET.get("next")
+        if url and url_has_allowed_host_and_scheme(
+            url,
+            allowed_hosts={self.request.get_host()},
+            require_https=self.request.is_secure(),
+        ):
+            return url
+        return reverse(self.lista_url_name)
+
+    def get_success_url(self):
+        return self.get_next_url()
+
+    def get_context_data(self, **kwargs):
+        context = super().get_context_data(**kwargs)
+        context["next_url"] = self.get_next_url()
+        return context
 
 
 class PacienteListView(PermissaoVer, ListView):
@@ -61,7 +86,7 @@ class PacienteListView(PermissaoVer, ListView):
         return context
 
 
-class PacienteDetailView(PermissaoVer, DetailView):
+class PacienteDetailView(VoltarParaListaMixin, PermissaoVer, DetailView):
     model = Paciente
     template_name = "pacientes/paciente_detail.html"
     slug_field = "uuid"
@@ -118,13 +143,22 @@ class PacienteCreateView(PermissaoAdicionar, PacienteFormsetMixin, CreateView):
     pass
 
 
-class PacienteUpdateView(PermissaoAlterar, PacienteFormsetMixin, UpdateView):
+class PacienteUpdateView(
+    PermissaoAlterar,
+    VoltarParaListaMixin,
+    PacienteFormsetMixin,
+    UpdateView,
+):
     slug_field = "uuid"
     slug_url_kwarg = "uuid"
     success_message = "Paciente atualizado com sucesso!"
 
 
-class PacienteDeleteView(PermissaoExcluir, DeleteView):
+class PacienteDeleteView(
+    PermissaoExcluir,
+    VoltarParaListaMixin,
+    DeleteView,
+):
     model = Paciente
     template_name = "pacientes/paciente_confirm_delete.html"
     slug_field = "uuid"
