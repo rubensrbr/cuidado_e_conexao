@@ -116,6 +116,11 @@ tasks:
     cmds:
       - "{{.MANAGE}} showmigrations"
 
+  seed:
+    desc: Popula o banco com dados fictícios, só em desenvolvimento (task seed -- --clinicas 3 --pacientes 50; task seed -- --remover)
+    cmds:
+      - "{{.MANAGE}} popular_dados_ficticios {{.CLI_ARGS}}"
+
   createsuperuser:
     desc: Create a Django superuser
     interactive: true

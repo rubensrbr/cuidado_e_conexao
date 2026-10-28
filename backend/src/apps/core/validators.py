@@ -61,8 +61,15 @@ class SimilaridadeComUsuarioValidator(
 ):
     ajuda = "Sua senha não pode ser muito parecida com as suas outras informações pessoais."
 
-    # `verbose_name` vem dos campos do usuário, que o Django descreve em inglês.
-    CAMPOS = {"first name": "nome", "last name": "sobrenome", "e-mail": "e-mail"}
+    # `verbose_name` vem dos campos do usuário e muda com o idioma: em en-us é
+    # "first name"/"last name"; em pt-br, "primeiro nome"/"último nome".
+    CAMPOS = {
+        "first name": "nome",
+        "last name": "sobrenome",
+        "primeiro nome": "nome",
+        "último nome": "sobrenome",
+        "e-mail": "e-mail",
+    }
 
     def _traduzir(self, erro):
         campo = str((erro.params or {}).get("verbose_name", ""))
