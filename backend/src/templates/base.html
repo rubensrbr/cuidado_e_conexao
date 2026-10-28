@@ -123,13 +123,7 @@
 
       function isDesktop() { return desktopQuery.matches; }
 
-      function applyStoredState() {
-        try {
-          if (isDesktop() && localStorage.getItem('sidebarCollapsed') === '1') {
-            body.classList.add('sidebar-collapsed');
-          }
-        } catch (e) { /* localStorage unavailable — ignore, default expanded */ }
-      }
+      /* Initial collapsed state is restored in layout.html before first paint. */
 
       function toggleSidebar() {
         if (isDesktop()) {
@@ -149,8 +143,6 @@
       toggle.addEventListener('click', toggleSidebar);
       backdrop.addEventListener('click', closeMobileSidebar);
       desktopQuery.addEventListener('change', closeMobileSidebar);
-
-      applyStoredState();
     })();
   </script>
 {% endblock %}

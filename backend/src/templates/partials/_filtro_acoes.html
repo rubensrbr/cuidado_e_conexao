@@ -1,7 +1,7 @@
 {% comment %}
 Botões e resumo de uma barra de filtros (formulário GET).
    Uso: {% include "partials/_filtro_acoes.html" with clear_url=list_url active=filtros_ativos total=paginator.count %}
-   clear_url: lista sem parâmetros; active: quantos filtros estão em uso; total: quantos resultados.
+   clear_url: lista sem parâmetros (o botão acrescenta ?limpar=1, que faz a lista esquecer os filtros guardados); active: quantos filtros estão em uso; total: quantos resultados.
 {% endcomment %}
 <div class="{{ col|default:'col-12 col-lg-4' }}">
     <div class="d-flex align-items-center flex-wrap gap-2">
@@ -10,7 +10,7 @@ Botões e resumo de uma barra de filtros (formulário GET).
         </button>
 
         {% if active %}
-            <a href="{{ clear_url }}" class="btn btn-outline-secondary btn-sm">
+            <a href="{{ clear_url }}?limpar=1" class="btn btn-outline-secondary btn-sm">
                 <i class="bi bi-x-lg me-1"></i> Limpar
             </a>
             <small class="text-muted">

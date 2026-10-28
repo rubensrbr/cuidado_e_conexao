@@ -16,6 +16,19 @@
   {% block extra_head %}{% endblock %}
 </head>
 <body class="{% block body_class %}{% endblock %}">
+  <script>
+    /* Restore the collapsed sidebar BEFORE first paint. Doing it later (end of
+       body) makes the sidebar render expanded and then animate to collapsed on
+       every page load (e.g. after submitting the "Filtrar" form). */
+    (function () {
+      try {
+        if (window.matchMedia('(min-width: 992px)').matches &&
+            localStorage.getItem('sidebarCollapsed') === '1') {
+          document.body.classList.add('sidebar-collapsed');
+        }
+      } catch (e) { /* localStorage unavailable — default expanded */ }
+    })();
+  </script>
   {% block body %}{% endblock %}
 
   <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/js/bootstrap.bundle.min.js"></script>

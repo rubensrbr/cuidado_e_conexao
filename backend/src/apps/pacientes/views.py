@@ -11,6 +11,8 @@ from django.views.generic import (
     DeleteView,
 )
 
+from core.mixins import FiltrosPersistentesMixin
+
 from .filters import PacienteFilter
 from .forms import PacienteForm, ProntuarioForm, TelefoneFormSet
 from telefones.models import Telefone
@@ -24,8 +26,9 @@ from clinicas.permissions import (
 )
 
 
-class PacienteListView(PermissaoVer, ListView):
+class PacienteListView(PermissaoVer, FiltrosPersistentesMixin, ListView):
     model = Paciente
+    filterset_class = PacienteFilter
     template_name = "pacientes/paciente_list.html"
     context_object_name = "pacientes"
     paginate_by = 10
@@ -42,7 +45,7 @@ class PacienteListView(PermissaoVer, ListView):
                 )
             )
         )
-        self.filtro = PacienteFilter(
+        self.filtro = self.filterset_class(
             self.request.GET, queryset=queryset, request=self.request
         )
         if not self.filtro.is_valid():
