@@ -2,6 +2,7 @@
 Paginação de ListView (usa is_paginated, page_obj e paginator do contexto).
    Uso: {% include "partials/_pagination.html" with noun="pacientes" %}
    Opcional: noun (padrão: "registros")
+   Os links usam {% querystring %}: mantêm os demais parâmetros da URL (filtros) e só trocam `page`.
 {% endcomment %}
 {% if is_paginated %}
 <nav class="d-flex justify-content-between align-items-center flex-wrap gap-2 px-3 py-3" aria-label="Paginação">
@@ -14,7 +15,7 @@ Paginação de ListView (usa is_paginated, page_obj e paginator do contexto).
 
         {% if page_obj.has_previous %}
             <li class="page-item">
-                <a class="page-link" href="?page={{ page_obj.previous_page_number }}" aria-label="Anterior">
+                <a class="page-link" href="{% querystring page=page_obj.previous_page_number %}" aria-label="Anterior">
                     <i class="bi bi-chevron-left"></i>
                 </a>
             </li>
@@ -31,14 +32,14 @@ Paginação de ListView (usa is_paginated, page_obj e paginator do contexto).
                 </li>
             {% elif num >= page_obj.number|add:"-2" and num <= page_obj.number|add:"2" %}
                 <li class="page-item">
-                    <a class="page-link" href="?page={{ num }}">{{ num }}</a>
+                    <a class="page-link" href="{% querystring page=num %}">{{ num }}</a>
                 </li>
             {% endif %}
         {% endfor %}
 
         {% if page_obj.has_next %}
             <li class="page-item">
-                <a class="page-link" href="?page={{ page_obj.next_page_number }}" aria-label="Próxima">
+                <a class="page-link" href="{% querystring page=page_obj.next_page_number %}" aria-label="Próxima">
                     <i class="bi bi-chevron-right"></i>
                 </a>
             </li>

@@ -592,6 +592,15 @@ a:hover {
 }
 
 
+/* Barra de filtros das listagens */
+
+.app-filter {
+  padding: 1rem 1.5rem 1.25rem;
+  background: var(--paper);
+  border-bottom: 1px solid var(--line);
+}
+
+
 /* Form controls */
 
 .app-form label {

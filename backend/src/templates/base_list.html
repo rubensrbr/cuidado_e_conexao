@@ -3,6 +3,7 @@
 Base das páginas de listagem. Cada lista só preenche os blocos:
    title        -> título da aba
    list_header  -> {% include "partials/_card_header.html" ... %}
+   list_filter  -> (opcional) barra de filtros, exibida entre o cabeçalho e a tabela
    table_head   -> os <th> da tabela
    table_body   -> o {% for %}…{% empty %}…{% endfor %} com as linhas
    pagination   -> (opcional) {% include "partials/_pagination.html" with noun="..." %}
@@ -15,6 +16,8 @@ Base das páginas de listagem. Cada lista só preenche os blocos:
     <div class="app-card">
 
         {% block list_header %}{% endblock %}
+
+        {% block list_filter %}{% endblock %}
 
         <div class="table-responsive">
 

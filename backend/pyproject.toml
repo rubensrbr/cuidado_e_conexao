@@ -10,6 +10,7 @@ dependencies = [
     "psycopg[binary]>=3.3.6",
     "python-decouple>=3.8",
     "weasyprint>=70.0",
+    "django-filter>=26.2",
 ]
 
 [dependency-groups]

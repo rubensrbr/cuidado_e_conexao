@@ -11,6 +11,7 @@ from django.views.generic import (
     DeleteView,
 )
 
+from .filters import PacienteFilter
 from .forms import PacienteForm, ProntuarioForm, TelefoneFormSet
 from telefones.models import Telefone
 
@@ -32,7 +33,7 @@ class PacienteListView(PermissaoVer, ListView):
     def get_queryset(self):
         # Uma query extra para todos os telefones da página (evita N+1),
         # com o telefone principal primeiro.
-        return (
+        queryset = (
             super()
             .get_queryset()
             .prefetch_related(
@@ -41,6 +42,23 @@ class PacienteListView(PermissaoVer, ListView):
                 )
             )
         )
+        self.filtro = PacienteFilter(
+            self.request.GET, queryset=queryset, request=self.request
+        )
+        if not self.filtro.is_valid():
+            # Valor de filtro inválido (idade fora da faixa, profissional de outra
+            # clínica...) não pode virar "mostrar tudo": a lista fica vazia e o
+            # formulário mostra o erro.
+            return queryset.none()
+        return self.filtro.qs
+
+    def get_context_data(self, **kwargs):
+        context = super().get_context_data(**kwargs)
+        context["filtro"] = self.filtro
+        context["filtros_ativos"] = sum(
+            1 for nome in self.filtro.filters if self.request.GET.get(nome, "").strip()
+        )
+        return context
 
 
 class PacienteDetailView(PermissaoVer, DetailView):

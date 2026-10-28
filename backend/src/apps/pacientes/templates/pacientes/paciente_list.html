@@ -7,6 +7,26 @@
     {% include "partials/_card_header.html" with icon="bi-people-fill" title="Lista de Pacientes" subtitle="Pacientes cadastrados no sistema" action_url=create_url action_label="Novo paciente" action_icon="bi-plus-lg" %}
 {% endblock %}
 
+{% block list_filter %}
+    {% url 'pacientes:paciente_list' as list_url %}
+    <form method="get" action="{{ list_url }}" class="app-form app-filter" aria-label="Filtrar pacientes">
+        <div class="row g-3 align-items-end">
+
+            {% include "partials/_field.html" with field=filtro.form.busca col="col-12 col-lg-4" %}
+            {% include "partials/_field.html" with field=filtro.form.genero col="col-sm-6 col-lg-2" %}
+            {% include "partials/_field.html" with field=filtro.form.status col="col-sm-6 col-lg-2" %}
+            {% include "partials/_field.html" with field=filtro.form.convenio col="col-12 col-lg-4" %}
+
+            {% include "partials/_field.html" with field=filtro.form.profissional col="col-12 col-lg-4" %}
+            {% include "partials/_field.html" with field=filtro.form.idade_min col="col-6 col-lg-2" %}
+            {% include "partials/_field.html" with field=filtro.form.idade_max col="col-6 col-lg-2" %}
+
+            {% include "partials/_filtro_acoes.html" with clear_url=list_url active=filtros_ativos total=paginator.count col="col-12 col-lg-4" %}
+
+        </div>
+    </form>
+{% endblock %}
+
 {% block table_head %}
     <th>Nome</th>
     <th>Data Nasc.</th>
@@ -43,7 +63,11 @@
         </td>
     </tr>
     {% empty %}
-        {% include "partials/_empty_row.html" with colspan=5 icon="bi-people" message="Nenhum paciente cadastrado." %}
+        {% if filtros_ativos %}
+            {% include "partials/_empty_row.html" with colspan=5 icon="bi-search" message="Nenhum paciente encontrado com esses filtros." %}
+        {% else %}
+            {% include "partials/_empty_row.html" with colspan=5 icon="bi-people" message="Nenhum paciente cadastrado." %}
+        {% endif %}
     {% endfor %}
 {% endblock %}
 
