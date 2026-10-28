@@ -15,11 +15,8 @@
             {% include "partials/_field.html" with field=filtro.form.busca col="col-12 col-lg-4" %}
             {% include "partials/_field.html" with field=filtro.form.genero col="col-sm-6 col-lg-2" %}
             {% include "partials/_field.html" with field=filtro.form.status col="col-sm-6 col-lg-2" %}
-            {% include "partials/_field.html" with field=filtro.form.convenio col="col-12 col-lg-4" %}
 
             {% include "partials/_field.html" with field=filtro.form.profissional col="col-12 col-lg-4" %}
-            {% include "partials/_field.html" with field=filtro.form.idade_min col="col-6 col-lg-2" %}
-            {% include "partials/_field.html" with field=filtro.form.idade_max col="col-6 col-lg-2" %}
 
             {% include "partials/_filtro_acoes.html" with clear_url=list_url active=filtros_ativos total=paginator.count col="col-12 col-lg-4" %}
 
