@@ -476,6 +476,60 @@ a:hover {
 }
 
 
+/* Pagination (footer of list cards) */
+
+.app-pagination {
+  background: var(--sage-100);
+  border-top: 1px solid var(--line);
+  color: var(--ink-600);
+}
+
+.app-pagination .app-pagination-info {
+  color: var(--ink-600);
+  font-size: .8rem;
+}
+
+.app-pagination .pagination {
+  --bs-pagination-padding-x: .65rem;
+  --bs-pagination-padding-y: .3rem;
+  --bs-pagination-font-size: .82rem;
+  --bs-pagination-color: var(--teal-600);
+  --bs-pagination-bg: var(--paper);
+  --bs-pagination-border-color: var(--line);
+  --bs-pagination-border-radius: 8px;
+  --bs-pagination-hover-color: var(--pine-700);
+  --bs-pagination-hover-bg: var(--sage-200);
+  --bs-pagination-hover-border-color: var(--line);
+  --bs-pagination-focus-color: var(--pine-700);
+  --bs-pagination-focus-bg: var(--sage-200);
+  --bs-pagination-focus-box-shadow: 0 0 0 .2rem rgba(46, 111, 96, .25);
+  --bs-pagination-active-color: #fff;
+  --bs-pagination-active-bg: var(--teal-600);
+  --bs-pagination-active-border-color: var(--teal-600);
+  --bs-pagination-disabled-color: var(--ink-400);
+  --bs-pagination-disabled-bg: var(--paper);
+  --bs-pagination-disabled-border-color: var(--line);
+  gap: .25rem;
+}
+
+/* Spaced, individually rounded buttons instead of a joined strip */
+.app-pagination .page-item .page-link,
+.app-pagination .page-item:first-child .page-link,
+.app-pagination .page-item:last-child .page-link {
+  border-radius: var(--bs-pagination-border-radius);
+  margin-left: 0;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  min-width: 32px;
+  font-weight: 500;
+}
+
+.app-pagination .page-item.active .page-link {
+  font-weight: 600;
+}
+
+
 /* Names / primary links inside tables */
 
 .app-name {
