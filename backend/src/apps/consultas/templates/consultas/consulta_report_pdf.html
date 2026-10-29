@@ -1,0 +1,85 @@
+{% extends "base_report_pdf.html" %}{% comment %}
+Relatório de consultas (WeasyPrint). O CSS e o cabeçalho vêm de base_report_pdf.html.
+{% endcomment %}
+
+{% block title %}Relatório de Consultas{% endblock %}
+{% block footer_label %}Relatório de Consultas{% endblock %}
+{% block report_title %}Relatório de Consultas{% endblock %}
+{% block report_subtitle %}Consultas agendadas no sistema{% endblock %}
+
+{% block summary %}
+<section class="summary">
+  <div class="summary-item">
+    <div class="summary-label">Total de consultas</div>
+    <div class="summary-value">{{ total }}</div>
+  </div>
+  <div class="summary-item">
+    <div class="summary-label">Em aberto</div>
+    <div class="summary-value">{{ total_em_aberto }}</div>
+  </div>
+  <div class="summary-item">
+    <div class="summary-label">Realizadas</div>
+    <div class="summary-value">{{ total_realizadas }}</div>
+  </div>
+  <div class="summary-item">
+    <div class="summary-label">Canceladas ou faltas</div>
+    <div class="summary-value">{{ total_nao_compareceu }}</div>
+  </div>
+</section>
+{% endblock %}
+
+{% block table %}
+<table>
+  <thead>
+    <tr>
+      <th>Data</th>
+      <th>Horário</th>
+      <th class="col-nome">Paciente</th>
+      <th>Profissional</th>
+      <th>Tipo</th>
+      <th>Status</th>
+    </tr>
+  </thead>
+  <tbody>
+    {% for consulta in consultas %}
+    <tr>
+      <td class="nowrap">{{ consulta.data_consulta|date:"d/m/Y" }}</td>
+      <td class="nowrap">{{ consulta.hora_inicio|time:"H:i" }} &ndash; {{ consulta.hora_fim|time:"H:i" }}</td>
+      <td><span class="app-name">{{ consulta.paciente.nome_completo }}</span></td>
+      <td>{{ consulta.profissional.nome_completo }}</td>
+      <td>{{ consulta.get_tipo_consulta_display }}</td>
+      <td>
+        {% if consulta.status == "confirmada" or consulta.status == "realizada" %}
+          <span class="app-status app-status-active">{{ consulta.get_status_display }}</span>
+        {% elif consulta.status == "cancelada" or consulta.status == "falta" %}
+          <span class="app-status app-status-inactive">{{ consulta.get_status_display }}</span>
+        {% else %}
+          <span class="app-status app-status-pending">{{ consulta.get_status_display }}</span>
+        {% endif %}
+      </td>
+    </tr>
+    {% empty %}
+    <tr>
+      <td colspan="6" class="empty">
+        {% if filtros_ativos %}Nenhuma consulta encontrada com esses filtros.{% else %}Nenhuma consulta agendada.{% endif %}
+      </td>
+    </tr>
+    {% endfor %}
+  </tbody>
+</table>
+{% endblock %}
+
+{% block note %}
+<p class="report-note">
+  {% if filtros_ativos %}
+    Relatório com {{ filtros_ativos }} filtro{{ filtros_ativos|pluralize }} aplicado{{ filtros_ativos|pluralize }} na lista, no momento da geração.
+    {% if periodo_de or periodo_ate %}
+      Período:
+      {% if periodo_de %}de {{ periodo_de|date:"d/m/Y" }}{% endif %}
+      {% if periodo_ate %}até {{ periodo_ate|date:"d/m/Y" }}{% endif %}.
+    {% endif %}
+  {% else %}
+    Relatório com todas as consultas da clínica no momento da geração, em ordem de data.
+  {% endif %}
+</p>
+{% endblock %}

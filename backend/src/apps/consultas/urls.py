@@ -16,6 +16,11 @@ urlpatterns = [
         name="consulta_create",
     ),
     path(
+        "relatorio/pdf/",
+        views.ConsultaPdfReportView.as_view(),
+        name="consulta_report_pdf",
+    ),
+    path(
         "<uuid:uuid>/",
         views.ConsultaDetailView.as_view(),
         name="consulta_detail",

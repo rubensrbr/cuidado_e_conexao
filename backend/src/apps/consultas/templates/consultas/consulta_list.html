@@ -4,7 +4,28 @@
 
 {% block list_header %}
     {% if "consultas.add_consulta" in perms %}{% url 'consultas:consulta_create' as create_url %}{% endif %}
-    {% include "partials/_card_header.html" with icon="bi-calendar-week-fill" title="Lista de Consultas" subtitle="Consultas agendadas no sistema" action_url=create_url action_label="Nova consulta" action_icon="bi-plus-lg" %}
+    {% url 'consultas:consulta_report_pdf' as report_url %}
+    {% querystring page=None as filtros_qs %}
+    {% include "partials/_card_header.html" with icon="bi-calendar-week-fill" title="Lista de Consultas" subtitle="Consultas agendadas no sistema" action_url=create_url action_label="Nova consulta" action_icon="bi-plus-lg" secondary_url=report_url|add:filtros_qs secondary_label="Gerar PDF" secondary_icon="bi-file-earmark-pdf" %}
+{% endblock %}
+
+{% block list_filter %}
+    {% url 'consultas:consulta_list' as list_url %}
+    <form method="get" action="{{ list_url }}" class="app-form app-filter" aria-label="Filtrar consultas">
+        <div class="row g-3 align-items-end">
+
+            {% include "partials/_field.html" with field=filtro.form.busca col="col-12 col-lg-4" %}
+            {% include "partials/_field.html" with field=filtro.form.profissional col="col-12 col-lg-4" %}
+            {% include "partials/_field.html" with field=filtro.form.status col="col-sm-6 col-lg-2" %}
+            {% include "partials/_field.html" with field=filtro.form.tipo col="col-sm-6 col-lg-2" %}
+
+            {% include "partials/_field.html" with field=filtro.form.data_de col="col-sm-6 col-lg-2" %}
+            {% include "partials/_field.html" with field=filtro.form.data_ate col="col-sm-6 col-lg-2" %}
+
+            {% include "partials/_filtro_acoes.html" with clear_url=list_url active=filtros_ativos total=paginator.count col="col-12 col-lg-8" %}
+
+        </div>
+    </form>
 {% endblock %}
 
 {% block table_head %}
@@ -59,7 +80,11 @@
         </td>
     </tr>
     {% empty %}
-        {% include "partials/_empty_row.html" with colspan=7 icon="bi-calendar-x" message="Nenhuma consulta agendada." %}
+        {% if filtros_ativos %}
+            {% include "partials/_empty_row.html" with colspan=7 icon="bi-search" message="Nenhuma consulta encontrada com esses filtros." %}
+        {% else %}
+            {% include "partials/_empty_row.html" with colspan=7 icon="bi-calendar-x" message="Nenhuma consulta agendada." %}
+        {% endif %}
     {% endfor %}
 {% endblock %}
 
