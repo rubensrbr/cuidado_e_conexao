@@ -3,7 +3,7 @@ services:
     build:
       context: .
       target: prod
-    command: gunicorn src.wsgi:application --bind 0.0.0.0:8000 --workers 3
+    command: gunicorn src.wsgi:application
     restart: always
     environment:
       DJANGO_SETTINGS_MODULE: src.settings

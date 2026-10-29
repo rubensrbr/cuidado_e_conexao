@@ -170,3 +170,38 @@ AUTHENTICATION_BACKENDS = ["clinicas.backends.MembroBackend"]
 LOGIN_URL = "/login/"
 LOGIN_REDIRECT_URL = "/"
 LOGOUT_REDIRECT_URL = LOGIN_URL
+
+
+# Logs
+# Tudo vai para a saída padrão (o Docker coleta). Regra do projeto: registre
+# identificadores (uuid), nunca dados pessoais (nome, CPF, CID, anotações).
+LOG_LEVEL = config("LOG_LEVEL", default="INFO").upper()
+
+LOGGING = {
+    "version": 1,
+    "disable_existing_loggers": False,
+    "formatters": {
+        "padrao": {
+            "format": "{asctime} {levelname} {name} {message}",
+            "style": "{",
+        },
+    },
+    "handlers": {
+        "console": {
+            "class": "logging.StreamHandler",
+            "stream": "ext://sys.stdout",
+            "formatter": "padrao",
+        },
+    },
+    # Loggers dos nossos apps (logging.getLogger(__name__)) caem aqui.
+    "root": {"handlers": ["console"], "level": LOG_LEVEL},
+    "loggers": {
+        # O logger "django" já vem com um handler próprio; reapontamos para o
+        # nosso e cortamos a propagação, senão cada linha sairia duas vezes.
+        # Fixo em INFO: LOG_LEVEL=DEBUG não deve inundar com logs do Django.
+        "django": {"handlers": ["console"], "level": "INFO", "propagate": False},
+        # Com DEBUG ligado o Django registra cada SQL *com os parâmetros*, que
+        # aqui são dados de pacientes. Mantido desligado de propósito.
+        "django.db.backends": {"level": "WARNING"},
+    },
+}
