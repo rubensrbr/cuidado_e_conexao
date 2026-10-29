@@ -4,7 +4,9 @@
 
 {% block list_header %}
     {% if "pacientes.add_paciente" in perms %}{% url 'pacientes:paciente_create' as create_url %}{% endif %}
-    {% include "partials/_card_header.html" with icon="bi-people-fill" title="Lista de Pacientes" subtitle="Pacientes cadastrados no sistema" action_url=create_url action_label="Novo paciente" action_icon="bi-plus-lg" %}
+    {% url 'pacientes:paciente_report_pdf' as report_url %}
+    {% querystring page=None as filtros_qs %}
+    {% include "partials/_card_header.html" with icon="bi-people-fill" title="Lista de Pacientes" subtitle="Pacientes cadastrados no sistema" action_url=create_url action_label="Novo paciente" action_icon="bi-plus-lg" secondary_url=report_url|add:filtros_qs secondary_label="Gerar PDF" secondary_icon="bi-file-earmark-pdf" %}
 {% endblock %}
 
 {% block list_filter %}

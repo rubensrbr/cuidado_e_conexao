@@ -1,14 +1,19 @@
+from django.conf import settings
 from django.contrib import messages
 from django.db import transaction
 from django.db.models import Prefetch
+from django.http import HttpResponse
 from django.shortcuts import redirect
+from django.template.loader import render_to_string
 from django.urls import reverse_lazy
+from django.utils import timezone
 from django.views.generic import (
     ListView,
     DetailView,
     CreateView,
     UpdateView,
     DeleteView,
+    View,
 )
 
 from core.mixins import FiltrosPersistentesMixin
@@ -62,6 +67,69 @@ class PacienteListView(PermissaoVer, FiltrosPersistentesMixin, ListView):
             1 for nome in self.filtro.filters if self.request.GET.get(nome, "").strip()
         )
         return context
+
+
+class PacientePdfReportView(PermissaoVer, View):
+    """Relatório em PDF (WeasyPrint) dos pacientes da clínica atual.
+
+    Usa o manager padrão de `Paciente`, que já filtra pela clínica da requisição;
+    sem clínica atual o relatório sai vazio (falha fechada).
+    Respeita os mesmos filtros da lista (a tela repassa a query string no botão),
+    mas não é paginado: o PDF traz todos os resultados, não só a página da tela.
+    """
+
+    model = Paciente  # usado só para montar a permissão (view_paciente)
+    filterset_class = PacienteFilter
+    template_name = "pacientes/paciente_report_pdf.html"
+
+    def get_queryset(self):
+        return Paciente.objects.prefetch_related(
+            "profissionais",
+            Prefetch(
+                "telefones",
+                queryset=Telefone.objects.order_by("-principal", "pk"),
+            ),
+        )
+
+    def get(self, request, *args, **kwargs):
+        # Import tardio: o WeasyPrint carrega bibliotecas nativas (Pango). Assim,
+        # um ambiente sem elas só afeta esta tela, não a inicialização do Django.
+        from weasyprint import HTML, URLFetcher
+
+        queryset = self.get_queryset()
+        filtro = self.filterset_class(request.GET, queryset=queryset, request=request)
+        # Filtro inválido não pode virar "todos os pacientes" (igual à lista).
+        pacientes = list(filtro.qs if filtro.is_valid() else queryset.none())
+        filtros_ativos = sum(
+            1 for nome in filtro.filters if request.GET.get(nome, "").strip()
+        )
+
+        agora = timezone.localtime()
+        ativos = sum(1 for paciente in pacientes if paciente.ativo)
+        contexto = {
+            "pacientes": pacientes,
+            "total": len(pacientes),
+            "total_ativos": ativos,
+            "total_inativos": len(pacientes) - ativos,
+            "filtros_ativos": filtros_ativos,
+            "clinica": request.clinica,
+            "gerado_em": agora,
+            "gerado_por": request.user.get_full_name() or request.user.get_username(),
+        }
+        html = render_to_string(self.template_name, contexto, request=request)
+
+        # O documento é autocontido (CSS e logo embutidos): só `data:` é permitido,
+        # então o WeasyPrint nunca faz requisições de rede ao renderizar.
+        pdf = HTML(
+            string=html,
+            base_url=str(settings.BASE_DIR),
+            url_fetcher=URLFetcher(allowed_protocols={"data"}),
+        ).write_pdf()
+
+        resposta = HttpResponse(pdf, content_type="application/pdf")
+        nome_arquivo = f"pacientes_{agora:%Y%m%d}.pdf"
+        resposta["Content-Disposition"] = f'attachment; filename="{nome_arquivo}"'
+        return resposta
 
 
 class PacienteDetailView(PermissaoVer, DetailView):

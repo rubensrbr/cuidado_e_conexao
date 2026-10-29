@@ -1,0 +1,92 @@
+{% extends "base_report_pdf.html" %}{% comment %}
+Relatório de pacientes (WeasyPrint). O CSS e o cabeçalho vêm de base_report_pdf.html.
+{% endcomment %}
+
+{% block title %}Relatório de Pacientes{% endblock %}
+{% block footer_label %}Relatório de Pacientes{% endblock %}
+{% block report_title %}Relatório de Pacientes{% endblock %}
+{% block report_subtitle %}Pacientes cadastrados no sistema{% endblock %}
+
+{% block summary %}
+<section class="summary">
+  <div class="summary-item">
+    <div class="summary-label">Total de pacientes</div>
+    <div class="summary-value">{{ total }}</div>
+  </div>
+  <div class="summary-item">
+    <div class="summary-label">Ativos</div>
+    <div class="summary-value">{{ total_ativos }}</div>
+  </div>
+  <div class="summary-item">
+    <div class="summary-label">Inativos</div>
+    <div class="summary-value">{{ total_inativos }}</div>
+  </div>
+</section>
+{% endblock %}
+
+{% block table %}
+<table>
+  <thead>
+    <tr>
+      <th class="col-nome">Nome</th>
+      <th>Nascimento</th>
+      <th>Gênero</th>
+      <th>E-mail</th>
+      <th>Telefones</th>
+      <th>Convênio</th>
+      <th>Profissionais</th>
+      <th>Status</th>
+    </tr>
+  </thead>
+  <tbody>
+    {% for paciente in pacientes %}
+    <tr>
+      <td><span class="app-name">{{ paciente.nome_completo }}</span></td>
+      <td class="nowrap">{{ paciente.data_nascimento|date:"d/m/Y"|default:"-" }}</td>
+      <td>{{ paciente.get_genero_display|default:"-" }}</td>
+      <td>{{ paciente.email|default:"-" }}</td>
+      <td>
+        {% for telefone in paciente.telefones.all %}
+          <div class="phone">
+            {{ telefone.numero }}
+            <span class="kind">{{ telefone.get_tipo_display }}{% if telefone.principal %} &middot; principal{% endif %}</span>
+          </div>
+        {% empty %}-{% endfor %}
+      </td>
+      <td>
+        {{ paciente.convenio|default:"Particular" }}
+        {% if paciente.numero_carteirinha %}<div class="muted">{{ paciente.numero_carteirinha }}</div>{% endif %}
+      </td>
+      <td>
+        {% for profissional in paciente.profissionais.all %}
+          <div>{{ profissional.nome_completo }}</div>
+        {% empty %}-{% endfor %}
+      </td>
+      <td>
+        {% if paciente.ativo %}
+          <span class="app-status app-status-active">Ativo</span>
+        {% else %}
+          <span class="app-status app-status-inactive">Inativo</span>
+        {% endif %}
+      </td>
+    </tr>
+    {% empty %}
+    <tr>
+      <td colspan="8" class="empty">
+        {% if filtros_ativos %}Nenhum paciente encontrado com esses filtros.{% else %}Nenhum paciente cadastrado.{% endif %}
+      </td>
+    </tr>
+    {% endfor %}
+  </tbody>
+</table>
+{% endblock %}
+
+{% block note %}
+<p class="report-note">
+  {% if filtros_ativos %}
+    Relatório com {{ filtros_ativos }} filtro{{ filtros_ativos|pluralize }} aplicado{{ filtros_ativos|pluralize }} na lista, no momento da geração.
+  {% else %}
+    Relatório com todos os pacientes da clínica no momento da geração, na mesma ordem da lista.
+  {% endif %}
+</p>
+{% endblock %}

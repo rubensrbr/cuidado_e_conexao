@@ -16,6 +16,11 @@ urlpatterns = [
         name="paciente_create",
     ),
     path(
+        "relatorio/pdf/",
+        views.PacientePdfReportView.as_view(),
+        name="paciente_report_pdf",
+    ),
+    path(
         "<uuid:uuid>/",
         views.PacienteDetailView.as_view(),
         name="paciente_detail",

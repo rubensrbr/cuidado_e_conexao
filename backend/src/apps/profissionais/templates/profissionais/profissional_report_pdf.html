@@ -1,238 +1,13 @@
-{% load core_extras %}{% comment %}
-Relatório de profissionais para o WeasyPrint (não estende base.html).
+{% extends "base_report_pdf.html" %}{% load core_extras %}{% comment %}
+Relatório de profissionais (WeasyPrint). O CSS e o cabeçalho vêm de base_report_pdf.html.
+{% endcomment %}
 
-Documento autocontido: CSS e logo estão embutidos, porque o WeasyPrint não
-carrega o Bootstrap nem as fontes web da tela. A paleta e os componentes
-(cabeçalho pine, tabela com cabeçalho sage, selos de status) espelham
-static/css/base.css — se mudar a identidade visual lá, ajuste aqui também.
-{% endcomment %}<!DOCTYPE html>
-<html lang="pt-br">
-<head>
-<meta charset="utf-8">
-<title>Relatório de Profissionais | Cuidado e Conexão</title>
-<style>
-  :root {
-    --pine-900: #16302B;
-    --pine-800: #1D3B34;
-    --teal-600: #2E6F60;
-    --sage-100: #E9F0EA;
-    --sage-200: #DCE8DE;
-    --paper: #FBFAF6;
-    --clay-500: #C1793F;
-    --clay-600: #A8642F;
-    --ink-900: #1F2E29;
-    --ink-600: #56665F;
-    --ink-400: #829087;
-    --line: #D7E2D8;
-    --danger: #B4483F;
-  }
+{% block title %}Relatório de Profissionais{% endblock %}
+{% block footer_label %}Relatório de Profissionais{% endblock %}
+{% block report_title %}Relatório de Profissionais{% endblock %}
+{% block report_subtitle %}Profissionais cadastrados no sistema{% endblock %}
 
-  @page {
-    size: A4 landscape;
-    margin: 16mm 14mm 18mm 14mm;
-
-    @bottom-left {
-      content: "Cuidado e Conexão · Relatório de Profissionais";
-      font-family: "IBM Plex Sans", "DejaVu Sans", sans-serif;
-      font-size: 7.5pt;
-      color: #829087;
-    }
-    @bottom-right {
-      content: "Página " counter(page) " de " counter(pages);
-      font-family: "IBM Plex Sans", "DejaVu Sans", sans-serif;
-      font-size: 7.5pt;
-      color: #829087;
-    }
-  }
-
-  * { box-sizing: border-box; }
-
-  body {
-    margin: 0;
-    font-family: "IBM Plex Sans", "DejaVu Sans", sans-serif;
-    font-size: 9pt;
-    color: var(--ink-900);
-    background: #fff;
-  }
-
-  h1, .brand-word {
-    font-family: "IBM Plex Serif", "DejaVu Serif", Georgia, serif;
-    font-weight: 600;
-  }
-
-  /* ---------- Cabeçalho (espelha .app-card-header) ---------- */
-  .report-header {
-    background: var(--pine-900);
-    color: #fff;
-    border-radius: 10px;
-    padding: 14px 18px;
-    display: flex;
-    justify-content: space-between;
-    align-items: center;
-  }
-
-  .report-brand {
-    display: flex;
-    align-items: center;
-    gap: 12px;
-  }
-
-  .report-mark {
-    width: 38px;
-    height: 38px;
-    border-radius: 9px;
-    background: var(--paper);
-    padding: 4px;
-  }
-
-  .report-header h1 {
-    margin: 0;
-    font-size: 15pt;
-    color: #fff;
-  }
-
-  .report-header .subtitle {
-    margin-top: 2px;
-    font-size: 8pt;
-    color: rgba(255, 255, 255, .7);
-  }
-
-  .report-clinic {
-    text-align: right;
-    font-size: 8pt;
-    color: rgba(255, 255, 255, .7);
-    line-height: 1.5;
-  }
-
-  .report-clinic strong {
-    display: block;
-    font-size: 10.5pt;
-    color: #fff;
-    font-weight: 600;
-  }
-
-  /* ---------- Resumo ---------- */
-  .summary {
-    display: flex;
-    gap: 10px;
-    margin: 12px 0 14px;
-  }
-
-  .summary-item {
-    flex: 1;
-    background: var(--paper);
-    border: 1px solid var(--line);
-    border-radius: 8px;
-    padding: 8px 12px;
-  }
-
-  .summary-label {
-    font-size: 7pt;
-    font-weight: 600;
-    text-transform: uppercase;
-    letter-spacing: .04em;
-    color: var(--ink-600);
-  }
-
-  .summary-value {
-    margin-top: 1px;
-    font-family: "IBM Plex Serif", "DejaVu Serif", Georgia, serif;
-    font-size: 15pt;
-    font-weight: 600;
-    color: var(--pine-900);
-  }
-
-  /* ---------- Tabela (espelha .app-table) ---------- */
-  table {
-    width: 100%;
-    border-collapse: collapse;
-  }
-
-  thead { display: table-header-group; }   /* repete o cabeçalho em cada página */
-  tr { break-inside: avoid; }
-
-  thead th {
-    background: var(--sage-100);
-    color: var(--ink-600);
-    border-bottom: 1px solid var(--line);
-    font-size: 7pt;
-    font-weight: 600;
-    text-transform: uppercase;
-    letter-spacing: .04em;
-    text-align: left;
-    padding: 7px 8px;
-    white-space: nowrap;
-  }
-
-  tbody td {
-    border-bottom: 1px solid var(--line);
-    padding: 7px 8px;
-    vertical-align: top;
-    font-size: 8.5pt;
-  }
-
-  th.num, td.num { text-align: right; white-space: nowrap; }
-  td.nowrap { white-space: nowrap; }
-  th.col-nome { width: 22%; }
-
-  .app-name { font-weight: 600; color: var(--ink-900); }
-
-  .muted { color: var(--ink-600); font-size: 7.5pt; }
-
-  .phone { white-space: nowrap; }
-  .phone + .phone { margin-top: 2px; }
-  .phone .kind { color: var(--ink-600); font-size: 7.5pt; }
-
-  /* Selos de status (espelham .app-status) */
-  .app-status {
-    display: inline-block;
-    padding: 2px 8px;
-    border-radius: 999px;
-    font-size: 7pt;
-    font-weight: 600;
-    white-space: nowrap;
-  }
-  .app-status-active { background: var(--sage-200); color: var(--pine-800); }
-  .app-status-inactive { background: #f1e3e0; color: var(--danger); }
-
-  .empty {
-    text-align: center;
-    color: var(--ink-400);
-    padding: 28px 0;
-  }
-
-  .report-note {
-    margin-top: 10px;
-    font-size: 7.5pt;
-    color: var(--ink-400);
-  }
-</style>
-</head>
-<body>
-
-<header class="report-header">
-  <div class="report-brand">
-    <svg class="report-mark" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 64 64">
-      <path d="M32,56 C10,41 3,27 11,16 C17,7.5 28,8 32,19 C36,8 47,7.5 53,16 C61,27 54,41 32,56 Z" fill="#16302B"/>
-      <rect x="28.5" y="24" width="7" height="22" rx="1.5" fill="#FBFAF6"/>
-      <rect x="21" y="31.5" width="22" height="7" rx="1.5" fill="#FBFAF6"/>
-    </svg>
-    <div>
-      <h1>Relatório de Profissionais</h1>
-      <div class="subtitle">Cuidado e Conexão &middot; Profissionais cadastrados no sistema</div>
-    </div>
-  </div>
-
-  <div class="report-clinic">
-    {% if clinica %}
-      <strong>{{ clinica.nome }}</strong>
-      {% if clinica.cnpj %}CNPJ {{ clinica.cnpj_formatado }}<br>{% endif %}
-    {% endif %}
-    Gerado em {{ gerado_em|date:"d/m/Y \à\s H:i" }}<br>
-    por {{ gerado_por }}
-  </div>
-</header>
-
+{% block summary %}
 <section class="summary">
   <div class="summary-item">
     <div class="summary-label">Total de profissionais</div>
@@ -247,7 +22,9 @@ static/css/base.css — se mudar a identidade visual lá, ajuste aqui também.
     <div class="summary-value">{{ total_inativos }}</div>
   </div>
 </section>
+{% endblock %}
 
+{% block table %}
 <table>
   <thead>
     <tr>
@@ -297,10 +74,10 @@ static/css/base.css — se mudar a identidade visual lá, ajuste aqui também.
     {% endfor %}
   </tbody>
 </table>
+{% endblock %}
 
+{% block note %}
 <p class="report-note">
   Relatório com todos os profissionais da clínica no momento da geração, em ordem alfabética por sobrenome.
 </p>
-
-</body>
-</html>
+{% endblock %}
