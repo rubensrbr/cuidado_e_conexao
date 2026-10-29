@@ -14,7 +14,9 @@ from django.views.generic import (
     DeleteView,
     View,
 )
+from core.mixins import FiltrosPersistentesMixin
 from telefones.models import Telefone
+from .filters import ProfissionalFilter
 from .models import Profissional, Disponibilidade
 from .forms import (
     DisponibilidadeForm,
@@ -31,11 +33,42 @@ from clinicas.permissions import (
 
 
 # --- Profissional Views ---
-class ProfissionalListView(PermissaoVer, ListView):
+class ProfissionalListView(PermissaoVer, FiltrosPersistentesMixin, ListView):
     model = Profissional
+    filterset_class = ProfissionalFilter
     template_name = "profissionais/profissional_list.html"
     context_object_name = "profissionais"
     paginate_by = 10
+
+    def get_queryset(self):
+        # Uma query extra para todos os telefones da página (evita N+1),
+        # com o telefone principal primeiro.
+        queryset = (
+            super()
+            .get_queryset()
+            .select_related("tipo_profissional")
+            .prefetch_related(
+                Prefetch(
+                    "telefones", queryset=Telefone.objects.order_by("-principal", "id")
+                )
+            )
+        )
+        self.filtro = self.filterset_class(
+            self.request.GET, queryset=queryset, request=self.request
+        )
+        if not self.filtro.is_valid():
+            # Valor de filtro inválido (especialidade inexistente...) não pode
+            # virar "mostrar tudo": a lista fica vazia e o formulário mostra o erro.
+            return queryset.none()
+        return self.filtro.qs
+
+    def get_context_data(self, **kwargs):
+        context = super().get_context_data(**kwargs)
+        context["filtro"] = self.filtro
+        context["filtros_ativos"] = sum(
+            1 for nome in self.filtro.filters if self.request.GET.get(nome, "").strip()
+        )
+        return context
 
 
 class ProfissionalDetailView(PermissaoVer, DetailView):
