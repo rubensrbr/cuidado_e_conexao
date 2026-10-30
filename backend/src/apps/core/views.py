@@ -9,7 +9,13 @@ from django.utils.decorators import method_decorator
 from .decorators import unauthenticated_user
 from .forms import CadastroForm, LoginForm, TrocaDeSenhaForm
 from .models import User
-from .throttle import cadastros_fechados, registrar_tentativa
+from .throttle import (
+    cadastros_fechados,
+    limpar_falhas_de_login,
+    login_bloqueado,
+    registrar_falha_de_login,
+    registrar_tentativa,
+)
 from django.contrib.auth.views import (
     LoginView as AuthLoginView,
     PasswordChangeView as AuthPasswordChangeView,
@@ -30,7 +36,26 @@ class LoginView(AuthLoginView):
     template_name = "core/registration/login.html"
     success_url = "/"
 
+    def post(self, request, *args, **kwargs):
+        bloqueado, espera = login_bloqueado(request)
+        if bloqueado:
+            self.object = None
+            contexto = self.get_context_data(
+                form=self.get_form_class()(request),
+                aviso="Muitas tentativas de login. Tente novamente mais tarde.",
+            )
+            resposta = self.render_to_response(contexto)
+            resposta.status_code = 429
+            resposta["Retry-After"] = str(espera)
+            return resposta
+        return super().post(request, *args, **kwargs)
+
+    def form_invalid(self, form):
+        registrar_falha_de_login(self.request)
+        return super().form_invalid(form)
+
     def form_valid(self, form):
+        limpar_falhas_de_login(self.request)
         self.request.session["just_logged_in"] = True
 
         http_respose = super().form_valid(form)

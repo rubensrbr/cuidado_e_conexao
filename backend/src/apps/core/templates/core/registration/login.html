@@ -6,7 +6,9 @@
     <h1>Entrar</h1>
     <p class="subtitle">Acesse sua conta para continuar.</p>
 
-    {% if form.errors %}
+    {% if aviso %}
+      <div class="alert alert-warning py-2" role="alert">{{ aviso }}</div>
+    {% elif form.errors %}
       <div class="alert alert-danger py-2" role="alert">
         {% for erro in form.non_field_errors %}{{ erro }}{% empty %}E-mail ou senha inválidos. Tente novamente.{% endfor %}
       </div>

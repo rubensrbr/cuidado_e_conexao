@@ -8,7 +8,7 @@ from django.utils import timezone
 
 from clinicas.models import Membro
 
-from .models import TentativaDeCadastro
+from .models import TentativaDeCadastro, TentativaDeLogin
 
 User = get_user_model()
 
@@ -267,3 +267,59 @@ class AprovacaoNoAdminTests(TestCase):
         self.pendente.refresh_from_db()
         self.assertTrue(self.pendente.is_active)
         self.assertFalse(self.pendente.cadastro_pendente)
+
+
+@override_settings(LOGIN_MAX_FALHAS_POR_IP=3, LOGIN_JANELA_EM_SEGUNDOS=900)
+class LimiteDeLoginTests(TestCase):
+    def setUp(self):
+        self.url = reverse("login")
+        User.objects.create_user("ana@clinica.com", password=SENHA)
+
+    def entrar(self, senha="errada", ip="10.0.0.1", email="ana@clinica.com"):
+        return self.client.post(
+            self.url, {"username": email, "password": senha}, REMOTE_ADDR=ip
+        )
+
+    def test_passou_do_limite_de_falhas_recebe_429_mesmo_com_senha_certa(self):
+        for _ in range(3):
+            self.assertEqual(self.entrar().status_code, 200)
+        resposta = self.entrar(senha=SENHA)
+        self.assertEqual(resposta.status_code, 429)
+        self.assertContains(resposta, "Muitas tentativas", status_code=429)
+        self.assertGreater(int(resposta["Retry-After"]), 0)
+        self.assertNotIn("_auth_user_id", self.client.session)
+
+    def test_bloqueado_nao_registra_novas_falhas(self):
+        for _ in range(5):
+            self.entrar()
+        self.assertEqual(TentativaDeLogin.objects.count(), 3)
+
+    def test_outro_ip_nao_e_afetado(self):
+        for _ in range(3):
+            self.entrar()
+        self.assertEqual(self.entrar(senha=SENHA, ip="10.0.0.2").status_code, 302)
+
+    def test_login_certo_nao_conta_e_zera_as_falhas(self):
+        self.entrar()
+        self.entrar()
+        self.assertEqual(self.entrar(senha=SENHA).status_code, 302)
+        self.assertEqual(TentativaDeLogin.objects.count(), 0)
+
+    def test_apenas_abrir_a_pagina_nao_conta(self):
+        for _ in range(10):
+            self.assertEqual(self.client.get(self.url, REMOTE_ADDR="10.0.0.1").status_code, 200)
+        self.assertEqual(self.entrar(senha=SENHA).status_code, 302)
+
+    def test_falhas_antigas_saem_da_conta(self):
+        antigas = timezone.now() - timedelta(hours=1)
+        for _ in range(3):
+            TentativaDeLogin.objects.create(ip="10.0.0.1", criada_em=antigas)
+        self.assertEqual(self.entrar(senha=SENHA).status_code, 302)
+
+    def test_conta_pendente_com_senha_certa_conta_como_falha(self):
+        User.objects.filter(email="ana@clinica.com").update(
+            is_active=False, cadastro_pendente=True
+        )
+        resposta = self.entrar(senha=SENHA)
+        self.assertContains(resposta, "aguardando a aprovação")
+        self.assertEqual(TentativaDeLogin.objects.count(), 1)

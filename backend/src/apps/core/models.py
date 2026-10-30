@@ -99,3 +99,20 @@ class TentativaDeCadastro(models.Model):
 
     def __str__(self):
         return f"{self.ip} em {self.criada_em:%d/%m/%Y %H:%M}"
+
+
+class TentativaDeLogin(models.Model):
+    """Um login que falhou, guardado para limitar tentativas por IP.
+
+    Só falhas entram na conta (quem acerta a senha não é punido) e, como no
+    cadastro, ficam no banco porque o servidor roda com vários processos.
+    """
+
+    ip = models.GenericIPAddressField()
+    criada_em = models.DateTimeField(default=timezone.now)
+
+    class Meta:
+        indexes = [models.Index(fields=["ip", "criada_em"])]
+
+    def __str__(self):
+        return f"{self.ip} em {self.criada_em:%d/%m/%Y %H:%M}"
