@@ -1,5 +1,6 @@
 import uuid as uuid_lib
 from django.db import models
+from django.utils import timezone
 from django.db.models import UUIDField
 from django.db.models.functions import Lower
 from django.contrib.auth.models import AbstractUser
@@ -17,6 +18,15 @@ class User(AbstractUser):
         default=False,
         verbose_name="Trocar a senha no próximo acesso",
         help_text="Se marcado, o usuário só usa o sistema depois de definir uma nova senha.",
+    )
+
+    cadastro_pendente = models.BooleanField(
+        default=False,
+        verbose_name="Cadastro aguardando aprovação",
+        help_text=(
+            "Conta criada pelo cadastro público. Fica inativa até um administrador "
+            "aprovar (ação \"Aprovar cadastros\" ou marcando \"Ativo\")."
+        ),
     )
 
     USERNAME_FIELD = "email"
@@ -72,3 +82,20 @@ class BaseModel(TimeStamped):
 
     class Meta:
         abstract = True
+
+
+class TentativaDeCadastro(models.Model):
+    """Um envio do formulário de cadastro, guardado para limitar abusos por IP.
+
+    Fica no banco (e não no cache) porque o servidor roda com vários processos,
+    e o cache em memória de cada um contaria separado.
+    """
+
+    ip = models.GenericIPAddressField()
+    criada_em = models.DateTimeField(default=timezone.now)
+
+    class Meta:
+        indexes = [models.Index(fields=["ip", "criada_em"])]
+
+    def __str__(self):
+        return f"{self.ip} em {self.criada_em:%d/%m/%Y %H:%M}"

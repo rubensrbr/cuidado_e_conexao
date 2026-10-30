@@ -37,6 +37,7 @@ class UserAdmin(DjangoUserAdmin):
             {
                 "fields": (
                     "is_active",
+                    "cadastro_pendente",
                     "is_staff",
                     "is_superuser",
                     "groups",
@@ -54,12 +55,38 @@ class UserAdmin(DjangoUserAdmin):
         "last_name",
         "is_staff",
         "is_active",
+        "cadastro_pendente",
         "change_password",
     )
-    list_filter = ("is_staff", "is_superuser", "is_active", "change_password", "groups")
+    list_filter = (
+        "cadastro_pendente",
+        "is_staff",
+        "is_superuser",
+        "is_active",
+        "change_password",
+        "groups",
+    )
     search_fields = ("first_name", "last_name", "email")
     ordering = ("email",)
-    actions = ["exigir_troca_de_senha"]
+    actions = ["aprovar_cadastros", "exigir_troca_de_senha"]
+
+    def save_model(self, request, obj, form, change):
+        # Marcar "Ativo" à mão também aprova o cadastro.
+        if obj.is_active and obj.cadastro_pendente:
+            obj.cadastro_pendente = False
+        super().save_model(request, obj, form, change)
+
+    @admin.action(description="Aprovar cadastros selecionados")
+    def aprovar_cadastros(self, request, queryset):
+        total = queryset.filter(cadastro_pendente=True).update(
+            is_active=True, cadastro_pendente=False
+        )
+        self.message_user(
+            request,
+            f"{total} cadastro(s) aprovado(s). Para dar acesso a uma clínica, "
+            "crie o vínculo (Membro) da pessoa com ela.",
+            messages.SUCCESS,
+        )
 
     @admin.action(description="Exigir troca de senha no próximo acesso")
     def exigir_troca_de_senha(self, request, queryset):

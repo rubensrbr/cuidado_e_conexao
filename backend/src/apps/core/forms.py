@@ -1,4 +1,5 @@
 from django import forms
+from django.core.exceptions import ValidationError
 from django.contrib.auth.forms import AdminUserCreationForm as BaseUserCreationForm
 from django.contrib.auth.forms import AuthenticationForm, PasswordChangeForm
 from django.contrib.auth.forms import BaseUserCreationForm as ContaUserCreationForm
@@ -33,6 +34,7 @@ class UserChangeForm(BaseUserChangeForm):
             "is_staff",
             "is_superuser",
             "change_password",
+            "cadastro_pendente",
             "groups",
             "user_permissions",
         )
@@ -44,7 +46,36 @@ class LoginForm(AuthenticationForm):
     error_messages = {
         **AuthenticationForm.error_messages,
         "invalid_login": "E-mail ou senha inválidos.",
+        "cadastro_pendente": (
+            "Seu cadastro ainda está aguardando a aprovação de um administrador."
+        ),
     }
+
+    def clean(self):
+        try:
+            return super().clean()
+        except ValidationError as erro:
+            if erro.code == "invalid_login" and self._cadastro_pendente():
+                raise ValidationError(
+                    self.error_messages["cadastro_pendente"],
+                    code="cadastro_pendente",
+                ) from None
+            raise
+
+    def _cadastro_pendente(self):
+        """Conta recém-cadastrada que ainda não foi aprovada.
+
+        Só diz isso a quem acertou a senha: com senha errada a resposta continua
+        sendo a genérica, então o formulário não revela quais e-mails existem.
+        """
+        email = (self.cleaned_data.get("username") or "").strip()
+        senha = self.cleaned_data.get("password")
+        if not email or not senha:
+            return False
+        usuario = User.objects.filter(
+            email__iexact=email, cadastro_pendente=True, is_active=False
+        ).first()
+        return bool(usuario and usuario.check_password(senha))
 
 
 class TrocaDeSenhaForm(PasswordChangeForm):
@@ -69,8 +100,10 @@ class TrocaDeSenhaForm(PasswordChangeForm):
 class CadastroForm(ContaUserCreationForm):
     """Cadastro público de conta.
 
-    Cria só a conta (nunca staff nem superusuário). Ela não dá acesso a nenhuma
-    clínica: isso só acontece quando um administrador cria o vínculo (`Membro`).
+    Cria só a conta (nunca staff nem superusuário), INATIVA e marcada como
+    aguardando aprovação: um administrador precisa aprová-la antes do primeiro
+    login. Mesmo aprovada, ela não dá acesso a nenhuma clínica: isso só acontece
+    quando um administrador cria o vínculo (`Membro`).
     """
 
     error_messages = {
@@ -107,3 +140,12 @@ class CadastroForm(ContaUserCreationForm):
         self.fields["first_name"].widget.attrs["autofocus"] = True
         self.fields["first_name"].widget.attrs["autocomplete"] = "given-name"
         self.fields["last_name"].widget.attrs["autocomplete"] = "family-name"
+
+    def save(self, commit=True):
+        usuario = super().save(commit=False)
+        usuario.is_active = False
+        usuario.cadastro_pendente = True
+        if commit:
+            usuario.save()
+            self._save_m2m()
+        return usuario

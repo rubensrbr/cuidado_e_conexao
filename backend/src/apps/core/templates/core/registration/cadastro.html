@@ -6,6 +6,10 @@
     <h1>Criar conta</h1>
     <p class="subtitle">Preencha os dados abaixo para se cadastrar.</p>
 
+    {% if aviso %}
+      <div class="alert alert-warning py-2" role="alert">{{ aviso }}</div>
+    {% endif %}
+
     {% if form.non_field_errors %}
       <div class="alert alert-danger py-2" role="alert">
         {% for erro in form.non_field_errors %}{{ erro }}{% endfor %}

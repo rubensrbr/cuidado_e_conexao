@@ -205,3 +205,16 @@ LOGGING = {
         "django.db.backends": {"level": "WARNING"},
     },
 }
+
+
+# Cadastro público (/cadastro/)
+# Tentativas (envios do formulário, válidos ou não) por IP dentro da janela.
+CADASTRO_MAX_TENTATIVAS_POR_IP = config("CADASTRO_MAX_TENTATIVAS_POR_IP", default=10, cast=int)
+CADASTRO_JANELA_EM_SEGUNDOS = config("CADASTRO_JANELA_EM_SEGUNDOS", default=3600, cast=int)
+# Contas aguardando aprovação: ao chegar neste número o cadastro fecha até o
+# administrador aprovar ou apagar algumas (trava contra enxurrada de vários IPs).
+CADASTRO_MAX_PENDENTES = config("CADASTRO_MAX_PENDENTES", default=50, cast=int)
+# Atrás de um proxy reverso (nginx etc.) o IP real vem no último valor de
+# X-Forwarded-For. Só ligue se o proxy SOBRESCREVE esse cabeçalho, senão o
+# visitante poderia forjá-lo para fugir do limite.
+CADASTRO_CONFIAR_X_FORWARDED_FOR = config("CADASTRO_CONFIAR_X_FORWARDED_FOR", default=False, cast=bool)

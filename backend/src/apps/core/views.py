@@ -9,6 +9,7 @@ from django.utils.decorators import method_decorator
 from .decorators import unauthenticated_user
 from .forms import CadastroForm, LoginForm, TrocaDeSenhaForm
 from .models import User
+from .throttle import cadastros_fechados, registrar_tentativa
 from django.contrib.auth.views import (
     LoginView as AuthLoginView,
     PasswordChangeView as AuthPasswordChangeView,
@@ -40,21 +41,49 @@ class LoginView(AuthLoginView):
 
 @method_decorator(unauthenticated_user, name="dispatch")
 class CadastroView(CreateView):
-    """Cadastro público: cria a conta e volta para o login.
+    """Cadastro público: cria a conta (inativa, aguardando aprovação) e volta ao login.
 
-    A conta nasce sem vínculo com clínica, então ainda não enxerga nada até um
-    administrador liberar o acesso.
+    Limites: cada IP só pode enviar o formulário um número de vezes por janela, e
+    o cadastro fecha enquanto houver contas demais esperando aprovação (veja
+    `core/throttle.py` e as CADASTRO_* em settings).
     """
 
     form_class = CadastroForm
     template_name = "core/registration/cadastro.html"
     success_url = reverse_lazy("login")
 
+    def post(self, request, *args, **kwargs):
+        if cadastros_fechados():
+            return self._recusar(
+                "Os cadastros estão temporariamente fechados. "
+                "Fale com o administrador da sua clínica.",
+                status=503,
+            )
+        permitida, espera = registrar_tentativa(request)
+        if not permitida:
+            return self._recusar(
+                "Muitas tentativas de cadastro. Tente novamente mais tarde.",
+                status=429,
+                espera=espera,
+            )
+        return super().post(request, *args, **kwargs)
+
+    def _recusar(self, aviso, status, espera=None):
+        # Formulário em branco (sem validar nada) e a mensagem do motivo.
+        self.object = None
+        contexto = self.get_context_data(form=self.form_class(), aviso=aviso)
+        resposta = self.render_to_response(contexto)
+        resposta.status_code = status
+        if espera:
+            resposta["Retry-After"] = str(espera)
+        return resposta
+
     def form_valid(self, form):
         response = super().form_valid(form)
         messages.success(
             self.request,
-            "Conta criada! Peça ao administrador da sua clínica para liberar o seu acesso.",
+            "Conta criada! Ela será liberada depois que um administrador "
+            "aprovar o seu cadastro.",
         )
         return response
 
