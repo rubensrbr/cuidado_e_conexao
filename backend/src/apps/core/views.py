@@ -1,13 +1,13 @@
 from django.contrib import messages
 from django.contrib.auth.mixins import LoginRequiredMixin
 from django.urls import reverse_lazy
-from django.views.generic import TemplateView
+from django.views.generic import CreateView, TemplateView
 from django.shortcuts import render, redirect, reverse
 from django.contrib.auth.mixins import LoginRequiredMixin
 from django.contrib.auth.decorators import login_required
 from django.utils.decorators import method_decorator
 from .decorators import unauthenticated_user
-from .forms import LoginForm, TrocaDeSenhaForm
+from .forms import CadastroForm, LoginForm, TrocaDeSenhaForm
 from .models import User
 from django.contrib.auth.views import (
     LoginView as AuthLoginView,
@@ -36,6 +36,27 @@ class LoginView(AuthLoginView):
         if form.get_user().change_password:
             return redirect("alterar_senha")
         return http_respose
+
+
+@method_decorator(unauthenticated_user, name="dispatch")
+class CadastroView(CreateView):
+    """Cadastro público: cria a conta e volta para o login.
+
+    A conta nasce sem vínculo com clínica, então ainda não enxerga nada até um
+    administrador liberar o acesso.
+    """
+
+    form_class = CadastroForm
+    template_name = "core/registration/cadastro.html"
+    success_url = reverse_lazy("login")
+
+    def form_valid(self, form):
+        response = super().form_valid(form)
+        messages.success(
+            self.request,
+            "Conta criada! Peça ao administrador da sua clínica para liberar o seu acesso.",
+        )
+        return response
 
 
 @method_decorator(login_required(login_url="login"), name="dispatch")

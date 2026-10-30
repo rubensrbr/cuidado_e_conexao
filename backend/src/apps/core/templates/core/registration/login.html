@@ -1,108 +1,8 @@
-{% extends "layout.html" %}
-{% load static %}
+{% extends "core/registration/auth_base.html" %}
 
 {% block title %}Entrar &middot; Cuidado e Conexão{% endblock %}
 
-{% block extra_head %}
-  <style>
-    body.auth-page {
-      display: flex;
-      align-items: center;
-      justify-content: center;
-      min-height: 100vh;
-      padding: 1.5rem;
-      background: radial-gradient(circle at 15% 15%, var(--sage-200) 0%, var(--sage-100) 45%, var(--sage-100) 100%);
-    }
-
-    .auth-card {
-      width: 100%;
-      max-width: 440px;
-      background: var(--paper);
-      border: 1px solid var(--line);
-      border-radius: 16px;
-      padding: 2.5rem 2.25rem;
-      box-shadow: 0 18px 40px -18px rgba(22, 48, 43, .25);
-    }
-
-    .auth-logo {
-      display: flex;
-      align-items: center;
-      gap: 1rem;
-      margin-bottom: .35rem;
-    }
-
-    .auth-logo img {
-      width: 64px;
-      height: 64px;
-      flex: 0 0 auto;
-    }
-
-    .auth-logo h2 {
-      font-size: 1.7rem;
-      line-height: 1.1;
-      margin: 0;
-    }
-
-    .auth-tagline {
-      font-size: .74rem;
-      letter-spacing: .14em;
-      color: var(--ink-400);
-      text-transform: uppercase;
-      margin-bottom: 1.75rem;
-    }
-
-    .auth-card h1 {
-      font-size: 1.3rem;
-      margin-bottom: .25rem;
-    }
-
-    .auth-card .subtitle {
-      color: var(--ink-600);
-      font-size: .9rem;
-      margin-bottom: 1.5rem;
-    }
-
-    .auth-card label {
-      font-size: .85rem;
-      font-weight: 500;
-      color: var(--ink-900);
-    }
-
-    .auth-card .form-control {
-      border-color: var(--line);
-      padding: .6rem .75rem;
-    }
-
-    .auth-card .form-control:focus {
-      border-color: var(--teal-500);
-      box-shadow: 0 0 0 .2rem rgba(46, 111, 96, .15);
-    }
-
-    .auth-card .btn-primary {
-      width: 100%;
-      padding: .6rem;
-      font-weight: 500;
-    }
-
-    .auth-footer {
-      text-align: center;
-      margin-top: 1.5rem;
-      font-size: .82rem;
-      color: var(--ink-400);
-    }
-  </style>
-{% endblock %}
-
-{% block body_class %}auth-page{% endblock %}
-
-{% block body %}
-  <div class="auth-card">
-    <div class="auth-logo">
-      <img src="{% static 'img/logo-mark.svg' %}" alt="">
-      <h2>Cuidado e<br>Conexão</h2>
-    </div>
-    <div class="auth-tagline">Saúde &middot; Pessoas &middot; Vida</div>
-
+{% block auth_content %}
     <h1>Entrar</h1>
     <p class="subtitle">Acesse sua conta para continuar.</p>
 
@@ -151,8 +51,7 @@
       <button type="submit" class="btn btn-primary mt-2">Entrar</button>
     </form>
 
-    <div class="auth-footer">
-      <i class="bi bi-shield-check"></i> Dados protegidos &middot; uso interno
-    </div>
-  </div>
+    <p class="auth-link">
+      Não tem conta? <a href="{% url 'cadastro' %}">Cadastre-se</a>
+    </p>
 {% endblock %}

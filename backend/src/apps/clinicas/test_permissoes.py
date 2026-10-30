@@ -412,6 +412,7 @@ class PapeisPadraoTests(BaseComClinicas):
 TELAS_SEM_PERMISSAO_DE_MODELO = {
     "core.views.IndexView",  # painel (cada cartão já se esconde pelas permissões)
     "core.views.LoginView",
+    "core.views.CadastroView",  # cadastro público: cria a conta, sem acesso a nenhuma clínica
     "core.views.LogoutView",
     "core.views.PasswordChangeView",
 }
