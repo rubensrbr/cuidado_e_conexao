@@ -1,0 +1,11 @@
+{% extends "core/registration/auth_base.html" %}
+
+{% block title %}Senha alterada &middot; Cuidado e Conexão{% endblock %}
+
+{% block auth_content %}
+    <h1>Senha alterada</h1>
+    <div class="alert alert-success py-2" role="alert">
+      Pronto! Sua nova senha já está valendo.
+    </div>
+    <a href="{% url 'login' %}" class="btn btn-primary mt-2">Entrar</a>
+{% endblock %}

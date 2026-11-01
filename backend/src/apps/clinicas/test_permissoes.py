@@ -415,6 +415,11 @@ TELAS_SEM_PERMISSAO_DE_MODELO = {
     "core.views.CadastroView",  # cadastro público: cria a conta, sem acesso a nenhuma clínica
     "core.views.LogoutView",
     "core.views.PasswordChangeView",
+    # recuperação de senha: telas públicas, a pessoa ainda nem está logada
+    "core.views.SenhaEsquecidaView",
+    "core.views.SenhaEsquecidaEnviadaView",
+    "core.views.SenhaRedefinirView",
+    "core.views.SenhaRedefinidaView",
 }
 # Funções-view; cada uma tem seu teste de comportamento abaixo.
 FUNCOES_SO_COM_LOGIN = {"localidades.views.cidades_por_estado"}

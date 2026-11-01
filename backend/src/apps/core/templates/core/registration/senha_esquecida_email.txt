@@ -1,0 +1,10 @@
+{% autoescape off %}Olá, {{ user.first_name|default:user.email }}!
+
+Recebemos um pedido para criar uma nova senha para a sua conta no Cuidado e Conexão.
+Para continuar, abra o link abaixo:
+
+{{ protocol }}://{{ domain }}{% url 'senha_redefinir' uidb64=uid token=token %}
+
+O link vale por poucas horas e só pode ser usado uma vez.
+Se você não fez esse pedido, ignore este e-mail: a sua senha continua a mesma.
+{% endautoescape %}

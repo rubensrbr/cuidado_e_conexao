@@ -1,0 +1,15 @@
+{% extends "core/registration/auth_base.html" %}
+
+{% block title %}Verifique seu e-mail &middot; Cuidado e Conexão{% endblock %}
+
+{% block auth_content %}
+    <h1>Verifique seu e-mail</h1>
+    <p class="subtitle">
+      Se o e-mail informado estiver cadastrado e a conta estiver ativa, você receberá em instantes
+      um link para criar uma nova senha. O link vale por poucas horas.
+    </p>
+
+    <p class="small text-muted">Não chegou? Confira a caixa de spam ou peça um novo link.</p>
+
+    <a href="{% url 'login' %}" class="btn btn-primary mt-2">Voltar para o login</a>
+{% endblock %}

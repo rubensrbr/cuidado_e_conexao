@@ -5,7 +5,7 @@ from datetime import timedelta
 from django.conf import settings
 from django.utils import timezone
 
-from .models import TentativaDeCadastro, TentativaDeLogin, User
+from .models import PedidoDeRecuperacao, TentativaDeCadastro, TentativaDeLogin, User
 
 
 def ip_do_cliente(request):
@@ -80,3 +80,27 @@ def registrar_falha_de_login(request):
 def limpar_falhas_de_login(request):
     """Login certo zera a conta do IP."""
     TentativaDeLogin.objects.filter(ip=ip_do_cliente(request)).delete()
+
+
+# ---------- esqueci minha senha: limite de PEDIDOS por IP ----------
+
+
+def registrar_pedido_de_recuperacao(request):
+    """Conta este pedido e diz se ele ainda cabe no limite do IP.
+
+    Devolve (permitido, segundos_para_tentar_de_novo).
+    """
+    janela = timedelta(seconds=settings.RECUPERACAO_JANELA_EM_SEGUNDOS)
+    agora = timezone.now()
+    ip = ip_do_cliente(request)
+
+    PedidoDeRecuperacao.objects.filter(criada_em__lt=agora - janela).delete()
+
+    recentes = PedidoDeRecuperacao.objects.filter(ip=ip).order_by("criada_em")
+    if recentes.count() >= settings.RECUPERACAO_MAX_PEDIDOS_POR_IP:
+        mais_antigo = recentes.first().criada_em
+        espera = int((mais_antigo + janela - agora).total_seconds()) + 1
+        return False, max(espera, 1)
+
+    PedidoDeRecuperacao.objects.create(ip=ip, criada_em=agora)
+    return True, 0

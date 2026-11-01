@@ -116,3 +116,20 @@ class TentativaDeLogin(models.Model):
 
     def __str__(self):
         return f"{self.ip} em {self.criada_em:%d/%m/%Y %H:%M}"
+
+
+class PedidoDeRecuperacao(models.Model):
+    """Um envio do formulário "esqueci minha senha", para limitar abusos por IP.
+
+    Conta todo envio (o e-mail existindo ou não), senão o limite revelaria quais
+    e-mails estão cadastrados e o formulário viraria um disparador de e-mails.
+    """
+
+    ip = models.GenericIPAddressField()
+    criada_em = models.DateTimeField(default=timezone.now)
+
+    class Meta:
+        indexes = [models.Index(fields=["ip", "criada_em"])]
+
+    def __str__(self):
+        return f"{self.ip} em {self.criada_em:%d/%m/%Y %H:%M}"

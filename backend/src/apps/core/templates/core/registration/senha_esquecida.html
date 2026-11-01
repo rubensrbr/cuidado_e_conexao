@@ -1,0 +1,34 @@
+{% extends "core/registration/auth_base.html" %}
+
+{% block title %}Recuperar senha &middot; Cuidado e Conexão{% endblock %}
+
+{% block auth_content %}
+    <h1>Esqueci minha senha</h1>
+    <p class="subtitle">Informe o e-mail da sua conta e enviaremos um link para criar uma nova senha.</p>
+
+    {% if aviso %}
+      <div class="alert alert-warning py-2" role="alert">{{ aviso }}</div>
+    {% endif %}
+
+    {% if form.non_field_errors %}
+      <div class="alert alert-danger py-2" role="alert">
+        {% for erro in form.non_field_errors %}{{ erro }}{% endfor %}
+      </div>
+    {% endif %}
+
+    <form method="post" action="{% url 'senha_esquecida' %}" novalidate>
+      {% csrf_token %}
+
+      <div class="mb-3">
+        <label for="{{ form.email.id_for_label }}" class="form-label">{{ form.email.label }}</label>
+        {{ form.email }}
+        {% for erro in form.email.errors %}<div class="text-danger small mt-1">{{ erro }}</div>{% endfor %}
+      </div>
+
+      <button type="submit" class="btn btn-primary mt-2">Enviar link</button>
+    </form>
+
+    <p class="auth-link">
+      Lembrou a senha? <a href="{% url 'login' %}">Entrar</a>
+    </p>
+{% endblock %}

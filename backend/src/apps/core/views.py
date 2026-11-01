@@ -7,18 +7,29 @@ from django.contrib.auth.mixins import LoginRequiredMixin
 from django.contrib.auth.decorators import login_required
 from django.utils.decorators import method_decorator
 from .decorators import unauthenticated_user
-from .forms import CadastroForm, LoginForm, TrocaDeSenhaForm
+from .forms import (
+    CadastroForm,
+    DefinirSenhaForm,
+    EsqueciSenhaForm,
+    LoginForm,
+    TrocaDeSenhaForm,
+)
 from .models import User
 from .throttle import (
     cadastros_fechados,
     limpar_falhas_de_login,
     login_bloqueado,
     registrar_falha_de_login,
+    registrar_pedido_de_recuperacao,
     registrar_tentativa,
 )
 from django.contrib.auth.views import (
     LoginView as AuthLoginView,
     PasswordChangeView as AuthPasswordChangeView,
+    PasswordResetCompleteView as AuthPasswordResetCompleteView,
+    PasswordResetConfirmView as AuthPasswordResetConfirmView,
+    PasswordResetDoneView as AuthPasswordResetDoneView,
+    PasswordResetView as AuthPasswordResetView,
     LogoutView as AuthLogoutView,
 )
 
@@ -133,3 +144,49 @@ class PasswordChangeView(AuthPasswordChangeView):
         User.objects.filter(pk=form.user.pk).update(change_password=False)
         messages.success(self.request, "Senha alterada com sucesso.")
         return response
+
+
+@method_decorator(unauthenticated_user, name="dispatch")
+class SenhaEsquecidaView(AuthPasswordResetView):
+    """Pede o e-mail e manda o link para definir uma nova senha.
+
+    A resposta é sempre a mesma, o e-mail existindo ou não, para não revelar
+    quais e-mails estão cadastrados. Cada IP tem um limite de pedidos por janela
+    (RECUPERACAO_* em settings).
+    """
+
+    form_class = EsqueciSenhaForm
+    template_name = "core/registration/senha_esquecida.html"
+    email_template_name = "core/registration/senha_esquecida_email.txt"
+    subject_template_name = "core/registration/senha_esquecida_assunto.txt"
+    success_url = reverse_lazy("senha_esquecida_enviada")
+
+    def post(self, request, *args, **kwargs):
+        permitido, espera = registrar_pedido_de_recuperacao(request)
+        if not permitido:
+            contexto = self.get_context_data(
+                form=self.form_class(),
+                aviso="Muitos pedidos de recuperação. Tente novamente mais tarde.",
+            )
+            resposta = self.render_to_response(contexto)
+            resposta.status_code = 429
+            resposta["Retry-After"] = str(espera)
+            return resposta
+        return super().post(request, *args, **kwargs)
+
+
+@method_decorator(unauthenticated_user, name="dispatch")
+class SenhaEsquecidaEnviadaView(AuthPasswordResetDoneView):
+    template_name = "core/registration/senha_esquecida_enviada.html"
+
+
+class SenhaRedefinirView(AuthPasswordResetConfirmView):
+    """Tela aberta pelo link do e-mail: define a nova senha."""
+
+    form_class = DefinirSenhaForm
+    template_name = "core/registration/senha_redefinir.html"
+    success_url = reverse_lazy("senha_redefinida")
+
+
+class SenhaRedefinidaView(AuthPasswordResetCompleteView):
+    template_name = "core/registration/senha_redefinida.html"

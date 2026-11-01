@@ -1,7 +1,12 @@
 from django import forms
 from django.core.exceptions import ValidationError
 from django.contrib.auth.forms import AdminUserCreationForm as BaseUserCreationForm
-from django.contrib.auth.forms import AuthenticationForm, PasswordChangeForm
+from django.contrib.auth.forms import (
+    AuthenticationForm,
+    PasswordChangeForm,
+    PasswordResetForm,
+    SetPasswordForm,
+)
 from django.contrib.auth.forms import BaseUserCreationForm as ContaUserCreationForm
 from django.contrib.auth.forms import UserChangeForm as BaseUserChangeForm
 
@@ -148,4 +153,61 @@ class CadastroForm(ContaUserCreationForm):
         if commit:
             usuario.save()
             self._save_m2m()
+        return usuario
+
+
+class EsqueciSenhaForm(PasswordResetForm):
+    """Pede o e-mail para enviar o link de redefinição.
+
+    Só contas ativas com senha utilizável recebem o e-mail (regra do Django):
+    quem está aguardando aprovação não recebe nada.
+    """
+
+    def __init__(self, *args, **kwargs):
+        super().__init__(*args, **kwargs)
+        campo = self.fields["email"]
+        campo.label = "E-mail"
+        campo.error_messages["required"] = "Este campo é obrigatório."
+        campo.error_messages["invalid"] = "Digite um e-mail válido."
+        campo.widget.attrs.update(
+            {
+                "class": "form-control",
+                "placeholder": "Digite seu e-mail",
+                "autocomplete": "email",
+                "autofocus": True,
+            }
+        )
+
+
+class DefinirSenhaForm(SetPasswordForm):
+    """Define a nova senha a partir do link enviado por e-mail."""
+
+    error_messages = {
+        **SetPasswordForm.error_messages,
+        "password_mismatch": "As duas senhas digitadas não são iguais.",
+    }
+
+    def __init__(self, *args, **kwargs):
+        super().__init__(*args, **kwargs)
+        self.fields["new_password1"].label = "Nova senha"
+        self.fields["new_password2"].label = "Confirmar nova senha"
+        self.fields["new_password2"].help_text = (
+            "Digite a mesma senha novamente, para confirmação."
+        )
+        placeholders = {
+            "new_password1": "Crie uma nova senha",
+            "new_password2": "Repita a nova senha",
+        }
+        for nome, campo in self.fields.items():
+            campo.widget.attrs["class"] = "form-control"
+            campo.widget.attrs["placeholder"] = placeholders[nome]
+            campo.error_messages["required"] = "Este campo é obrigatório."
+        self.fields["new_password1"].widget.attrs["autofocus"] = True
+
+    def save(self, commit=True):
+        usuario = super().save(commit=False)
+        # Quem escolheu a própria senha não precisa ser obrigado a trocá-la de novo.
+        usuario.change_password = False
+        if commit:
+            usuario.save()
         return usuario
