@@ -13,7 +13,6 @@ class Paciente(TenantModel):
         ("prefiro_nao_informar", "Prefiro não informar"),
     ]
 
-    pro_bono = models.BooleanField(default=False)
     primeiro_nome = models.CharField(
         max_length=100,
         verbose_name="Primeiro Nome",
@@ -57,6 +56,12 @@ class Paciente(TenantModel):
     ativo = models.BooleanField(
         default=True,
         verbose_name="Ativo",
+    )
+
+    pro_bono = models.BooleanField(
+        default=False,
+        verbose_name="Pro bono",
+        help_text="Atendido gratuitamente. Novos faturamentos sem valor são marcados como pro bono.",
     )
 
     class Meta:

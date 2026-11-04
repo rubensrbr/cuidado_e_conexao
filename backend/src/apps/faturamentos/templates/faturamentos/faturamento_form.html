@@ -25,6 +25,7 @@
 
             {% include "partials/_field.html" with field=form.paciente label="Paciente" %}
             {% include "partials/_field.html" with field=form.consulta label="Consulta (opcional)" %}
+            {% include "partials/_field.html" with field=form.pacote label="Pacote (opcional)" %}
         </div>
 
     </div>
@@ -43,6 +44,9 @@
             {% include "partials/_field.html" with field=form.valor_cobrado label="Valor cobrado (R$)" col="col-md-6" %}
             {% include "partials/_field.html" with field=form.valor_pago label="Valor pago (R$)" col="col-md-6" %}
             {% include "partials/_field.html" with field=form.valor_convenio label="Valor do convênio (R$)" col="col-md-6" %}
+            <div class="col-12">
+                {% include "partials/_checkbox_field.html" with field=form.pro_bono label="Pro bono (atendimento gratuito, sem valores)" %}
+            </div>
         </div>
 
     </div>

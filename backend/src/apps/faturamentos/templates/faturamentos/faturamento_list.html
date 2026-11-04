@@ -29,6 +29,8 @@
             <span class="app-name">
                 {{ faturamento.paciente.nome_completo }}
             </span>
+            {% if faturamento.pro_bono %}<span class="app-status app-status-neutral ms-1">Pro bono</span>{% endif %}
+            {% if faturamento.pacote_id %}<span class="app-status app-status-neutral ms-1">Pacote</span>{% endif %}
         </td>
 
         <td class="text-end text-nowrap">{{ faturamento.valor_cobrado|brl }}</td>

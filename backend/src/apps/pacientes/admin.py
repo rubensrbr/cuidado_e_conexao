@@ -23,7 +23,7 @@ class PacienteAdmin(admin.ModelAdmin):
         "convenio",
         "ativo",
     )
-    list_filter = ("ativo", "genero", "convenio")
+    list_filter = ("ativo", "pro_bono", "genero", "convenio")
     search_fields = (
         "primeiro_nome",
         "sobrenome",
@@ -44,6 +44,7 @@ class PacienteAdmin(admin.ModelAdmin):
                     "genero",
                     "email",
                     "ativo",
+                    "pro_bono",
                 )
             },
         ),

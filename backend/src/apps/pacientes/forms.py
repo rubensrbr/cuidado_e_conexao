@@ -20,6 +20,7 @@ class PacienteForm(TenantFormMixin, forms.ModelForm):
             "convenio",
             "numero_carteirinha",
             "ativo",
+            "pro_bono",
         ]
         widgets = {
             "primeiro_nome": forms.TextInput(attrs={"class": "form-control"}),
@@ -38,6 +39,7 @@ class PacienteForm(TenantFormMixin, forms.ModelForm):
             "convenio": forms.TextInput(attrs={"class": "form-control"}),
             "numero_carteirinha": forms.TextInput(attrs={"class": "form-control"}),
             "ativo": forms.CheckboxInput(attrs={"class": "form-check-input"}),
+            "pro_bono": forms.CheckboxInput(attrs={"class": "form-check-input"}),
         }
         labels = {
             "enderecos": "Endereço",

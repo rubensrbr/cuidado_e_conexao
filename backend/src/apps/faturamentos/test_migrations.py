@@ -18,7 +18,7 @@ PREENCHIDA = [("faturamentos", "0003_preencher_clinica")]
 # Estado final dos apps de que os faturamentos dependem (Paciente, Profissional
 # e Consulta já com `clinica`), para criar as linhas de teste no estado certo.
 DEPENDENCIAS = [
-    ("pacientes", "0005_clinica_obrigatoria"),
+    ("pacientes", "0006_paciente_pro_bono"),
     ("profissionais", "0005_clinica_obrigatoria_email_por_clinica"),
     ("consultas", "0006_clinica_obrigatoria"),
 ]

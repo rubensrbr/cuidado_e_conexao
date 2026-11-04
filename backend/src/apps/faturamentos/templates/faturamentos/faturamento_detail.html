@@ -20,6 +20,7 @@
                     <div class="app-summary-meta">
                         {{ object.data_servico|date:"d/m/Y" }}
                         · {{ object.get_status_pagamento_display }}
+                        {% if object.pro_bono %}· Pro bono{% endif %}
                     </div>
                 </div>
             </div>
@@ -65,6 +66,15 @@
                             · {{ object.consulta.hora_inicio|time:"H:i" }}&ndash;{{ object.consulta.hora_fim|time:"H:i" }}
                         {% else %}
                             Sem consulta associada
+                        {% endif %}
+                    </div>
+                    <div class="col-12">
+                        <div class="text-muted small">Pacote</div>
+                        {% if object.pacote %}
+                            {{ object.pacote.quantidade_sessoes }} sessões
+                            · saldo {{ object.pacote.saldo }}
+                        {% else %}
+                            Sem pacote associado
                         {% endif %}
                     </div>
                 </div>

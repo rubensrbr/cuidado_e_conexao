@@ -8,7 +8,7 @@ from django.test import TransactionTestCase
 # profissionais (os donos) já com clínica obrigatória.
 ANTES = [
     ("enderecos", "0004_endereco_clinica"),
-    ("pacientes", "0005_clinica_obrigatoria"),
+    ("pacientes", "0006_paciente_pro_bono"),
     ("profissionais", "0005_clinica_obrigatoria_email_por_clinica"),
 ]
 PREENCHIDA = [("enderecos", "0005_preencher_clinica")]
