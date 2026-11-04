@@ -1,0 +1,40 @@
+{% extends "base_form.html" %}
+
+{% block title %}Vincular consulta ao pacote | Cuidado & Conexão{% endblock %}
+
+{% block form_header %}
+    {% include "partials/_card_header.html" with icon="bi-link-45deg" title="Vincular consulta ao pacote" subtitle=pacote.paciente.nome_completo %}
+{% endblock %}
+
+{% block form_sections %}
+    <div class="app-form-section">
+
+        <div class="app-form-section-title">
+            <i class="bi bi-calendar-check"></i>
+            Pacote e consulta
+        </div>
+
+        <div class="row g-3">
+
+            {% include "partials/_field.html" with field=form.pacote label="Pacote" %}
+            {% include "partials/_field.html" with field=form.consulta label="Consulta" %}
+        </div>
+
+        {% if form.consulta.field.queryset.exists %}
+            <p class="text-muted small mt-3 mb-0">
+                Aparecem só consultas deste paciente{% if pacote.profissional %} e deste profissional{% endif %},
+                ainda sem pacote e não canceladas. Cada consulta realizada gasta uma sessão.
+            </p>
+        {% else %}
+            <p class="text-muted small mt-3 mb-0">
+                Não há consultas disponíveis para vincular a este pacote.
+            </p>
+        {% endif %}
+
+    </div>
+{% endblock %}
+
+{% block form_actions %}
+    {% url 'faturamentos:pacote_detail' pacote.uuid as cancel_url %}
+    {% include "partials/_form_actions.html" with cancel_url=cancel_url submit_label="Vincular consulta" %}
+{% endblock %}

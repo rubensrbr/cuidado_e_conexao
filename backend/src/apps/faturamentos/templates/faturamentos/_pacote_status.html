@@ -1,0 +1,10 @@
+{% comment %}
+Selo do status do pacote. Uso: {% include "faturamentos/_pacote_status.html" with pacote=pacote %}
+{% endcomment %}
+{% if pacote.status == "ativo" %}
+    <span class="app-status app-status-active">{{ pacote.get_status_display }}</span>
+{% elif pacote.status == "expirado" %}
+    <span class="app-status app-status-inactive">{{ pacote.get_status_display }}</span>
+{% else %}
+    <span class="app-status app-status-neutral">{{ pacote.get_status_display }}</span>
+{% endif %}

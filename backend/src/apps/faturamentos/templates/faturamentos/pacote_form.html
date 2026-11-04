@@ -1,0 +1,69 @@
+{% extends "base_form.html" %}
+
+{% block title %}
+    {% if object %}
+        Editar Pacote | Cuidado & Conexão
+    {% else %}
+        Novo Pacote | Cuidado & Conexão
+    {% endif %}
+{% endblock %}
+
+{% block form_header %}
+    {% include "partials/_card_header.html" with icon="bi-box-seam" title=object|yesno:"Editar Pacote,Novo Pacote" subtitle=object|yesno:"Atualize os dados do pacote.,Registre um pacote de sessões para o paciente." %}
+{% endblock %}
+
+{% block form_sections %}
+    <!-- Paciente e profissional -->
+    <div class="app-form-section">
+
+        <div class="app-form-section-title">
+            <i class="bi bi-people"></i>
+            Paciente e profissional
+        </div>
+
+        <div class="row g-3">
+
+            {% include "partials/_field.html" with field=form.paciente label="Paciente" %}
+            {% include "partials/_field.html" with field=form.profissional label="Profissional (opcional)" %}
+        </div>
+
+    </div>
+
+    <!-- Sessões e valor -->
+    <div class="app-form-section">
+
+        <div class="app-form-section-title">
+            <i class="bi bi-cash-coin"></i>
+            Sessões e valor
+        </div>
+
+        <div class="row g-3">
+
+            {% include "partials/_field.html" with field=form.quantidade_sessoes label="Quantidade de sessões" col="col-md-6" %}
+            {% include "partials/_field.html" with field=form.valor_total label="Valor total (R$)" col="col-md-6" %}
+        </div>
+
+    </div>
+
+    <!-- Datas e status -->
+    <div class="app-form-section">
+
+        <div class="app-form-section-title">
+            <i class="bi bi-calendar-event"></i>
+            Datas e status
+        </div>
+
+        <div class="row g-3">
+
+            {% include "partials/_field.html" with field=form.data_compra label="Data da compra" col="col-md-4" %}
+            {% include "partials/_field.html" with field=form.validade label="Validade (opcional)" col="col-md-4" %}
+            {% include "partials/_field.html" with field=form.status label="Status" col="col-md-4" %}
+        </div>
+
+    </div>
+{% endblock %}
+
+{% block form_actions %}
+    {% url 'faturamentos:pacote_list' as cancel_url %}
+    {% include "partials/_form_actions.html" with cancel_url=cancel_url submit_label=object|yesno:"Salvar alterações,Registrar pacote" %}
+{% endblock %}

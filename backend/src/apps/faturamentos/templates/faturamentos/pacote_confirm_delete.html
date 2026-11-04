@@ -1,0 +1,44 @@
+{% extends "base_delete.html" %}
+{% load core_extras %}
+
+{% block title %}Excluir Pacote | Cuidado & Conexão{% endblock %}
+
+{% block delete_header %}{% include "partials/_delete_header.html" with title="Excluir Pacote" %}{% endblock %}
+
+{% block delete_icon %}bi-box-seam{% endblock %}
+{% block delete_name %}{{ object.paciente.nome_completo }}{% endblock %}
+{% block delete_meta %}
+    {{ object.quantidade_sessoes }} sessões
+    · {{ object.valor_total|brl }}
+    · {{ object.data_compra|date:"d/m/Y" }}
+{% endblock %}
+
+{% block delete_warnings %}
+    {% with cobrancas=object.faturamentos.count sessoes=object.sessoes.count %}
+        {% if cobrancas %}
+            <p class="small text-danger">
+                Este pacote tem {{ cobrancas }} cobrança{{ cobrancas|pluralize }} registrada{{ cobrancas|pluralize }}
+                e <strong>não pode ser excluído</strong>.
+            </p>
+        {% endif %}
+        {% if sessoes %}
+            <p class="text-muted small">
+                {{ sessoes }} consulta{{ sessoes|pluralize }} vinculada{{ sessoes|pluralize }} a este pacote
+                não {{ sessoes|pluralize:"será,serão" }} apagada{{ sessoes|pluralize }}: apenas perde{{ sessoes|pluralize:",m" }} o vínculo.
+            </p>
+        {% endif %}
+    {% endwith %}
+{% endblock %}
+
+{% block delete_hint %}
+    <p class="text-muted small mb-0">
+        Se o pacote não será mais usado, prefira
+        <a href="{% url 'faturamentos:pacote_update' object.uuid %}">editar o pacote</a>
+        e alterar o status para <strong>Cancelado</strong>: o histórico é mantido.
+    </p>
+{% endblock %}
+
+{% block delete_actions %}
+    {% url 'faturamentos:pacote_detail' object.uuid as cancel_url %}
+    {% include "partials/_delete_actions.html" with cancel_url=cancel_url submit_label="Sim, excluir pacote" %}
+{% endblock %}

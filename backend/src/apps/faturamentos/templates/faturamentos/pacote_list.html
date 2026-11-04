@@ -1,0 +1,72 @@
+{% extends "base_list.html" %}
+{% load core_extras %}
+
+{% block title %}Pacotes | Cuidado & Conexão{% endblock %}
+
+{% block list_header %}
+    {% if "faturamentos.add_pacote" in perms %}{% url 'faturamentos:pacote_create' as create_url %}{% endif %}
+    {% include "partials/_card_header.html" with icon="bi-box-seam" title="Lista de Pacotes" subtitle="Pacotes de sessões vendidos aos pacientes" action_url=create_url action_label="Novo pacote" action_icon="bi-plus-lg" %}
+{% endblock %}
+
+{% block table_head %}
+    <th>Compra</th>
+    <th>Paciente</th>
+    <th>Profissional</th>
+    <th class="text-center">Sessões</th>
+    <th class="text-end">Valor total</th>
+    <th>Validade</th>
+    <th>Status</th>
+    <th class="text-end">Ações</th>
+{% endblock %}
+
+{% block table_body %}
+    {% for pacote in pacotes %}
+    <tr>
+        <td class="text-nowrap">
+            <a href="{% url 'faturamentos:pacote_detail' pacote.uuid %}">{{ pacote.data_compra|date:"d/m/Y" }}</a>
+        </td>
+
+        <td>
+            <span class="app-name">{{ pacote.paciente.nome_completo }}</span>
+        </td>
+
+        <td>
+            {% if pacote.profissional %}
+                {{ pacote.profissional.nome_completo }}
+            {% else %}
+                <span class="text-muted">Qualquer profissional</span>
+            {% endif %}
+        </td>
+
+        <td class="text-center text-nowrap">
+            {{ pacote.qtd_sessoes_usadas }}/{{ pacote.quantidade_sessoes }}
+            <div class="text-muted small">saldo {{ pacote.qtd_saldo }}</div>
+        </td>
+
+        <td class="text-end text-nowrap">{{ pacote.valor_total|brl }}</td>
+
+        <td class="text-nowrap">
+            {% if pacote.validade %}
+                {{ pacote.validade|date:"d/m/Y" }}
+                {% if pacote.esta_vencido and pacote.status == "ativo" %}
+                    <span class="badge text-bg-danger">Vencido</span>
+                {% endif %}
+            {% else %}
+                <span class="text-muted">Sem validade</span>
+            {% endif %}
+        </td>
+
+        <td>{% include "faturamentos/_pacote_status.html" with pacote=pacote %}</td>
+
+        <td class="text-end">
+            {% url 'faturamentos:pacote_update' pacote.uuid as edit_url %}
+            {% url 'faturamentos:pacote_delete' pacote.uuid as delete_url %}
+            {% include "partials/_row_actions.html" with edit_perm="faturamentos.change_pacote" delete_perm="faturamentos.delete_pacote" %}
+        </td>
+    </tr>
+    {% empty %}
+        {% include "partials/_empty_row.html" with colspan=8 icon="bi-box-seam" message="Nenhum pacote registrado." %}
+    {% endfor %}
+{% endblock %}
+
+{% block pagination %}{% include "partials/_pagination.html" with noun="pacotes" %}{% endblock %}

@@ -1,0 +1,172 @@
+{% extends "base.html" %}
+{% load core_extras %}
+
+{% block title %}Pacote | Cuidado & Conexão{% endblock %}
+
+{% block content %}
+
+<div class="app-page app-page--medium">
+    <div class="app-card">
+
+        {% if "faturamentos.change_pacote" in perms %}{% url 'faturamentos:pacote_update' object.uuid as edit_url %}{% endif %}
+        {% include "partials/_card_header.html" with icon="bi-box-seam" title="Pacote" subtitle=object.data_compra|date:"d/m/Y" action_url=edit_url action_label="Editar" action_icon="bi-pencil" %}
+
+        <div class="app-form-body">
+
+            <div class="app-summary">
+                <span class="app-summary-avatar"><i class="bi bi-box-seam"></i></span>
+                <div>
+                    <div class="app-summary-name">{{ object.paciente.nome_completo }}</div>
+                    <div class="app-summary-meta">
+                        {{ object.quantidade_sessoes }} sessões
+                        · {{ object.valor_total|brl }}
+                        · {% include "faturamentos/_pacote_status.html" with pacote=object %}
+                    </div>
+                </div>
+            </div>
+
+            <div class="app-form-section">
+                <div class="app-form-section-title">
+                    <i class="bi bi-info-circle"></i>
+                    Dados do pacote
+                </div>
+
+                <div class="row g-3">
+                    <div class="col-md-6">
+                        <div class="text-muted small">Profissional</div>
+                        {% if object.profissional %}
+                            {{ object.profissional.nome_completo }}
+                        {% else %}
+                            Qualquer profissional
+                        {% endif %}
+                    </div>
+                    <div class="col-md-6">
+                        <div class="text-muted small">Data da compra</div>
+                        {{ object.data_compra|date:"d/m/Y" }}
+                    </div>
+                    <div class="col-md-6">
+                        <div class="text-muted small">Validade</div>
+                        {% if object.validade %}
+                            {{ object.validade|date:"d/m/Y" }}
+                            {% if object.esta_vencido and object.status == "ativo" %}
+                                <span class="badge text-bg-danger">Vencido</span>
+                            {% endif %}
+                        {% else %}
+                            Sem validade
+                        {% endif %}
+                    </div>
+                    <div class="col-md-6">
+                        <div class="text-muted small">Valor total</div>
+                        {{ object.valor_total|brl }}
+                    </div>
+                </div>
+            </div>
+
+            <div class="app-form-section">
+                <div class="app-form-section-title">
+                    <i class="bi bi-calendar-check"></i>
+                    Sessões
+                </div>
+
+                <div class="row g-3 mb-3">
+                    <div class="col-md-4"><div class="text-muted small">Contratadas</div>{{ object.quantidade_sessoes }}</div>
+                    <div class="col-md-4"><div class="text-muted small">Usadas</div>{{ object.sessoes_usadas }}</div>
+                    <div class="col-md-4"><div class="text-muted small">Saldo</div>{{ object.saldo }}</div>
+                </div>
+
+                <div class="table-responsive">
+                    <table class="table align-middle mb-2">
+                        <thead>
+                            <tr>
+                                <th>Data</th>
+                                <th>Horário</th>
+                                <th>Profissional</th>
+                                <th>Consulta</th>
+                                <th class="text-end">Ações</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            {% for sessao in sessoes %}
+                            <tr>
+                                <td class="text-nowrap">{{ sessao.consulta.data_consulta|date:"d/m/Y" }}</td>
+                                <td class="text-nowrap">{{ sessao.consulta.hora_inicio|time:"H:i" }}&ndash;{{ sessao.consulta.hora_fim|time:"H:i" }}</td>
+                                <td>{{ sessao.consulta.profissional.nome_completo }}</td>
+                                <td>{{ sessao.consulta.get_status_display }}</td>
+                                <td class="text-end">
+                                    {% if "faturamentos.delete_sessaopacote" in perms %}
+                                    <a href="{% url 'faturamentos:sessaopacote_delete' sessao.uuid %}" class="btn btn-outline-danger btn-sm" title="Desvincular consulta">
+                                        <i class="bi bi-x-lg"></i>
+                                    </a>
+                                    {% endif %}
+                                </td>
+                            </tr>
+                            {% empty %}
+                                {% include "partials/_empty_row.html" with colspan=5 icon="bi-calendar-x" message="Nenhuma consulta vinculada a este pacote." %}
+                            {% endfor %}
+                        </tbody>
+                    </table>
+                </div>
+
+                <p class="text-muted small mb-2">Só consultas <strong>realizadas</strong> gastam uma sessão do pacote.</p>
+
+                {% if "faturamentos.add_sessaopacote" in perms and object.status == "ativo" %}
+                <a href="{% url 'faturamentos:sessaopacote_create' object.uuid %}" class="btn btn-outline-primary btn-sm">
+                    <i class="bi bi-link-45deg me-1"></i>
+                    Vincular consulta
+                </a>
+                {% endif %}
+            </div>
+
+            <div class="app-form-section">
+                <div class="app-form-section-title">
+                    <i class="bi bi-receipt"></i>
+                    Cobranças
+                </div>
+
+                <div class="table-responsive">
+                    <table class="table align-middle mb-0">
+                        <thead>
+                            <tr>
+                                <th>Data</th>
+                                <th class="text-end">Cobrado</th>
+                                <th class="text-end">Pago</th>
+                                <th>Status</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            {% for faturamento in faturamentos %}
+                            <tr>
+                                <td class="text-nowrap">
+                                    <a href="{% url 'faturamentos:faturamento_detail' faturamento.uuid %}">{{ faturamento.data_servico|date:"d/m/Y" }}</a>
+                                </td>
+                                <td class="text-end text-nowrap">{{ faturamento.valor_cobrado|brl }}</td>
+                                <td class="text-end text-nowrap">{{ faturamento.valor_pago|brl }}</td>
+                                <td>{{ faturamento.get_status_pagamento_display }}</td>
+                            </tr>
+                            {% empty %}
+                                {% include "partials/_empty_row.html" with colspan=4 icon="bi-receipt" message="Nenhuma cobrança registrada para este pacote." %}
+                            {% endfor %}
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+
+            <div class="app-form-actions">
+                <a href="{% url 'faturamentos:pacote_list' %}" class="btn btn-outline-secondary">
+                    <i class="bi bi-arrow-left me-1"></i>
+                    Voltar
+                </a>
+
+                {% if "faturamentos.delete_pacote" in perms %}
+                <a href="{% url 'faturamentos:pacote_delete' object.uuid %}" class="btn btn-outline-danger">
+                    <i class="bi bi-trash3 me-1"></i>
+                    Excluir
+                </a>
+                {% endif %}
+            </div>
+
+        </div>
+    </div>
+</div>
+
+{% endblock %}

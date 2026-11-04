@@ -43,6 +43,8 @@ PAPEIS = {
         **{modelo: TUDO for modelo in _NEGOCIO},
         "pacientes.prontuario": TUDO,
         "faturamentos.faturamento": TUDO,
+        "faturamentos.pacote": TUDO,
+        "faturamentos.sessaopacote": TUDO,
         "localidades.estado": VER,
         "localidades.cidade": VER,
     },
