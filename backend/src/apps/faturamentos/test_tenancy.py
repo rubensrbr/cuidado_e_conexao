@@ -164,8 +164,8 @@ class FaturamentoFormTenantTests(FaturamentosTenantBase):
 
 
 class FaturamentoViewsTenantTests(FaturamentosTenantBase):
-    # O app ainda não tem templates, então só testamos o que não renderiza
-    # página: o queryset da listagem, os 404 e os POSTs que redirecionam.
+    # Queryset da listagem, 404 entre clínicas, POSTs que redirecionam e as
+    # páginas renderizadas (listagem, formulário, detalhe e exclusão).
     @classmethod
     def setUpTestData(cls):
         super().setUpTestData()
@@ -219,3 +219,26 @@ class FaturamentoViewsTenantTests(FaturamentosTenantBase):
         self.assertEqual(resposta.status_code, 302)
         novo = Faturamento.todas.get(data_servico=date(2026, 11, 12))
         self.assertEqual(novo.clinica, self.vida)
+
+    def test_paginas_renderizam_para_faturamento_da_propria_clinica(self):
+        urls = [
+            reverse("faturamentos:faturamento_list"),
+            reverse("faturamentos:faturamento_create"),
+            reverse("faturamentos:faturamento_detail", kwargs={"uuid": self.fat_vida.uuid}),
+            reverse("faturamentos:faturamento_update", kwargs={"uuid": self.fat_vida.uuid}),
+            reverse("faturamentos:faturamento_delete", kwargs={"uuid": self.fat_vida.uuid}),
+        ]
+        for url in urls:
+            with self.subTest(url=url):
+                self.assertEqual(self.client.get(url).status_code, 200)
+
+    def test_listagem_mostra_so_pacientes_da_clinica_atual(self):
+        resposta = self.client.get(reverse("faturamentos:faturamento_list"))
+        self.assertContains(resposta, "Ana Silva")
+        self.assertNotContains(resposta, "Beto Silva")
+        self.assertContains(resposta, "R$ 150,00")
+
+    def test_menu_lateral_tem_link_para_faturamentos(self):
+        resposta = self.client.get(reverse("faturamentos:faturamento_list"))
+        self.assertContains(resposta, reverse("faturamentos:faturamento_list"))
+        self.assertContains(resposta, "Faturamentos")

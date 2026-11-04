@@ -1,0 +1,101 @@
+{% extends "base.html" %}
+{% load core_extras %}
+
+{% block title %}Faturamento | Cuidado & Conexão{% endblock %}
+
+{% block content %}
+
+<div class="app-page app-page--medium">
+    <div class="app-card">
+
+        {% if "faturamentos.change_faturamento" in perms %}{% url 'faturamentos:faturamento_update' object.uuid as edit_url %}{% endif %}
+        {% include "partials/_card_header.html" with icon="bi-receipt" title="Faturamento" subtitle=object.data_servico|date:"d/m/Y" action_url=edit_url action_label="Editar" action_icon="bi-pencil" %}
+
+        <div class="app-form-body">
+
+            <div class="app-summary">
+                <span class="app-summary-avatar"><i class="bi bi-receipt"></i></span>
+                <div>
+                    <div class="app-summary-name">{{ object.paciente.nome_completo }}</div>
+                    <div class="app-summary-meta">
+                        {{ object.data_servico|date:"d/m/Y" }}
+                        · {{ object.get_status_pagamento_display }}
+                    </div>
+                </div>
+            </div>
+
+            <div class="app-form-section">
+                <div class="app-form-section-title">
+                    <i class="bi bi-cash-coin"></i>
+                    Valores
+                </div>
+
+                <div class="row g-3">
+                    <div class="col-md-6"><div class="text-muted small">Valor cobrado</div>{{ object.valor_cobrado|brl }}</div>
+                    <div class="col-md-6"><div class="text-muted small">Valor pago</div>{{ object.valor_pago|brl }}</div>
+                    <div class="col-md-6"><div class="text-muted small">Valor pendente</div>{{ object.valor_pendente|brl }}</div>
+                    <div class="col-md-6"><div class="text-muted small">Valor do convênio</div>{{ object.valor_convenio|brl }}</div>
+                </div>
+            </div>
+
+            <div class="app-form-section">
+                <div class="app-form-section-title">
+                    <i class="bi bi-credit-card"></i>
+                    Pagamento
+                </div>
+
+                <div class="row g-3">
+                    <div class="col-md-4"><div class="text-muted small">Método</div>{{ object.get_metodo_pagamento_display|default:"-" }}</div>
+                    <div class="col-md-4"><div class="text-muted small">Status</div>{{ object.get_status_pagamento_display }}</div>
+                    <div class="col-md-4"><div class="text-muted small">Número da nota</div>{{ object.numero_nota|default:"-" }}</div>
+                </div>
+            </div>
+
+            <div class="app-form-section">
+                <div class="app-form-section-title">
+                    <i class="bi bi-link-45deg"></i>
+                    Vínculos
+                </div>
+
+                <div class="row g-3">
+                    <div class="col-12">
+                        <div class="text-muted small">Consulta</div>
+                        {% if object.consulta %}
+                            {{ object.consulta.data_consulta|date:"d/m/Y" }}
+                            · {{ object.consulta.hora_inicio|time:"H:i" }}&ndash;{{ object.consulta.hora_fim|time:"H:i" }}
+                        {% else %}
+                            Sem consulta associada
+                        {% endif %}
+                    </div>
+                </div>
+            </div>
+
+            {% if object.observacoes %}
+            <div class="app-form-section">
+                <div class="app-form-section-title">
+                    <i class="bi bi-journal-text"></i>
+                    Observações
+                </div>
+                <p class="mb-0">{{ object.observacoes|linebreaksbr }}</p>
+            </div>
+            {% endif %}
+
+            <div class="app-form-actions">
+                <a href="{% url 'faturamentos:faturamento_list' %}" class="btn btn-outline-secondary">
+                    <i class="bi bi-arrow-left me-1"></i>
+                    Voltar
+                </a>
+
+                {% if "faturamentos.delete_faturamento" in perms %}
+                <a href="{% url 'faturamentos:faturamento_delete' object.uuid %}" class="btn btn-outline-danger">
+                    <i class="bi bi-trash3 me-1"></i>
+                    Excluir
+                </a>
+                {% endif %}
+            </div>
+
+        </div>
+    </div>
+</div>
+
+{% endblock %}

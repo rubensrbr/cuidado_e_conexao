@@ -55,7 +55,9 @@ INSTALLED_APPS = [
 # Apps fora do release 1. Para liberar no release 2, adicione "salas" e/ou
 # "faturamentos" aqui e rode `manage.py migrate`. O código e as migrações
 # continuam no repositório; só não são carregados nem expostos.
-OPTIONAL_APPS = []
+OPTIONAL_APPS = [
+    "faturamentos",
+]
 INSTALLED_APPS += OPTIONAL_APPS
 
 MIDDLEWARE = [
@@ -209,15 +211,21 @@ LOGGING = {
 
 # Cadastro público (/cadastro/)
 # Tentativas (envios do formulário, válidos ou não) por IP dentro da janela.
-CADASTRO_MAX_TENTATIVAS_POR_IP = config("CADASTRO_MAX_TENTATIVAS_POR_IP", default=10, cast=int)
-CADASTRO_JANELA_EM_SEGUNDOS = config("CADASTRO_JANELA_EM_SEGUNDOS", default=3600, cast=int)
+CADASTRO_MAX_TENTATIVAS_POR_IP = config(
+    "CADASTRO_MAX_TENTATIVAS_POR_IP", default=10, cast=int
+)
+CADASTRO_JANELA_EM_SEGUNDOS = config(
+    "CADASTRO_JANELA_EM_SEGUNDOS", default=3600, cast=int
+)
 # Contas aguardando aprovação: ao chegar neste número o cadastro fecha até o
 # administrador aprovar ou apagar algumas (trava contra enxurrada de vários IPs).
 CADASTRO_MAX_PENDENTES = config("CADASTRO_MAX_PENDENTES", default=50, cast=int)
 # Atrás de um proxy reverso (nginx etc.) o IP real vem no último valor de
 # X-Forwarded-For. Só ligue se o proxy SOBRESCREVE esse cabeçalho, senão o
 # visitante poderia forjá-lo para fugir do limite.
-CADASTRO_CONFIAR_X_FORWARDED_FOR = config("CADASTRO_CONFIAR_X_FORWARDED_FOR", default=False, cast=bool)
+CADASTRO_CONFIAR_X_FORWARDED_FOR = config(
+    "CADASTRO_CONFIAR_X_FORWARDED_FOR", default=False, cast=bool
+)
 
 
 # Login (/login/)
@@ -229,19 +237,27 @@ LOGIN_JANELA_EM_SEGUNDOS = config("LOGIN_JANELA_EM_SEGUNDOS", default=900, cast=
 
 # Esqueci minha senha (/esqueci-senha/)
 # Pedidos (válidos ou não) por IP dentro da janela.
-RECUPERACAO_MAX_PEDIDOS_POR_IP = config("RECUPERACAO_MAX_PEDIDOS_POR_IP", default=5, cast=int)
-RECUPERACAO_JANELA_EM_SEGUNDOS = config("RECUPERACAO_JANELA_EM_SEGUNDOS", default=3600, cast=int)
+RECUPERACAO_MAX_PEDIDOS_POR_IP = config(
+    "RECUPERACAO_MAX_PEDIDOS_POR_IP", default=5, cast=int
+)
+RECUPERACAO_JANELA_EM_SEGUNDOS = config(
+    "RECUPERACAO_JANELA_EM_SEGUNDOS", default=3600, cast=int
+)
 # Validade do link enviado por e-mail (o padrão do Django é 3 dias; aqui são 2 horas).
 PASSWORD_RESET_TIMEOUT = config("PASSWORD_RESET_TIMEOUT", default=7200, cast=int)
 
 # E-mail. Em desenvolvimento a mensagem aparece no log do servidor; em produção
 # defina EMAIL_BACKEND=django.core.mail.backends.smtp.EmailBackend e o SMTP abaixo,
 # senão ninguém recebe o link de recuperação.
-EMAIL_BACKEND = config("EMAIL_BACKEND", default="django.core.mail.backends.console.EmailBackend")
+EMAIL_BACKEND = config(
+    "EMAIL_BACKEND", default="django.core.mail.backends.console.EmailBackend"
+)
 EMAIL_HOST = config("EMAIL_HOST", default="localhost")
 EMAIL_PORT = config("EMAIL_PORT", default=25, cast=int)
 EMAIL_HOST_USER = config("EMAIL_HOST_USER", default="")
 EMAIL_HOST_PASSWORD = config("EMAIL_HOST_PASSWORD", default="")
 EMAIL_USE_TLS = config("EMAIL_USE_TLS", default=False, cast=bool)
 EMAIL_USE_SSL = config("EMAIL_USE_SSL", default=False, cast=bool)
-DEFAULT_FROM_EMAIL = config("DEFAULT_FROM_EMAIL", default="Cuidado e Conexão <nao-responder@localhost>")
+DEFAULT_FROM_EMAIL = config(
+    "DEFAULT_FROM_EMAIL", default="Cuidado e Conexão <nao-responder@localhost>"
+)

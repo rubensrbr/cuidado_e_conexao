@@ -1,0 +1,86 @@
+{% extends "base_form.html" %}
+
+{% block title %}
+    {% if object %}
+        Editar Faturamento | Cuidado & Conexão
+    {% else %}
+        Novo Faturamento | Cuidado & Conexão
+    {% endif %}
+{% endblock %}
+
+{% block form_header %}
+    {% include "partials/_card_header.html" with icon=object|yesno:"bi-receipt-cutoff,bi-receipt" title=object|yesno:"Editar Faturamento,Novo Faturamento" subtitle=object|yesno:"Atualize os dados da cobrança.,Registre uma nova cobrança no sistema." %}
+{% endblock %}
+
+{% block form_sections %}
+    <!-- Paciente e consulta -->
+    <div class="app-form-section">
+
+        <div class="app-form-section-title">
+            <i class="bi bi-people"></i>
+            Paciente e consulta
+        </div>
+
+        <div class="row g-3">
+
+            {% include "partials/_field.html" with field=form.paciente label="Paciente" %}
+            {% include "partials/_field.html" with field=form.consulta label="Consulta (opcional)" %}
+        </div>
+
+    </div>
+
+    <!-- Serviço e valores -->
+    <div class="app-form-section">
+
+        <div class="app-form-section-title">
+            <i class="bi bi-cash-coin"></i>
+            Serviço e valores
+        </div>
+
+        <div class="row g-3">
+
+            {% include "partials/_field.html" with field=form.data_servico label="Data do serviço" col="col-md-6" %}
+            {% include "partials/_field.html" with field=form.valor_cobrado label="Valor cobrado (R$)" col="col-md-6" %}
+            {% include "partials/_field.html" with field=form.valor_pago label="Valor pago (R$)" col="col-md-6" %}
+            {% include "partials/_field.html" with field=form.valor_convenio label="Valor do convênio (R$)" col="col-md-6" %}
+        </div>
+
+    </div>
+
+    <!-- Pagamento -->
+    <div class="app-form-section">
+
+        <div class="app-form-section-title">
+            <i class="bi bi-credit-card"></i>
+            Pagamento
+        </div>
+
+        <div class="row g-3">
+
+            {% include "partials/_field.html" with field=form.metodo_pagamento label="Método de pagamento" col="col-md-4" %}
+            {% include "partials/_field.html" with field=form.status_pagamento label="Status do pagamento" col="col-md-4" %}
+            {% include "partials/_field.html" with field=form.numero_nota label="Número da nota" col="col-md-4" %}
+        </div>
+
+    </div>
+
+    <!-- Observações -->
+    <div class="app-form-section">
+
+        <div class="app-form-section-title">
+            <i class="bi bi-journal-text"></i>
+            Observações
+        </div>
+
+        <div class="row g-3">
+
+            {% include "partials/_field.html" with field=form.observacoes label="Observações" col="col-12" %}
+        </div>
+
+    </div>
+{% endblock %}
+
+{% block form_actions %}
+    {% url 'faturamentos:faturamento_list' as cancel_url %}
+    {% include "partials/_form_actions.html" with cancel_url=cancel_url submit_label=object|yesno:"Salvar alterações,Registrar faturamento" %}
+{% endblock %}

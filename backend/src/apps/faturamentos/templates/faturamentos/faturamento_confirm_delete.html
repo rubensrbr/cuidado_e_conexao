@@ -1,0 +1,27 @@
+{% extends "base_delete.html" %}
+{% load core_extras %}
+
+{% block title %}Excluir Faturamento | Cuidado & Conexão{% endblock %}
+
+{% block delete_header %}{% include "partials/_delete_header.html" with title="Excluir Faturamento" %}{% endblock %}
+
+{% block delete_icon %}bi-receipt{% endblock %}
+{% block delete_name %}{{ object.paciente.nome_completo }}{% endblock %}
+{% block delete_meta %}
+    {{ object.data_servico|date:"d/m/Y" }}
+    · {{ object.valor_cobrado|brl }}
+    · {{ object.get_status_pagamento_display }}
+{% endblock %}
+
+{% block delete_hint %}
+    <p class="text-muted small mb-0">
+        Se a cobrança apenas não será paga, prefira
+        <a href="{% url 'faturamentos:faturamento_update' object.uuid %}">editar o faturamento</a>
+        e alterar o status para <strong>Cancelado</strong>: o histórico é mantido.
+    </p>
+{% endblock %}
+
+{% block delete_actions %}
+    {% url 'faturamentos:faturamento_list' as cancel_url %}
+    {% include "partials/_delete_actions.html" with cancel_url=cancel_url submit_label="Sim, excluir faturamento" %}
+{% endblock %}

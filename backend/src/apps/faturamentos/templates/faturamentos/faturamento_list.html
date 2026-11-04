@@ -1,0 +1,63 @@
+{% extends "base_list.html" %}
+{% load core_extras %}
+
+{% block title %}Faturamentos | Cuidado & Conexão{% endblock %}
+
+{% block list_header %}
+    {% if "faturamentos.add_faturamento" in perms %}{% url 'faturamentos:faturamento_create' as create_url %}{% endif %}
+    {% include "partials/_card_header.html" with icon="bi-receipt" title="Lista de Faturamentos" subtitle="Cobranças e pagamentos registrados no sistema" action_url=create_url action_label="Novo faturamento" action_icon="bi-plus-lg" %}
+{% endblock %}
+
+{% block table_head %}
+    <th>Data do serviço</th>
+    <th>Paciente</th>
+    <th class="text-end">Cobrado</th>
+    <th class="text-end">Pago</th>
+    <th class="text-end">Pendente</th>
+    <th>Status</th>
+    <th class="text-end">Ações</th>
+{% endblock %}
+
+{% block table_body %}
+    {% for faturamento in faturamentos %}
+    <tr>
+        <td class="text-nowrap">
+            <a href="{% url 'faturamentos:faturamento_detail' faturamento.uuid %}">{{ faturamento.data_servico|date:"d/m/Y" }}</a>
+        </td>
+
+        <td>
+            <span class="app-name">
+                {{ faturamento.paciente.nome_completo }}
+            </span>
+        </td>
+
+        <td class="text-end text-nowrap">{{ faturamento.valor_cobrado|brl }}</td>
+
+        <td class="text-end text-nowrap">{{ faturamento.valor_pago|brl }}</td>
+
+        <td class="text-end text-nowrap">{{ faturamento.valor_pendente|brl }}</td>
+
+        <td>
+            {% if faturamento.status_pagamento == "pago" %}
+                <span class="app-status app-status-active">{{ faturamento.get_status_pagamento_display }}</span>
+            {% elif faturamento.status_pagamento == "atrasado" %}
+                <span class="app-status app-status-inactive">{{ faturamento.get_status_pagamento_display }}</span>
+            {% elif faturamento.status_pagamento == "cancelado" %}
+                <span class="app-status app-status-neutral">{{ faturamento.get_status_pagamento_display }}</span>
+            {% else %}
+                <span class="app-status app-status-pending">{{ faturamento.get_status_pagamento_display }}</span>
+            {% endif %}
+        </td>
+
+        <td class="text-end">
+            {% url 'faturamentos:faturamento_update' faturamento.uuid as edit_url %}
+            {% url 'faturamentos:faturamento_delete' faturamento.uuid as delete_url %}
+            {% include "partials/_row_actions.html" with edit_perm="faturamentos.change_faturamento" delete_perm="faturamentos.delete_faturamento" %}
+        </td>
+    </tr>
+    {% empty %}
+        {% include "partials/_empty_row.html" with colspan=7 icon="bi-receipt" message="Nenhum faturamento registrado." %}
+    {% endfor %}
+{% endblock %}
+
+{% block pagination %}{% include "partials/_pagination.html" with noun="faturamentos" %}{% endblock %}

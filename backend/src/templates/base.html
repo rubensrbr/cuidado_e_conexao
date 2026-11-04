@@ -61,12 +61,12 @@
            href="{{ salas_url|default:'#' }}"{% if not salas_url %} aria-disabled="true" tabindex="-1" title="Em construção"{% endif %}>
           <i class="bi bi-door-open-fill"></i><span>Salas</span>
         </a>
+        {% endcomment %}
         {% maybe_url 'faturamentos:faturamento_list' as faturamentos_url %}
         <a class="nav-link{% if request.resolver_match.namespace == 'faturamentos' %} active{% endif %}{% if not faturamentos_url %} disabled{% endif %}"
            href="{{ faturamentos_url|default:'#' }}"{% if not faturamentos_url %} aria-disabled="true" tabindex="-1" title="Em construção"{% endif %}>
           <i class="bi bi-receipt"></i><span>Faturamentos</span>
         </a>
-        {% endcomment %}
       </nav>
 
       <div class="sidebar-footer">
