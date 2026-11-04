@@ -127,7 +127,9 @@ class Faturamento(TenantModel):
             if self.valor_pago:
                 erros["valor_pago"] = "Atendimento pro bono não tem valor pago."
             if self.valor_convenio:
-                erros["valor_convenio"] = "Atendimento pro bono não tem valor de convênio."
+                erros["valor_convenio"] = (
+                    "Atendimento pro bono não tem valor de convênio."
+                )
 
         if erros:
             raise ValidationError(erros)
@@ -152,8 +154,6 @@ class Pacote(TenantModel):
         ("cancelado", "Cancelado"),
     ]
 
-    # Status da consulta que gasta uma sessão do pacote. Ajuste aqui se a
-    # clínica decidir que falta também consome (acrescente "falta").
     STATUS_QUE_CONSOMEM_SESSAO = ("realizada",)
 
     paciente = models.ForeignKey(
@@ -272,7 +272,10 @@ class SessaoPacote(TenantModel):
             erros["consulta"] = "A consulta pertence a outra clínica."
         elif consulta.paciente_id != pacote.paciente_id:
             erros["consulta"] = "A consulta é de outro paciente."
-        elif pacote.profissional_id and consulta.profissional_id != pacote.profissional_id:
+        elif (
+            pacote.profissional_id
+            and consulta.profissional_id != pacote.profissional_id
+        ):
             erros["consulta"] = "A consulta é de outro profissional."
         elif self._state.adding:
             if pacote.status != "ativo":
@@ -283,7 +286,9 @@ class SessaoPacote(TenantModel):
                     consulta__status="cancelada"
                 ).count()
                 if reservadas >= pacote.quantidade_sessoes:
-                    erros["pacote"] = "Todas as sessões deste pacote já foram agendadas."
+                    erros["pacote"] = (
+                        "Todas as sessões deste pacote já foram agendadas."
+                    )
 
         if erros:
             raise ValidationError(erros)

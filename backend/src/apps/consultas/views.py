@@ -1,3 +1,4 @@
+from django.contrib.messages.views import SuccessMessageMixin
 from django.conf import settings
 from django.db.models import Case, IntegerField, When
 from django.http import HttpResponse
@@ -129,20 +130,22 @@ class ConsultaDetailView(PermissaoVer, DetailView):
     slug_url_kwarg = "uuid"
 
 
-class ConsultaCreateView(PermissaoAdicionar, CreateView):
+class ConsultaCreateView(PermissaoAdicionar, SuccessMessageMixin, CreateView):
     model = Consulta
     template_name = "consultas/consulta_form.html"
     form_class = ConsultaForm
     success_url = reverse_lazy("consultas:consulta_list")
+    success_message = "Faturamento salvo com sucesso!"
 
 
-class ConsultaUpdateView(PermissaoAlterar, UpdateView):
+class ConsultaUpdateView(PermissaoAlterar, SuccessMessageMixin, UpdateView):
     model = Consulta
     template_name = "consultas/consulta_form.html"
     form_class = ConsultaForm
     slug_field = "uuid"
     slug_url_kwarg = "uuid"
     success_url = reverse_lazy("consultas:consulta_list")
+    success_message = "Faturamento atualizado com sucesso!"
 
 
 class ConsultaDeleteView(PermissaoExcluir, DeleteView):

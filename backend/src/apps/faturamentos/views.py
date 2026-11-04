@@ -1,4 +1,5 @@
 from django.urls import reverse_lazy
+from django.contrib.messages.views import SuccessMessageMixin
 from django.views.generic import (
     ListView,
     DetailView,
@@ -30,20 +31,22 @@ class FaturamentoDetailView(PermissaoVer, DetailView):
     slug_url_kwarg = "uuid"
 
 
-class FaturamentoCreateView(PermissaoAdicionar, CreateView):
+class FaturamentoCreateView(PermissaoAdicionar, SuccessMessageMixin, CreateView):
     model = Faturamento
     template_name = "faturamentos/faturamento_form.html"
     form_class = FaturamentoForm
     success_url = reverse_lazy("faturamentos:faturamento_list")
+    success_message = "Faturamento salvo com sucesso!"
 
 
-class FaturamentoUpdateView(PermissaoAlterar, UpdateView):
+class FaturamentoUpdateView(PermissaoAlterar, SuccessMessageMixin, UpdateView):
     model = Faturamento
     template_name = "faturamentos/faturamento_form.html"
     form_class = FaturamentoForm
     slug_field = "uuid"
     slug_url_kwarg = "uuid"
     success_url = reverse_lazy("faturamentos:faturamento_list")
+    success_message = "Faturamento atualizado com sucesso!"
 
 
 class FaturamentoDeleteView(PermissaoExcluir, DeleteView):
