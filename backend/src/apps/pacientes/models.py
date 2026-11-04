@@ -13,6 +13,7 @@ class Paciente(TenantModel):
         ("prefiro_nao_informar", "Prefiro não informar"),
     ]
 
+    pro_bono = models.BooleanField(default=False)
     primeiro_nome = models.CharField(
         max_length=100,
         verbose_name="Primeiro Nome",

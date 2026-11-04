@@ -75,6 +75,7 @@ class Faturamento(TenantModel):
         max_length=100, blank=True, verbose_name="Número da Nota"
     )
     observacoes = models.TextField(blank=True, verbose_name="Observações")
+    pro_bono = models.BooleanField(default=False)
 
     class Meta:
         verbose_name = "Faturamento"
@@ -97,3 +98,49 @@ class Faturamento(TenantModel):
     @property
     def valor_pendente(self):
         return self.valor_cobrado - self.valor_pago
+
+
+class Pacote(TenantModel):
+    STATUS_CHOICES = [
+        ("ativo", "ATIVO"),
+        ("concluido", "CONCLUIDO"),
+        ("expirado", "EXPIRADO"),
+        ("cancelado", "CANCELADO"),
+    ]
+    paciente = models.ForeignKey(
+        "pacientes.Paciente",
+        on_delete=models.DO_NOTHING,
+        related_name="pacotes",
+    )
+    profissional = models.ForeignKey(
+        "profissionais.Profissional",
+        on_delete=models.DO_NOTHING,
+        null=True,
+        blank=True,
+    )
+    quantidade_sessoes = models.PositiveSmallIntegerField()
+    valor_total = models.DecimalField(
+        max_digits=10,
+        decimal_places=2,
+        verbose_name="Valor Total",
+    )
+
+    data_compra = models.DateField(
+        null=True,
+        blank=True,
+        verbose_name="Data da Compra",
+    )
+    validade = models.DateField(null=True, blank=True)
+    status = models.CharField(
+        max_length=10,
+        choices=STATUS_CHOICES,
+        verbose_name="Status",
+    )
+
+    @property
+    def sessoes_usadas(self):
+        return self.consultas.filter(status="realizada").count()
+
+    @property
+    def saldo(self):
+        return self.quantidade_sessoes - self.sessoes_usadas
