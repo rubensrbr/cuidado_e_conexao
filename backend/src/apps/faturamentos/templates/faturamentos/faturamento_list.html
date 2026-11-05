@@ -8,6 +8,22 @@
     {% include "partials/_card_header.html" with icon="bi-receipt" title="Lista de Faturamentos" subtitle="Cobranças e pagamentos registrados no sistema" action_url=create_url action_label="Novo faturamento" action_icon="bi-plus-lg" %}
 {% endblock %}
 
+{% block list_filter %}
+    {% url 'faturamentos:faturamento_list' as list_url %}
+    <form method="get" action="{{ list_url }}" class="app-form app-filter" aria-label="Filtrar faturamentos">
+        <div class="row g-3 align-items-end">
+
+            {% include "partials/_field.html" with field=filtro.form.busca col="col-12 col-lg-4" %}
+            {% include "partials/_field.html" with field=filtro.form.status col="col-sm-4 col-lg-2" %}
+            {% include "partials/_field.html" with field=filtro.form.data_de col="col-sm-4 col-lg-3" %}
+            {% include "partials/_field.html" with field=filtro.form.data_ate col="col-sm-4 col-lg-3" %}
+
+            {% include "partials/_filtro_acoes.html" with clear_url=list_url active=filtros_ativos total=paginator.count col="col-12" %}
+
+        </div>
+    </form>
+{% endblock %}
+
 {% block table_head %}
     <th>Data do serviço</th>
     <th>Paciente</th>
@@ -58,7 +74,11 @@
         </td>
     </tr>
     {% empty %}
-        {% include "partials/_empty_row.html" with colspan=7 icon="bi-receipt" message="Nenhum faturamento registrado." %}
+        {% if filtros_ativos %}
+            {% include "partials/_empty_row.html" with colspan=7 icon="bi-search" message="Nenhum faturamento encontrado com esses filtros." %}
+        {% else %}
+            {% include "partials/_empty_row.html" with colspan=7 icon="bi-receipt" message="Nenhum faturamento registrado." %}
+        {% endif %}
     {% endfor %}
 {% endblock %}
 

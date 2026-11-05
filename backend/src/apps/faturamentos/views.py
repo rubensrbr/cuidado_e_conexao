@@ -12,7 +12,9 @@ from django.views.generic import (
     DeleteView,
 )
 from consultas.models import Consulta
+from core.mixins import FiltrosPersistentesMixin
 
+from .filters import FaturamentoFilter
 from .forms import FaturamentoForm, PacoteForm, SessaoPacoteForm
 from .models import Faturamento, Pacote, SessaoPacote
 from clinicas.permissions import (
@@ -23,11 +25,32 @@ from clinicas.permissions import (
 )
 
 
-class FaturamentoListView(PermissaoVer, ListView):
+class FaturamentoListView(PermissaoVer, FiltrosPersistentesMixin, ListView):
     model = Faturamento
+    filterset_class = FaturamentoFilter
     template_name = "faturamentos/faturamento_list.html"
     context_object_name = "faturamentos"
     paginate_by = 10
+
+    def get_queryset(self):
+        # O paciente vem no mesmo SELECT (evita N+1 na tabela).
+        queryset = super().get_queryset().select_related("paciente")
+        self.filtro = self.filterset_class(
+            self.request.GET, queryset=queryset, request=self.request
+        )
+        if not self.filtro.is_valid():
+            # Valor de filtro inválido (data final antes da inicial...) não pode
+            # virar "mostrar tudo": a lista fica vazia e o formulário mostra o erro.
+            return queryset.none()
+        return self.filtro.qs
+
+    def get_context_data(self, **kwargs):
+        context = super().get_context_data(**kwargs)
+        context["filtro"] = self.filtro
+        context["filtros_ativos"] = sum(
+            1 for nome in self.filtro.filters if self.request.GET.get(nome, "").strip()
+        )
+        return context
 
 
 class FaturamentoDetailView(PermissaoVer, DetailView):
