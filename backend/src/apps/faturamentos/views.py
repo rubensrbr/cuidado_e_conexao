@@ -1,8 +1,14 @@
+from decimal import Decimal
+
+from django.conf import settings
 from django.contrib import messages
 from django.contrib.messages.views import SuccessMessageMixin
 from django.db.models import Count, F, Q, RestrictedError
+from django.http import HttpResponse
 from django.shortcuts import get_object_or_404, redirect
+from django.template.loader import render_to_string
 from django.urls import reverse, reverse_lazy
+from django.utils import timezone
 from django.utils.functional import cached_property
 from django.views.generic import (
     ListView,
@@ -10,6 +16,7 @@ from django.views.generic import (
     CreateView,
     UpdateView,
     DeleteView,
+    View,
 )
 from consultas.models import Consulta
 from core.mixins import FiltrosPersistentesMixin
@@ -51,6 +58,73 @@ class FaturamentoListView(PermissaoVer, FiltrosPersistentesMixin, ListView):
             1 for nome in self.filtro.filters if self.request.GET.get(nome, "").strip()
         )
         return context
+
+
+class FaturamentoPdfReportView(PermissaoVer, View):
+    """Relatório em PDF (WeasyPrint) dos faturamentos da clínica atual.
+
+    Usa o manager padrão de `Faturamento`, que já filtra pela clínica da
+    requisição; sem clínica atual o relatório sai vazio (falha fechada).
+    Respeita os mesmos filtros da lista (a tela repassa a query string no botão),
+    mas não é paginado: o PDF traz todos os resultados, não só a página da tela.
+    """
+
+    model = Faturamento  # usado só para montar a permissão (view_faturamento)
+    filterset_class = FaturamentoFilter
+    template_name = "faturamentos/faturamento_report_pdf.html"
+
+    def get_queryset(self):
+        return Faturamento.objects.select_related("paciente")
+
+    def get(self, request, *args, **kwargs):
+        # Import tardio: o WeasyPrint carrega bibliotecas nativas (Pango). Assim,
+        # um ambiente sem elas só afeta esta tela, não a inicialização do Django.
+        from weasyprint import HTML, URLFetcher
+
+        queryset = self.get_queryset()
+        filtro = self.filterset_class(request.GET, queryset=queryset, request=request)
+        # Filtro inválido não pode virar "todos os faturamentos" (igual à lista).
+        valido = filtro.is_valid()
+        faturamentos = list(filtro.qs if valido else queryset.none())
+        dados = filtro.form.cleaned_data if valido else {}
+        filtros_ativos = sum(
+            1 for nome in filtro.filters if request.GET.get(nome, "").strip()
+        )
+
+        # Cobranças canceladas aparecem na tabela, mas não entram nos valores
+        # totais (não são dinheiro a receber).
+        validos = [f for f in faturamentos if f.status_pagamento != "cancelado"]
+        total_cobrado = sum((f.valor_cobrado for f in validos), Decimal("0"))
+        total_pago = sum((f.valor_pago for f in validos), Decimal("0"))
+
+        agora = timezone.localtime()
+        contexto = {
+            "faturamentos": faturamentos,
+            "total": len(faturamentos),
+            "total_cobrado": total_cobrado,
+            "total_pago": total_pago,
+            "total_pendente": total_cobrado - total_pago,
+            "filtros_ativos": filtros_ativos,
+            "periodo_de": dados.get("data_de"),
+            "periodo_ate": dados.get("data_ate"),
+            "clinica": request.clinica,
+            "gerado_em": agora,
+            "gerado_por": request.user.get_full_name() or request.user.get_username(),
+        }
+        html = render_to_string(self.template_name, contexto, request=request)
+
+        # O documento é autocontido (CSS e logo embutidos): só `data:` é permitido,
+        # então o WeasyPrint nunca faz requisições de rede ao renderizar.
+        pdf = HTML(
+            string=html,
+            base_url=str(settings.BASE_DIR),
+            url_fetcher=URLFetcher(allowed_protocols={"data"}),
+        ).write_pdf()
+
+        resposta = HttpResponse(pdf, content_type="application/pdf")
+        nome_arquivo = f"faturamentos_{agora:%Y%m%d}.pdf"
+        resposta["Content-Disposition"] = f'attachment; filename="{nome_arquivo}"'
+        return resposta
 
 
 class FaturamentoDetailView(PermissaoVer, DetailView):

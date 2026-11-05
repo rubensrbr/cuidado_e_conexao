@@ -15,6 +15,11 @@ urlpatterns = [
         name="faturamento_create",
     ),
     path(
+        "relatorio/pdf/",
+        views.FaturamentoPdfReportView.as_view(),
+        name="faturamento_report_pdf",
+    ),
+    path(
         "<uuid:uuid>/",
         views.FaturamentoDetailView.as_view(),
         name="faturamento_detail",

@@ -1,0 +1,92 @@
+{% extends "base_report_pdf.html" %}{% load core_extras %}{% comment %}
+Relatório de faturamentos (WeasyPrint). O CSS e o cabeçalho vêm de base_report_pdf.html.
+{% endcomment %}
+
+{% block title %}Relatório de Faturamentos{% endblock %}
+{% block footer_label %}Relatório de Faturamentos{% endblock %}
+{% block report_title %}Relatório de Faturamentos{% endblock %}
+{% block report_subtitle %}Cobranças e pagamentos registrados no sistema{% endblock %}
+
+{% block summary %}
+<section class="summary">
+  <div class="summary-item">
+    <div class="summary-label">Total de faturamentos</div>
+    <div class="summary-value">{{ total }}</div>
+  </div>
+  <div class="summary-item">
+    <div class="summary-label">Cobrado</div>
+    <div class="summary-value">{{ total_cobrado|brl }}</div>
+  </div>
+  <div class="summary-item">
+    <div class="summary-label">Pago</div>
+    <div class="summary-value">{{ total_pago|brl }}</div>
+  </div>
+  <div class="summary-item">
+    <div class="summary-label">Pendente</div>
+    <div class="summary-value">{{ total_pendente|brl }}</div>
+  </div>
+</section>
+{% endblock %}
+
+{% block table %}
+<table>
+  <thead>
+    <tr>
+      <th>Data do serviço</th>
+      <th class="col-nome">Paciente</th>
+      <th class="num">Cobrado</th>
+      <th class="num">Pago</th>
+      <th class="num">Pendente</th>
+      <th>Status</th>
+    </tr>
+  </thead>
+  <tbody>
+    {% for faturamento in faturamentos %}
+    <tr>
+      <td class="nowrap">{{ faturamento.data_servico|date:"d/m/Y" }}</td>
+      <td>
+        <span class="app-name">{{ faturamento.paciente.nome_completo }}</span>
+        {% if faturamento.pro_bono %}<span class="muted">&middot; Pro bono</span>{% endif %}
+        {% if faturamento.pacote_id %}<span class="muted">&middot; Pacote</span>{% endif %}
+      </td>
+      <td class="num">{{ faturamento.valor_cobrado|brl }}</td>
+      <td class="num">{{ faturamento.valor_pago|brl }}</td>
+      <td class="num">{{ faturamento.valor_pendente|brl }}</td>
+      <td>
+        {% if faturamento.status_pagamento == "pago" %}
+          <span class="app-status app-status-active">{{ faturamento.get_status_pagamento_display }}</span>
+        {% elif faturamento.status_pagamento == "atrasado" %}
+          <span class="app-status app-status-inactive">{{ faturamento.get_status_pagamento_display }}</span>
+        {% elif faturamento.status_pagamento == "cancelado" %}
+          <span class="app-status app-status-neutral">{{ faturamento.get_status_pagamento_display }}</span>
+        {% else %}
+          <span class="app-status app-status-pending">{{ faturamento.get_status_pagamento_display }}</span>
+        {% endif %}
+      </td>
+    </tr>
+    {% empty %}
+    <tr>
+      <td colspan="6" class="empty">
+        {% if filtros_ativos %}Nenhum faturamento encontrado com esses filtros.{% else %}Nenhum faturamento registrado.{% endif %}
+      </td>
+    </tr>
+    {% endfor %}
+  </tbody>
+</table>
+{% endblock %}
+
+{% block note %}
+<p class="report-note">
+  {% if filtros_ativos %}
+    Relatório com {{ filtros_ativos }} filtro{{ filtros_ativos|pluralize }} aplicado{{ filtros_ativos|pluralize }} na lista, no momento da geração.
+    {% if periodo_de or periodo_ate %}
+      Período do serviço:
+      {% if periodo_de %}de {{ periodo_de|date:"d/m/Y" }}{% endif %}
+      {% if periodo_ate %}até {{ periodo_ate|date:"d/m/Y" }}{% endif %}.
+    {% endif %}
+  {% else %}
+    Relatório com todos os faturamentos da clínica no momento da geração, do mais recente para o mais antigo.
+  {% endif %}
+  Faturamentos cancelados aparecem na tabela, mas não entram nos valores totais.
+</p>
+{% endblock %}
