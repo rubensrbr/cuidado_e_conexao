@@ -1,0 +1,104 @@
+{% extends "base.html" %}
+{% load core_extras %}
+
+{% block title %}Resumo de faturamentos | Cuidado & Conexão{% endblock %}
+
+{% block content %}
+<div class="app-page">
+
+    <div class="app-card">
+
+        {% url 'faturamentos:faturamento_report_pdf' as report_url %}
+        {% include "partials/_card_header.html" with icon="bi-receipt" title="Resumo de Faturamentos" subtitle="Panorama financeiro do período escolhido" secondary_url=report_url|add:periodo_query secondary_label="Gerar PDF" secondary_icon="bi-file-earmark-pdf" %}
+
+        {% include "faturamentos/_abas.html" with aba="resumo" %}
+
+        {% url 'faturamentos:faturamento_resumo' as resumo_url %}
+        <form method="get" action="{{ resumo_url }}" class="app-form app-filter" aria-label="Escolher o período">
+            <div class="row g-3 align-items-end">
+
+                {% include "partials/_field.html" with field=filtro.form.data_de col="col-sm-6 col-lg-3" %}
+                {% include "partials/_field.html" with field=filtro.form.data_ate col="col-sm-6 col-lg-3" %}
+
+                <div class="col-12 col-lg-6">
+                    <div class="d-flex align-items-center flex-wrap gap-2">
+                        <button type="submit" class="btn btn-primary btn-sm">
+                            <i class="bi bi-funnel me-1"></i> Filtrar
+                        </button>
+                        <a href="{{ resumo_url }}" class="btn btn-outline-secondary btn-sm">
+                            <i class="bi bi-calendar-month me-1"></i> Mês atual
+                        </a>
+                        <a href="{{ resumo_url }}?data_de=&amp;data_ate=" class="btn btn-outline-secondary btn-sm">
+                            <i class="bi bi-infinity me-1"></i> Todo o período
+                        </a>
+                    </div>
+                </div>
+
+            </div>
+        </form>
+
+        <!-- Indicadores do período -->
+        <div class="app-kpis">
+
+            <div class="app-kpi">
+                <div class="app-kpi-label">Total cobrado</div>
+                <div class="app-kpi-value">{{ resumo.total_cobrado|brl }}</div>
+                <div class="app-kpi-hint">Sem cancelados</div>
+            </div>
+
+            <div class="app-kpi">
+                <div class="app-kpi-label">Total pago</div>
+                <div class="app-kpi-value app-kpi-value--ok">{{ resumo.total_pago|brl }}</div>
+                <div class="app-kpi-hint">Já recebido</div>
+            </div>
+
+            <div class="app-kpi">
+                <div class="app-kpi-label">Total pendente</div>
+                <div class="app-kpi-value app-kpi-value--warn">{{ resumo.total_pendente|brl }}</div>
+                <div class="app-kpi-hint">Cobrado − pago</div>
+            </div>
+
+            <div class="app-kpi">
+                <div class="app-kpi-label">Taxa de recebimento</div>
+                <div class="app-kpi-value">
+                    {% if resumo.taxa_recebimento is not None %}{{ resumo.taxa_recebimento|floatformat:1 }}%{% else %}—{% endif %}
+                </div>
+                <div class="app-kpi-hint">Pago ÷ cobrado</div>
+            </div>
+
+        </div>
+
+        <!-- Quantidade e valor por status -->
+        <div class="app-kpi-title">
+            <i class="bi bi-pie-chart me-2"></i>Por status
+        </div>
+
+        <div class="app-kpis app-kpis--status">
+            {% url 'faturamentos:faturamento_list' as lista_url %}
+            {% for item in resumo.por_status %}
+                <a class="app-kpi app-kpi--link" href="{{ lista_url }}?status={{ item.status }}{% if periodo_qs %}&amp;{{ periodo_qs }}{% endif %}" title="Ver na lista">
+                    <span class="app-status app-status-{{ item.selo }}">{{ item.rotulo }}</span>
+                    <div class="app-kpi-value">{{ item.qtd }}</div>
+                    <div class="app-kpi-hint">
+                        <strong>{{ item.valor|brl }}</strong> {{ item.legenda }}
+                    </div>
+                </a>
+            {% endfor %}
+
+            <div class="app-kpi">
+                <span class="app-status app-status-neutral">Pro bono</span>
+                <div class="app-kpi-value">{{ resumo.pro_bono }}</div>
+                <div class="app-kpi-hint">Atendimentos gratuitos, sem valor</div>
+            </div>
+        </div>
+
+        <p class="app-kpi-note">
+            Cancelados aparecem no status, mas ficam fora dos totais.
+            O valor de cada status é o que ainda está em aberto (pendente, parcialmente pago e atrasado),
+            o que já foi recebido (pago) ou o que foi cancelado.
+        </p>
+
+    </div>
+
+</div>
+{% endblock %}

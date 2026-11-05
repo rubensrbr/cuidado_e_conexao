@@ -67,3 +67,15 @@ class FaturamentoFilter(django_filters.FilterSet):
                 | Q(paciente__sobrenome__icontains=termo)
             )
         return queryset
+
+
+class FaturamentoResumoFilter(django_filters.FilterSet):
+    """Filtro da aba Resumo: só o período (o status é justamente o que se resume)."""
+
+    data_de = campo_de_data("Data do serviço de", "gte")
+    data_ate = campo_de_data("Data do serviço até", "lte")
+
+    class Meta:
+        model = Faturamento
+        fields = []
+        form = FiltroFaturamentoForm

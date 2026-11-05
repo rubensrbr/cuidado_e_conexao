@@ -1,4 +1,4 @@
-from decimal import Decimal
+from urllib.parse import urlencode
 
 from django.conf import settings
 from django.contrib import messages
@@ -16,14 +16,16 @@ from django.views.generic import (
     CreateView,
     UpdateView,
     DeleteView,
+    TemplateView,
     View,
 )
 from consultas.models import Consulta
 from core.mixins import FiltrosPersistentesMixin
 
-from .filters import FaturamentoFilter
+from .filters import FaturamentoFilter, FaturamentoResumoFilter
 from .forms import FaturamentoForm, PacoteForm, SessaoPacoteForm
 from .models import Faturamento, Pacote, SessaoPacote
+from .resumo import mes_atual, periodo_da_query, resumir
 from clinicas.permissions import (
     PermissaoAdicionar,
     PermissaoAlterar,
@@ -57,6 +59,46 @@ class FaturamentoListView(PermissaoVer, FiltrosPersistentesMixin, ListView):
         context["filtros_ativos"] = sum(
             1 for nome in self.filtro.filters if self.request.GET.get(nome, "").strip()
         )
+        _contexto_do_periodo(context, self.request)
+        return context
+
+
+def _contexto_do_periodo(context, request):
+    """Período atual da tela, para as abas (Lista/Resumo) o levarem de uma à outra."""
+    periodo = periodo_da_query(request.GET)
+    context["periodo_qs"] = periodo
+    context["periodo_query"] = f"?{periodo}" if periodo else ""
+
+
+class FaturamentoResumoView(PermissaoVer, TemplateView):
+    """Aba "Resumo": cards com o panorama financeiro do período.
+
+    Sem período na URL, abre no mês atual. Período em branco (campos enviados
+    vazios) significa "todo o período". Usa o manager padrão de `Faturamento`,
+    então só soma a clínica atual.
+    """
+
+    model = Faturamento  # usado só para montar a permissão (view_faturamento)
+    template_name = "faturamentos/faturamento_resumo.html"
+
+    def get(self, request, *args, **kwargs):
+        if not any(nome in request.GET for nome in ("data_de", "data_ate")):
+            inicio, fim = mes_atual()
+            parametros = urlencode({"data_de": inicio, "data_ate": fim})
+            return redirect(f"{request.path}?{parametros}")
+        return super().get(request, *args, **kwargs)
+
+    def get_context_data(self, **kwargs):
+        context = super().get_context_data(**kwargs)
+        queryset = Faturamento.objects.all()
+        filtro = FaturamentoResumoFilter(
+            self.request.GET, queryset=queryset, request=self.request
+        )
+        # Período inválido não pode virar "todos os faturamentos" (igual à lista).
+        valido = filtro.is_valid()
+        context["filtro"] = filtro
+        context["resumo"] = resumir(filtro.qs if valido else queryset.none())
+        _contexto_do_periodo(context, self.request)
         return context
 
 
@@ -92,10 +134,10 @@ class FaturamentoPdfReportView(PermissaoVer, View):
         )
 
         # Cobranças canceladas aparecem na tabela, mas não entram nos valores
-        # totais (não são dinheiro a receber).
-        validos = [f for f in faturamentos if f.status_pagamento != "cancelado"]
-        total_cobrado = sum((f.valor_cobrado for f in validos), Decimal("0"))
-        total_pago = sum((f.valor_pago for f in validos), Decimal("0"))
+        # totais (não são dinheiro a receber). Mesmo cálculo da aba Resumo.
+        resumo = resumir(filtro.qs if valido else queryset.none())
+        total_cobrado = resumo.total_cobrado
+        total_pago = resumo.total_pago
 
         agora = timezone.localtime()
         contexto = {
@@ -103,7 +145,7 @@ class FaturamentoPdfReportView(PermissaoVer, View):
             "total": len(faturamentos),
             "total_cobrado": total_cobrado,
             "total_pago": total_pago,
-            "total_pendente": total_cobrado - total_pago,
+            "total_pendente": resumo.total_pendente,
             "filtros_ativos": filtros_ativos,
             "periodo_de": dados.get("data_de"),
             "periodo_ate": dados.get("data_ate"),

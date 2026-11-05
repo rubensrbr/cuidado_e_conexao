@@ -403,6 +403,8 @@ a:hover {
   font-size: 1.1rem;
   font-weight: 600;
   margin: 0;
+  /* O h1-h4 global usa --ink-900, que some no fundo escuro do cabeçalho. */
+  color: inherit;
 }
 
 .app-card-header .subtitle {
@@ -948,3 +950,120 @@ a:hover {
   gap: .6rem 1.4rem;
   padding: .35rem 0;
 }
+
+
+/* Tabs (e.g. Lista / Resumo de faturamentos) */
+
+.app-tabs {
+  padding: 0 1.5rem;
+  border-bottom: 1px solid var(--line);
+  background: var(--paper);
+}
+
+.app-tabs .nav-link {
+  padding: .75rem 1rem;
+  border: 0;
+  border-bottom: 2px solid transparent;
+  border-radius: 0;
+  background: transparent;
+  color: var(--ink-600);
+  font-size: .9rem;
+  font-weight: 600;
+}
+
+.app-tabs .nav-link:hover {
+  color: var(--teal-600);
+}
+
+.app-tabs .nav-link.active {
+  color: var(--pine-800);
+  border-bottom-color: var(--teal-500);
+  background: transparent;
+}
+
+
+/* KPI cards */
+
+.app-kpis {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(210px, 1fr));
+  gap: 1rem;
+  padding: 1.25rem 1.5rem 0;
+}
+
+/* Seis cards de status (5 + pro bono): 3 x 2 no desktop, 2 colunas no tablet, 1 no celular. */
+.app-kpis--status {
+  grid-template-columns: repeat(3, 1fr);
+}
+
+@media (max-width: 767.98px) {
+  .app-kpis--status {
+    grid-template-columns: repeat(2, 1fr);
+  }
+}
+
+@media (max-width: 479.98px) {
+  .app-kpis--status {
+    grid-template-columns: 1fr;
+  }
+}
+
+.app-kpi {
+  display: block;
+  padding: 1rem 1.15rem;
+  background: #fff;
+  border: 1px solid var(--line);
+  border-radius: 12px;
+  color: var(--ink-900);
+  text-decoration: none;
+}
+
+.app-kpi--link:hover {
+  border-color: var(--teal-500);
+  box-shadow: 0 8px 20px -12px rgba(22, 48, 43, .35);
+}
+
+.app-kpi-label {
+  font-size: .72rem;
+  font-weight: 600;
+  letter-spacing: .04em;
+  text-transform: uppercase;
+  color: var(--ink-600);
+}
+
+.app-kpi-value {
+  margin-top: .25rem;
+  font-size: 1.65rem;
+  font-weight: 700;
+  line-height: 1.2;
+  color: var(--pine-900);
+}
+
+.app-kpi-value--ok {
+  color: var(--teal-600);
+}
+
+.app-kpi-value--warn {
+  color: var(--clay-600);
+}
+
+.app-kpi-hint {
+  margin-top: .15rem;
+  font-size: .78rem;
+  color: var(--ink-600);
+}
+
+.app-kpi-title {
+  padding: 1.5rem 1.5rem 0;
+  font-size: .95rem;
+  font-weight: 600;
+  color: var(--pine-800);
+}
+
+.app-kpi-note {
+  margin: 0;
+  padding: 1rem 1.5rem 1.5rem;
+  font-size: .78rem;
+  color: var(--ink-400);
+}
+

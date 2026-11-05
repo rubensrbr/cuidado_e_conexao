@@ -15,6 +15,11 @@ urlpatterns = [
         name="faturamento_create",
     ),
     path(
+        "resumo/",
+        views.FaturamentoResumoView.as_view(),
+        name="faturamento_resumo",
+    ),
+    path(
         "relatorio/pdf/",
         views.FaturamentoPdfReportView.as_view(),
         name="faturamento_report_pdf",
