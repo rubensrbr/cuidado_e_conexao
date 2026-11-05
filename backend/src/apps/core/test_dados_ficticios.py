@@ -10,7 +10,7 @@ from django.contrib.auth.models import Group
 from django.core.management import call_command
 from django.core.management.base import CommandError
 from django.db import connection
-from unittest import mock
+from unittest import mock, skipUnless
 
 from django.test import TestCase, override_settings
 from django.utils import timezone
@@ -72,10 +72,12 @@ class QuantidadesChecks:
                 ):
                     self.assertGreater(modelo.objects.count(), 0, modelo.__name__)
 
-    def test_apps_opcionais_nao_instalados_sao_ignorados(self):
-        # Salas e faturamentos estão fora do release 1: nada deles é tocado.
-        self.assertFalse(apps.is_installed("salas"))
-        self.assertFalse(apps.is_installed("faturamentos"))
+    def test_apps_opcionais_so_geram_dados_quando_instalados(self):
+        # Salas e faturamentos são opcionais: se não estiverem em INSTALLED_APPS,
+        # o comando nem os toca; se estiverem, têm que ter dados.
+        for app, modelo in (("salas", "Sala"), ("faturamentos", "Faturamento")):
+            if apps.is_installed(app):
+                self.assertTrue(apps.get_model(app, modelo).todas.exists(), app)
 
     def test_saida_lista_logins_e_senha(self):
         self.assertIn(SENHA_PADRAO, self.saida)
@@ -99,6 +101,94 @@ class ValidadeDosDadosChecks:
     def test_cnpj_das_clinicas_e_valido(self):
         for clinica in self.clinicas:
             validar_cnpj(clinica.cnpj)
+
+
+@skipUnless(apps.is_installed("faturamentos"), "app 'faturamentos' não instalado")
+class FaturamentosChecks:
+    """Cobranças avulsas, pacotes de sessões e pro bono gerados pelo comando."""
+
+    @staticmethod
+    def _modelos():
+        return (
+            apps.get_model("faturamentos", "Faturamento"),
+            apps.get_model("faturamentos", "Pacote"),
+            apps.get_model("faturamentos", "SessaoPacote"),
+        )
+
+    def test_gera_cobrancas_pacotes_sessoes_e_pro_bono(self):
+        Faturamento, Pacote, SessaoPacote = self._modelos()
+        self.assertGreater(Faturamento.todas.count(), 0)
+        self.assertGreater(Pacote.todas.count(), 0)
+        self.assertGreater(SessaoPacote.todas.count(), 0)
+        self.assertGreater(Faturamento.todas.filter(pro_bono=True).count(), 0)
+        self.assertGreater(Paciente.todas.filter(pro_bono=True).count(), 0)
+
+    def test_toda_consulta_realizada_foi_cobrada_uma_vez_ou_esta_em_pacote(self):
+        Faturamento, _, SessaoPacote = self._modelos()
+        em_pacote = set(SessaoPacote.todas.values_list("consulta_id", flat=True))
+        cobradas = Counter(
+            Faturamento.todas.filter(consulta__isnull=False).values_list("consulta_id", flat=True)
+        )
+        for consulta in Consulta.todas.filter(status="realizada"):
+            with self.subTest(consulta=str(consulta)):
+                if consulta.pk in em_pacote:
+                    # Já foi paga junto com o pacote: sem cobrança avulsa.
+                    self.assertEqual(cobradas[consulta.pk], 0)
+                else:
+                    self.assertEqual(cobradas[consulta.pk], 1)
+        # Só consultas realizadas são cobradas individualmente.
+        for consulta_id in cobradas:
+            self.assertEqual(Consulta.todas.get(pk=consulta_id).status, "realizada")
+
+    def test_pacientes_pro_bono_so_tem_atendimentos_pro_bono_sem_valor(self):
+        Faturamento, _, _ = self._modelos()
+        for paciente in Paciente.todas.filter(pro_bono=True):
+            for faturamento in Faturamento.todas.filter(paciente=paciente):
+                with self.subTest(paciente=str(paciente)):
+                    self.assertTrue(faturamento.pro_bono)
+                    self.assertEqual(faturamento.valor_cobrado, 0)
+                    self.assertEqual(faturamento.valor_pago, 0)
+                    self.assertIsNone(faturamento.pacote_id)
+        for faturamento in Faturamento.todas.filter(pro_bono=True):
+            self.assertTrue(faturamento.paciente.pro_bono)
+
+    def test_cada_pacote_tem_uma_cobranca_sem_consulta_com_o_valor_total(self):
+        Faturamento, Pacote, _ = self._modelos()
+        for pacote in Pacote.todas.all():
+            with self.subTest(pacote=str(pacote)):
+                cobrancas = list(Faturamento.todas.filter(pacote=pacote))
+                self.assertEqual(len(cobrancas), 1)
+                self.assertIsNone(cobrancas[0].consulta_id)
+                self.assertEqual(cobrancas[0].valor_cobrado, pacote.valor_total)
+                self.assertEqual(cobrancas[0].paciente_id, pacote.paciente_id)
+
+    def test_sessoes_do_pacote_sao_do_mesmo_paciente_profissional_e_cabem_no_pacote(self):
+        _, Pacote, SessaoPacote = self._modelos()
+        for sessao in SessaoPacote.todas.select_related("pacote", "consulta"):
+            self.assertEqual(sessao.consulta.paciente_id, sessao.pacote.paciente_id)
+            self.assertEqual(sessao.consulta.clinica_id, sessao.pacote.clinica_id)
+            if sessao.pacote.profissional_id:
+                self.assertEqual(
+                    sessao.consulta.profissional_id, sessao.pacote.profissional_id
+                )
+            self.assertNotIn(sessao.consulta.status, ("cancelada", "falta"))
+        for pacote in Pacote.todas.all():
+            self.assertLessEqual(pacote.sessoes.count(), pacote.quantidade_sessoes)
+
+    def test_status_do_pacote_combina_com_saldo_e_validade(self):
+        _, Pacote, _ = self._modelos()
+        for pacote in Pacote.todas.all():
+            with self.subTest(pacote=str(pacote), status=pacote.status):
+                self.assertGreaterEqual(pacote.saldo, 0)
+                if pacote.status == "concluido":
+                    self.assertEqual(pacote.saldo, 0)
+                elif pacote.status == "expirado":
+                    self.assertGreater(pacote.saldo, 0)
+                    self.assertTrue(pacote.esta_vencido)
+                else:
+                    self.assertEqual(pacote.status, "ativo")
+                    self.assertGreater(pacote.saldo, 0)
+                    self.assertFalse(pacote.esta_vencido)
 
 
 class IsolamentoChecks:
@@ -249,6 +339,7 @@ class DadosGeradosTests(
     IsolamentoChecks,
     AgendaChecks,
     UsuariosChecks,
+    FaturamentosChecks,
     TestCase,
 ):
     """Roda o comando UMA vez e confere os dados gerados (os testes só leem)."""

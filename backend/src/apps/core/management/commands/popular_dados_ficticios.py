@@ -12,7 +12,9 @@ Como é isolado do resto: tudo o que ele cria é identificável.
 `--remover` apaga somente isso, nunca dados reais.
 
 Cobre todos os apps de negócio presentes em INSTALLED_APPS. Os opcionais (salas,
-faturamentos) só entram quando instalados.
+faturamentos) só entram quando instalados. Em faturamentos, o comando gera
+cobranças avulsas por consulta, pacotes de sessões (com a cobrança do pacote e as
+consultas que o consomem) e atendimentos pro bono.
 """
 
 import random
@@ -142,6 +144,14 @@ class Command(BaseCommand):
             # Os models de negócio apontam para a clínica com PROTECT: primeiro
             # os dados, por último a clínica. A ordem entre os models de negócio
             # não importa (as ligações entre eles se apagam em cascata).
+            # Exceção: Faturamento.pacote é RESTRICT, então cobranças e sessões
+            # saem antes dos pacotes.
+            if apps.is_installed("faturamentos"):
+                for nome in ("Faturamento", "SessaoPacote", "Pacote"):
+                    modelo = apps.get_model("faturamentos", nome)
+                    total, _ = modelo.todas.filter(clinica_id__in=ids).delete()
+                    if total:
+                        removidos[modelo._meta.verbose_name_plural] += total
             for modelo in apps.get_models():
                 if issubclass(modelo, TenantModel):
                     total, _ = modelo.todas.filter(clinica_id__in=ids).delete()
@@ -245,7 +255,7 @@ class Command(BaseCommand):
             if apps.is_installed("salas"):
                 self._criar_salas(rng, consultas, resumo)
             if apps.is_installed("faturamentos"):
-                self._criar_faturamentos(rng, consultas, resumo)
+                self._criar_faturamentos(rng, pacientes, consultas, resumo)
         return resumo
 
     # ------------------------------------------------------- profissionais
@@ -522,20 +532,166 @@ class Command(BaseCommand):
             )
             resumo["agenda de salas"] += 1
 
+    @classmethod
+    def _criar_faturamentos(cls, rng, pacientes, consultas, resumo):
+        """Cobranças, pacotes de sessões e atendimentos pro bono.
+
+        A ordem importa: primeiro se decide quem é pro bono, depois se montam os
+        pacotes (que consomem consultas) e só então se cobram, avulsas, as
+        consultas realizadas que sobraram.
+        """
+        pro_bono = cls._marcar_pacientes_pro_bono(rng, pacientes, resumo)
+        em_pacote = cls._criar_pacotes(rng, pacientes, consultas, pro_bono, resumo)
+        cls._criar_cobrancas(rng, consultas, pro_bono, em_pacote, resumo)
+
     @staticmethod
-    def _criar_faturamentos(rng, consultas, resumo):
+    def _marcar_pacientes_pro_bono(rng, pacientes, resumo):
+        """Cerca de 1 em cada 10 pacientes é atendido gratuitamente (Paciente.pro_bono)."""
+        escolhidos = rng.sample(pacientes, k=len(pacientes) // 10)
+        if escolhidos:
+            Paciente.objects.filter(pk__in=[p.pk for p in escolhidos]).update(pro_bono=True)
+            for paciente in escolhidos:
+                paciente.pro_bono = True
+            resumo["pacientes pro bono"] += len(escolhidos)
+        return {p.pk for p in escolhidos}
+
+    @staticmethod
+    def _situacao_pagamento(rng, data_servico, hoje):
+        """Uma única sorteada: serviço antigo já foi pago, parcial ou está atrasado."""
+        antigo = (hoje - data_servico).days > 30
+        return rng.choices(
+            ("pago", "parcialmente_pago", "atrasado") if antigo else ("pendente", "pago"),
+            weights=(60, 20, 20) if antigo else (50, 50),
+        )[0]
+
+    @classmethod
+    def _criar_pacotes(cls, rng, pacientes, consultas, pro_bono, resumo):
+        """Alguns pacientes compram um pacote de sessões e o usam nas próprias consultas.
+
+        Devolve os ids das consultas que entraram em algum pacote: elas não
+        recebem cobrança avulsa, porque já foram pagas junto com o pacote.
+        """
+        Faturamento = apps.get_model("faturamentos", "Faturamento")
+        Pacote = apps.get_model("faturamentos", "Pacote")
+        SessaoPacote = apps.get_model("faturamentos", "SessaoPacote")
+        hoje = timezone.localdate()
+
+        # Consultas que podem gastar uma sessão (as canceladas e as faltas, não).
+        por_paciente = defaultdict(list)
+        for consulta in consultas:
+            if consulta.status in ("realizada", "agendada", "confirmada", "reagendada"):
+                por_paciente[consulta.paciente_id].append(consulta)
+
+        em_pacote = set()
+        for paciente in pacientes:
+            # Os sorteios acontecem SEMPRE, na mesma ordem (como em _criar_lembrete),
+            # para que pular um paciente não mude os dados dos seguintes.
+            quer_pacote = rng.random() < 0.3
+            qualquer_profissional = rng.random() < 0.25
+            quantidade = rng.choice((4, 4, 8, 10))
+            antecedencia = rng.randint(0, 5)
+            meses = rng.choice((1, 2, 3))
+            com_validade = rng.random() < 0.8
+            desconto = rng.choice((0, 5, 10))
+            metodo = rng.choice(("pix", "dinheiro", "cartao_credito", "cartao_debito"))
+            numero_nota = str(rng.randint(1000, 99999))
+
+            if not quer_pacote or paciente.pk in pro_bono:
+                continue
+            candidatas = sorted(
+                por_paciente.get(paciente.pk, []),
+                key=lambda c: (c.data_consulta, c.hora_inicio),
+            )
+            if len(candidatas) < 2:
+                continue
+
+            primeira = candidatas[0]
+            profissional = primeira.profissional
+            # Não se compra um pacote no futuro: no máximo, hoje.
+            data_compra = min(primeira.data_consulta - timedelta(days=antecedencia), hoje)
+            validade = data_compra + timedelta(days=30 * meses) if com_validade else None
+            elegiveis = [
+                c for c in candidatas
+                if (qualquer_profissional or c.profissional_id == profissional.pk)
+                and (validade is None or c.data_consulta <= validade)
+            ][:quantidade]
+            if len(elegiveis) < 2:
+                continue
+
+            usadas = sum(1 for c in elegiveis if c.status == "realizada")
+            if usadas >= quantidade:
+                status = "concluido"
+            elif validade and validade < hoje:
+                status = "expirado"
+            else:
+                status = "ativo"
+
+            valor_total = (
+                Decimal(profissional.valor_hora) * quantidade * (100 - desconto) / 100
+            ).quantize(Decimal("0.01"))
+            situacao = cls._situacao_pagamento(rng, data_compra, hoje)
+            pago = {
+                "pago": valor_total,
+                "parcialmente_pago": (valor_total / 2).quantize(Decimal("0.01")),
+            }.get(situacao, Decimal(0))
+
+            pacote = Pacote.objects.create(
+                paciente=paciente,
+                profissional=None if qualquer_profissional else profissional,
+                quantidade_sessoes=quantidade,
+                valor_total=valor_total,
+                data_compra=data_compra,
+                validade=validade,
+                status=status,
+            )
+            resumo["pacotes"] += 1
+            # O pagamento do pacote é um Faturamento sem consulta.
+            Faturamento.objects.create(
+                paciente=paciente,
+                pacote=pacote,
+                data_servico=data_compra,
+                valor_cobrado=valor_total,
+                valor_pago=pago,
+                metodo_pagamento=metodo if pago else "",
+                status_pagamento=situacao,
+                numero_nota=numero_nota if situacao == "pago" else "",
+                observacoes=f"Pacote de {quantidade} sessões.",
+            )
+            resumo["faturamentos"] += 1
+            for consulta in elegiveis:
+                SessaoPacote.objects.create(pacote=pacote, consulta=consulta)
+                em_pacote.add(consulta.pk)
+                resumo["sessões de pacote"] += 1
+        return em_pacote
+
+    @classmethod
+    def _criar_cobrancas(cls, rng, consultas, pro_bono, em_pacote, resumo):
+        """Uma cobrança avulsa para cada consulta realizada fora de pacote."""
         Faturamento = apps.get_model("faturamentos", "Faturamento")
         hoje = timezone.localdate()
         for consulta in consultas:
-            if consulta.status != "realizada":
+            if consulta.status != "realizada" or consulta.pk in em_pacote:
                 continue
-            valor = Decimal(consulta.profissional.valor_hora)
             paciente = consulta.paciente
-            antigo = (hoje - consulta.data_consulta).days > 30
-            situacao = rng.choices(
-                ("pago", "parcialmente_pago", "atrasado") if antigo else ("pendente", "pago"),
-                weights=(60, 20, 20) if antigo else (50, 50),
-            )[0]
+
+            if paciente.pk in pro_bono:
+                # Pro bono: sem valor cobrado, pago nem de convênio (ver Faturamento.clean).
+                Faturamento.objects.create(
+                    paciente=paciente,
+                    consulta=consulta,
+                    data_servico=consulta.data_consulta,
+                    valor_cobrado=Decimal(0),
+                    valor_pago=Decimal(0),
+                    status_pagamento="pago",
+                    pro_bono=True,
+                    observacoes="Atendimento pro bono.",
+                )
+                resumo["faturamentos"] += 1
+                resumo["atendimentos pro bono"] += 1
+                continue
+
+            valor = Decimal(consulta.profissional.valor_hora)
+            situacao = cls._situacao_pagamento(rng, consulta.data_consulta, hoje)
             pago = {"pago": valor, "parcialmente_pago": valor / 2}.get(situacao, Decimal(0))
             Faturamento.objects.create(
                 paciente=paciente,
