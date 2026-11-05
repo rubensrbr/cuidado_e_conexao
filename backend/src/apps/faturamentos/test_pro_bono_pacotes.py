@@ -10,7 +10,7 @@ from datetime import date, time, timedelta
 from decimal import Decimal
 
 from django.core.exceptions import ValidationError
-from django.db.models import RestrictedError
+from django.db.models import ProtectedError, RestrictedError
 from django.test import TestCase
 from django.utils import timezone
 
@@ -217,7 +217,7 @@ class PacoteModelTests(Base):
         self.assertTrue(criar_pacote(self.ana, validade=ontem).esta_vencido)
         self.assertFalse(criar_pacote(self.ana).esta_vencido)
 
-    def test_nao_apaga_pacote_com_cobranca_mas_apagar_paciente_funciona(self):
+    def test_nao_apaga_pacote_com_cobranca_nem_paciente_com_historico(self):
         pacote = criar_pacote(self.ana)
         Faturamento.objects.create(
             paciente=self.ana,
@@ -227,8 +227,26 @@ class PacoteModelTests(Base):
         )
         with self.assertRaises(RestrictedError):
             pacote.delete()
-        self.ana.delete()  # cascade leva pacote e cobrança juntos
-        self.assertFalse(Pacote.objects.exists())
+        with self.assertRaises(ProtectedError):
+            self.ana.delete()
+        self.assertTrue(Paciente.objects.filter(pk=self.ana.pk).exists())
+        self.assertTrue(Pacote.objects.filter(pk=pacote.pk).exists())
+        self.assertEqual(Faturamento.objects.count(), 1)
+
+    def test_nao_apaga_paciente_so_com_pacote_ou_so_com_faturamento(self):
+        criar_pacote(self.ana)
+        Faturamento.objects.create(
+            paciente=self.bia,
+            data_servico=date(2026, 11, 3),
+            valor_cobrado=Decimal("150"),
+        )
+        for paciente in (self.ana, self.bia):
+            with self.assertRaises(ProtectedError):
+                paciente.delete()
+
+    def test_apaga_paciente_sem_historico_financeiro(self):
+        self.bia.delete()
+        self.assertFalse(Paciente.objects.filter(pk=self.bia.pk).exists())
 
 
 class SessaoPacoteTests(Base):

@@ -306,3 +306,46 @@ class PermissoesDePacoteTests(TelasDePacoteBase):
                             content_type__app_label="faturamentos", codename=codename
                         ).exists()
                     )
+
+
+class ExcluirPacienteComHistoricoFinanceiroTests(TelasDePacoteBase):
+    """A view de exclusão do paciente não pode apagar o histórico financeiro."""
+
+    def test_post_recusa_paciente_com_faturamento_e_nao_da_500(self):
+        Faturamento.objects.create(
+            paciente=self.ana,
+            data_servico=date(2026, 11, 3),
+            valor_cobrado=Decimal("150"),
+        )
+        resposta = self.client.post(reverse("pacientes:paciente_delete", args=[self.ana.uuid]))
+        self.assertRedirects(resposta, reverse("pacientes:paciente_list"))
+        mensagens = [str(m) for m in get_messages(resposta.wsgi_request)]
+        self.assertTrue(any("histórico financeiro" in m for m in mensagens), mensagens)
+        with clinica_atual(self.vida):
+            self.assertTrue(type(self.ana).objects.filter(pk=self.ana.pk).exists())
+        self.assertEqual(Faturamento.objects.count(), 1)
+
+    def test_post_recusa_paciente_so_com_pacote(self):
+        pacote = criar_pacote(self.ana)
+        resposta = self.client.post(reverse("pacientes:paciente_delete", args=[self.ana.uuid]))
+        self.assertRedirects(resposta, reverse("pacientes:paciente_list"))
+        self.assertTrue(Pacote.objects.filter(pk=pacote.pk).exists())
+
+    def test_post_apaga_paciente_sem_historico_financeiro(self):
+        resposta = self.client.post(reverse("pacientes:paciente_delete", args=[self.bia.uuid]))
+        self.assertRedirects(resposta, reverse("pacientes:paciente_list"))
+        with clinica_atual(self.vida):
+            self.assertFalse(type(self.bia).objects.filter(pk=self.bia.pk).exists())
+
+    def test_tela_de_confirmacao_avisa_e_nao_oferece_excluir(self):
+        criar_pacote(self.ana)
+        url = reverse("pacientes:paciente_delete", args=[self.ana.uuid])
+        resposta = self.client.get(url)
+        self.assertEqual(resposta.status_code, 200)
+        self.assertContains(resposta, "não pode ser excluído")
+        self.assertNotContains(resposta, "Sim, excluir paciente")
+
+    def test_tela_de_confirmacao_oferece_excluir_sem_historico(self):
+        resposta = self.client.get(reverse("pacientes:paciente_delete", args=[self.bia.uuid]))
+        self.assertContains(resposta, "Sim, excluir paciente")
+        self.assertNotContains(resposta, "não pode ser excluído")

@@ -30,7 +30,9 @@ class Faturamento(TenantModel):
 
     paciente = models.ForeignKey(
         "pacientes.Paciente",
-        on_delete=models.CASCADE,
+        # PROTECT: o histórico financeiro não some junto com o cadastro. Para
+        # deixar de atender o paciente, inative-o (Paciente.ativo).
+        on_delete=models.PROTECT,
         related_name="faturamentos",
         verbose_name="Paciente",
     )
@@ -79,8 +81,9 @@ class Faturamento(TenantModel):
     observacoes = models.TextField(blank=True, verbose_name="Observações")
     pacote = models.ForeignKey(
         "faturamentos.Pacote",
-        # RESTRICT: não dá para apagar um pacote que já tem cobrança, mas o
-        # cascade a partir do paciente continua funcionando.
+        # RESTRICT: não dá para apagar um pacote que já tem cobrança. Apagar o
+        # paciente também é barrado (Faturamento.paciente e Pacote.paciente são
+        # PROTECT), então não há mais caminho em cascata que leve a cobrança.
         on_delete=models.RESTRICT,
         null=True,
         blank=True,
@@ -156,7 +159,9 @@ class Pacote(TenantModel):
 
     paciente = models.ForeignKey(
         "pacientes.Paciente",
-        on_delete=models.CASCADE,
+        # PROTECT: pacote é registro financeiro (valor pago, sessões a
+        # consumir); não é apagado junto com o paciente.
+        on_delete=models.PROTECT,
         related_name="pacotes",
         verbose_name="Paciente",
     )

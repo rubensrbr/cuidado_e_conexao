@@ -9,7 +9,18 @@
 {% block delete_meta %}{% if object.email %}{{ object.email }}{% else %}Sem e-mail cadastrado{% endif %}{% endblock %}
 
 {% block delete_warnings %}
-    {% include "partials/_delete_cascade.html" with consultas=object.consultas.count prontuarios=object.prontuarios.count faturamentos=object.faturamentos.count espera=object.lista_espera.count telefones=object.telefones.count enderecos=object.enderecos.count %}
+    {% with faturamentos=object.faturamentos.count pacotes=object.pacotes.count %}
+        {% if faturamentos or pacotes %}
+            <div class="app-alert-danger">
+                <strong><i class="bi bi-exclamation-triangle-fill me-1"></i> Este paciente não pode ser excluído.</strong>
+                <p class="mb-0">
+                    O histórico financeiro é mantido:
+                    {% if faturamentos %}{{ faturamentos }} faturamento{{ faturamentos|pluralize }}{% endif %}{% if faturamentos and pacotes %} e {% endif %}{% if pacotes %}{{ pacotes }} pacote{{ pacotes|pluralize }}{% endif %}.
+                </p>
+            </div>
+        {% endif %}
+    {% endwith %}
+    {% include "partials/_delete_cascade.html" with consultas=object.consultas.count prontuarios=object.prontuarios.count espera=object.lista_espera.count telefones=object.telefones.count enderecos=object.enderecos.count %}
 {% endblock %}
 
 {% block delete_hint %}
@@ -22,5 +33,18 @@
 
 {% block delete_actions %}
     {% url 'pacientes:paciente_list' as cancel_url %}
-    {% include "partials/_delete_actions.html" with cancel_url=cancel_url submit_label="Sim, excluir paciente" %}
+    {% if object.faturamentos.exists or object.pacotes.exists %}
+        <div class="app-form-actions">
+            <a href="{{ cancel_url }}" class="btn btn-outline-secondary">
+                <i class="bi bi-arrow-left me-1"></i>
+                Voltar
+            </a>
+            <a href="{% url 'pacientes:paciente_update' object.uuid %}" class="btn btn-primary">
+                <i class="bi bi-pencil me-1"></i>
+                Editar cadastro
+            </a>
+        </div>
+    {% else %}
+        {% include "partials/_delete_actions.html" with cancel_url=cancel_url submit_label="Sim, excluir paciente" %}
+    {% endif %}
 {% endblock %}

@@ -1,7 +1,7 @@
 from django.conf import settings
 from django.contrib import messages
 from django.db import transaction
-from django.db.models import Prefetch
+from django.db.models import Prefetch, ProtectedError, RestrictedError
 from django.http import HttpResponse
 from django.shortcuts import redirect
 from django.template.loader import render_to_string
@@ -201,6 +201,20 @@ class PacienteDeleteView(PermissaoExcluir, DeleteView):
     slug_field = "uuid"
     slug_url_kwarg = "uuid"
     success_url = reverse_lazy("pacientes:paciente_list")
+
+    def form_valid(self, form):
+        # Paciente com faturamento ou pacote não pode ser apagado (PROTECT /
+        # RESTRICT no app opcional `faturamentos`). Sem este tratamento o
+        # usuário veria um erro 500.
+        try:
+            return super().form_valid(form)
+        except (ProtectedError, RestrictedError):
+            messages.error(
+                self.request,
+                "Este paciente tem histórico financeiro (faturamentos ou pacotes) "
+                "e não pode ser excluído. Edite o cadastro e desmarque Ativo.",
+            )
+            return redirect("pacientes:paciente_list")
 
 
 # --- Prontuario Views ---
