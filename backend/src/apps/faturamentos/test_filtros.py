@@ -40,6 +40,8 @@ def criar_faturamento(paciente, dia, status="pendente"):
         paciente=paciente,
         data_servico=dia,
         valor_cobrado=Decimal("100.00"),
+        # "pago" só existe com o valor quitado; os demais status não têm pagamento.
+        valor_pago=Decimal("100.00") if status == "pago" else Decimal("0"),
         status_pagamento=status,
     )
 

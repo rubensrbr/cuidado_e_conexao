@@ -131,7 +131,7 @@ class FaturamentoFormTenantTests(FaturamentosTenantBase):
             "data_servico": "2026-11-10",
             "valor_cobrado": "200.00",
             "valor_pago": "0",
-            "status_pagamento": "pendente",
+            "status_pagamento": "",  # automático: sai do valor pago
         }
         dados.update(kwargs)
         return dados
@@ -213,7 +213,7 @@ class FaturamentoViewsTenantTests(FaturamentosTenantBase):
                 "data_servico": "2026-11-12",
                 "valor_cobrado": "80.00",
                 "valor_pago": "0",
-                "status_pagamento": "pendente",
+                "status_pagamento": "",  # automático: sai do valor pago
             },
         )
         self.assertEqual(resposta.status_code, 302)

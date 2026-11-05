@@ -7,6 +7,39 @@ from django.utils import timezone
 
 from clinicas.tenancy import TenantModel
 
+ZERO = Decimal("0")
+
+
+def status_do_pagamento(valor_cobrado, valor_pago, pro_bono=False, marcacao=""):
+    """Status de um faturamento, derivado dos valores.
+
+    Só duas situações são marcadas à mão (`marcacao`): "cancelado" e "atrasado".
+    Todo o resto vem do valor pago:
+
+      pago >= cobrado (cobrado > 0)  -> pago
+      0 < pago < cobrado             -> parcialmente_pago
+      pago == 0                      -> pendente (pro bono: pago, não há o que cobrar)
+
+    "cancelado" vale sempre. "atrasado" só vale enquanto falta pagar: quitado,
+    o status volta a ser "pago". Qualquer outro valor em `marcacao` (inclusive um
+    status antigo como "pendente") é ignorado.
+    """
+    if marcacao == "cancelado":
+        return "cancelado"
+    cobrado = Decimal(str(valor_cobrado or 0))
+    pago = Decimal(str(valor_pago or 0))
+    if cobrado > ZERO and pago >= cobrado:
+        calculado = "pago"
+    elif pago > ZERO:
+        calculado = "parcialmente_pago"
+    elif pro_bono:
+        calculado = "pago"
+    else:
+        calculado = "pendente"
+    if marcacao == "atrasado" and calculado != "pago":
+        return "atrasado"
+    return calculado
+
 
 class Faturamento(TenantModel):
     """Controle de faturamento e pagamentos"""
@@ -27,6 +60,9 @@ class Faturamento(TenantModel):
         ("atrasado", "Atrasado"),
         ("cancelado", "Cancelado"),
     ]
+    # Únicos status escolhidos por uma pessoa; os demais saem dos valores
+    # (ver `status_do_pagamento`).
+    STATUS_MANUAIS = ("atrasado", "cancelado")
 
     paciente = models.ForeignKey(
         "pacientes.Paciente",
@@ -134,6 +170,24 @@ class Faturamento(TenantModel):
 
         if erros:
             raise ValidationError(erros)
+
+    def atualizar_status(self):
+        """Recalcula `status_pagamento` a partir dos valores (ver `status_do_pagamento`)."""
+        self.status_pagamento = status_do_pagamento(
+            self.valor_cobrado, self.valor_pago, self.pro_bono, self.status_pagamento
+        )
+
+    def save(self, *args, **kwargs):
+        # O status nunca contradiz os valores, venha o faturamento de formulário,
+        # shell ou comando. (`QuerySet.update()` e `bulk_create()` não passam por
+        # aqui: quem os usa precisa chamar `status_do_pagamento` por conta própria.)
+        self.atualizar_status()
+        campos = kwargs.get("update_fields")
+        if campos is not None and {
+            "valor_cobrado", "valor_pago", "pro_bono", "status_pagamento"
+        } & set(campos):
+            kwargs["update_fields"] = {*campos, "status_pagamento"}
+        super().save(*args, **kwargs)
 
     @property
     def valor_pendente(self):

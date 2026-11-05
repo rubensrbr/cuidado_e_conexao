@@ -5,7 +5,7 @@ from django.db.models import Q
 
 from clinicas.forms import TenantFormMixin
 
-from .models import Faturamento, Pacote, SessaoPacote
+from .models import Faturamento, Pacote, SessaoPacote, status_do_pagamento
 
 
 class OpcoesPorPaciente(forms.Select):
@@ -27,6 +27,23 @@ class OpcoesPorPaciente(forms.Select):
 
 
 class FaturamentoForm(TenantFormMixin, forms.ModelForm):
+    # Pendente, parcialmente pago e pago não são escolhidos: saem do valor pago
+    # (ver `status_do_pagamento`). Só "atrasado" e "cancelado" são marcados à mão.
+    status_pagamento = forms.ChoiceField(
+        label="Status do pagamento",
+        required=False,
+        choices=[
+            ("", "Automático (conforme o valor pago)"),
+            ("atrasado", "Atrasado"),
+            ("cancelado", "Cancelado"),
+        ],
+        widget=forms.Select(attrs={"class": "form-select"}),
+        help_text=(
+            "Pendente, parcialmente pago e pago são definidos pelo valor pago. "
+            "Marque só se estiver atrasado ou cancelado."
+        ),
+    )
+
     class Meta:
         model = Faturamento
         fields = [
@@ -59,7 +76,6 @@ class FaturamentoForm(TenantFormMixin, forms.ModelForm):
                 attrs={"class": "form-control", "step": "0.01", "min": "0"}
             ),
             "metodo_pagamento": forms.Select(attrs={"class": "form-select"}),
-            "status_pagamento": forms.Select(attrs={"class": "form-select"}),
             "numero_nota": forms.TextInput(attrs={"class": "form-control"}),
             "observacoes": forms.Textarea(attrs={"class": "form-control", "rows": 3}),
         }
@@ -70,6 +86,10 @@ class FaturamentoForm(TenantFormMixin, forms.ModelForm):
         # (a regra está em `clean`).
         self.fields["valor_cobrado"].required = False
         self.fields["valor_pago"].required = False
+        # Na edição, só uma marcação manual aparece escolhida; um status derivado
+        # (pago, pendente...) volta a "Automático".
+        if self.instance.status_pagamento not in Faturamento.STATUS_MANUAIS:
+            self.initial["status_pagamento"] = ""
         # Só pacotes ativos aparecem para novas cobranças; na edição, mantém o
         # pacote já vinculado mesmo que tenha sido concluído ou cancelado.
         filtro = Q(status="ativo")
@@ -104,13 +124,30 @@ class FaturamentoForm(TenantFormMixin, forms.ModelForm):
         except (TypeError, ValueError):
             return None
 
+    def _get_validation_exclusions(self):
+        # O status é calculado em `clean`; o valor "" do campo (automático) não
+        # pode ser validado como se fosse o status do modelo.
+        exclude = super()._get_validation_exclusions()
+        exclude.add("status_pagamento")
+        return exclude
+
+    def _definir_status(self, cleaned_data, cobrado, pago, pro_bono):
+        marcacao = cleaned_data.get("status_pagamento") or ""
+        status = status_do_pagamento(cobrado, pago, pro_bono, marcacao)
+        if marcacao == "atrasado" and status == "pago":
+            self.add_error(
+                "status_pagamento",
+                "Um faturamento quitado não pode estar atrasado.",
+            )
+            return
+        cleaned_data["status_pagamento"] = status
+
     def clean(self):
         cleaned_data = super().clean()
         paciente = cleaned_data.get("paciente")
         pacote = cleaned_data.get("pacote")
         valor_cobrado = cleaned_data.get("valor_cobrado")
         valor_pago = cleaned_data.get("valor_pago")
-        status_pagamento = cleaned_data.get("status_pagamento")
         pro_bono = cleaned_data.get("pro_bono")
 
         # Paciente pro bono + valor em branco = atendimento pro bono.
@@ -128,11 +165,10 @@ class FaturamentoForm(TenantFormMixin, forms.ModelForm):
             # Valores em branco viram zero; valores preenchidos são recusados
             # pela validação do modelo (Faturamento.clean).
             if valor_cobrado is None and not self.has_error("valor_cobrado"):
-                cleaned_data["valor_cobrado"] = Decimal("0")
+                cleaned_data["valor_cobrado"] = valor_cobrado = Decimal("0")
             if valor_pago is None and not self.has_error("valor_pago"):
-                cleaned_data["valor_pago"] = Decimal("0")
-            if status_pagamento == "pendente":
-                cleaned_data["status_pagamento"] = "pago"
+                cleaned_data["valor_pago"] = valor_pago = Decimal("0")
+            self._definir_status(cleaned_data, valor_cobrado, valor_pago, True)
             return cleaned_data
 
         for campo in ("valor_cobrado", "valor_pago"):
@@ -149,11 +185,9 @@ class FaturamentoForm(TenantFormMixin, forms.ModelForm):
                 self.add_error(
                     "valor_pago", "O valor pago não pode ser maior que o valor cobrado."
                 )
-            elif status_pagamento == "pago" and valor_pago < valor_cobrado:
-                self.add_error(
-                    "status_pagamento",
-                    "Status 'Pago' exige que o valor pago seja igual ao valor cobrado.",
-                )
+
+        if not (self.has_error("valor_cobrado") or self.has_error("valor_pago")):
+            self._definir_status(cleaned_data, valor_cobrado, valor_pago, False)
 
         return cleaned_data
 

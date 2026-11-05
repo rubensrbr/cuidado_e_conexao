@@ -78,7 +78,7 @@ def dados_form(paciente, **kwargs):
         "data_servico": "2026-11-03",
         "valor_cobrado": "150.00",
         "valor_pago": "0",
-        "status_pagamento": "pendente",
+        "status_pagamento": "",  # automático: sai do valor pago
     }
     dados.update(kwargs)
     return dados
