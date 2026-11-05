@@ -6,8 +6,6 @@ from django.db import models
 from django.utils import timezone
 
 from clinicas.tenancy import TenantModel
-from consultas.models import Consulta
-from pacientes.models import Paciente
 
 
 class Faturamento(TenantModel):

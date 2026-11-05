@@ -135,7 +135,7 @@ class ConsultaCreateView(PermissaoAdicionar, SuccessMessageMixin, CreateView):
     template_name = "consultas/consulta_form.html"
     form_class = ConsultaForm
     success_url = reverse_lazy("consultas:consulta_list")
-    success_message = "Faturamento salvo com sucesso!"
+    success_message = "Consulta salva com sucesso!"
 
 
 class ConsultaUpdateView(PermissaoAlterar, SuccessMessageMixin, UpdateView):
@@ -145,7 +145,7 @@ class ConsultaUpdateView(PermissaoAlterar, SuccessMessageMixin, UpdateView):
     slug_field = "uuid"
     slug_url_kwarg = "uuid"
     success_url = reverse_lazy("consultas:consulta_list")
-    success_message = "Faturamento atualizado com sucesso!"
+    success_message = "Consulta atualizada com sucesso!"
 
 
 class ConsultaDeleteView(PermissaoExcluir, DeleteView):
