@@ -4,6 +4,7 @@ from django import forms
 from django.db.models import Q
 
 from clinicas.forms import TenantFormMixin
+from core.widgets import DateInput
 
 from .models import Faturamento, Pacote, SessaoPacote, status_do_pagamento
 
@@ -65,7 +66,7 @@ class FaturamentoForm(TenantFormMixin, forms.ModelForm):
             "consulta": OpcoesPorPaciente(attrs={"class": "form-select"}),
             "pacote": OpcoesPorPaciente(attrs={"class": "form-select"}),
             "pro_bono": forms.CheckboxInput(attrs={"class": "form-check-input"}),
-            "data_servico": forms.DateInput(attrs={"class": "form-control", "type": "date"}),
+            "data_servico": DateInput(),
             "valor_cobrado": forms.NumberInput(
                 attrs={"class": "form-control", "step": "0.01", "min": "0"}
             ),
@@ -213,10 +214,8 @@ class PacoteForm(TenantFormMixin, forms.ModelForm):
             "valor_total": forms.NumberInput(
                 attrs={"class": "form-control", "step": "0.01", "min": "0"}
             ),
-            "data_compra": forms.DateInput(
-                attrs={"class": "form-control", "type": "date"}
-            ),
-            "validade": forms.DateInput(attrs={"class": "form-control", "type": "date"}),
+            "data_compra": DateInput(),
+            "validade": DateInput(),
             "status": forms.Select(attrs={"class": "form-select"}),
         }
 

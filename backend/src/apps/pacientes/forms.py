@@ -2,6 +2,7 @@ from django import forms
 from django.utils import timezone
 
 from clinicas.forms import TenantFormMixin
+from core.widgets import DateInput
 
 from .models import Paciente, Prontuario
 from telefones.forms import TelefoneForm
@@ -25,9 +26,7 @@ class PacienteForm(TenantFormMixin, forms.ModelForm):
         widgets = {
             "primeiro_nome": forms.TextInput(attrs={"class": "form-control"}),
             "sobrenome": forms.TextInput(attrs={"class": "form-control"}),
-            "data_nascimento": forms.DateInput(
-                attrs={"class": "form-control", "type": "date"}
-            ),
+            "data_nascimento": DateInput(),
             "genero": forms.Select(attrs={"class": "form-select"}),
             "email": forms.EmailInput(attrs={"class": "form-control"}),
             "enderecos": forms.Select(attrs={"class": "form-select"}),
@@ -79,9 +78,7 @@ class ProntuarioForm(TenantFormMixin, forms.ModelForm):
             "paciente": forms.Select(attrs={"class": "form-select"}),
             "profissional": forms.Select(attrs={"class": "form-select"}),
             "consulta": forms.Select(attrs={"class": "form-select"}),
-            "data_registro": forms.DateInput(
-                attrs={"class": "form-control", "type": "date"}
-            ),
+            "data_registro": DateInput(),
             "codigo_cid": forms.TextInput(attrs={"class": "form-control"}),
             "queixa_principal": forms.Textarea(
                 attrs={"class": "form-control", "rows": 3}

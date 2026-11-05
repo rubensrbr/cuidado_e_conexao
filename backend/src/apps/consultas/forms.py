@@ -3,6 +3,7 @@ from django import forms
 from src.apps import pacientes
 
 from clinicas.forms import TenantFormMixin
+from core.widgets import DateInput
 
 from .models import Consulta, Lembrete, ListaEspera
 
@@ -24,9 +25,7 @@ class ConsultaForm(TenantFormMixin, forms.ModelForm):
         widgets = {
             "paciente": forms.Select(attrs={"class": "form-select"}),
             "profissional": forms.Select(attrs={"class": "form-select"}),
-            "data_consulta": forms.DateInput(
-                attrs={"class": "form-control", "type": "date"}
-            ),
+            "data_consulta": DateInput(),
             "hora_inicio": forms.TimeInput(
                 attrs={"class": "form-control", "type": "time"}
             ),

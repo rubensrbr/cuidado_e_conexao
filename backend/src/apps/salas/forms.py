@@ -1,6 +1,7 @@
 from django import forms
 
 from clinicas.forms import TenantFormMixin
+from core.widgets import DateInput
 
 from .models import AgendaSala, Sala
 
@@ -30,7 +31,7 @@ class AgendaSalaForm(TenantFormMixin, forms.ModelForm):
         widgets = {
             "sala": forms.Select(attrs={"class": "form-select"}),
             "consulta": forms.Select(attrs={"class": "form-select"}),
-            "data": forms.DateInput(attrs={"class": "form-control", "type": "date"}),
+            "data": DateInput(),
             "hora_inicio": forms.TimeInput(attrs={"class": "form-control", "type": "time"}),
             "hora_fim": forms.TimeInput(attrs={"class": "form-control", "type": "time"}),
         }

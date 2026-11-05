@@ -3,6 +3,7 @@ from decimal import Decimal
 from django import forms
 
 from clinicas.forms import TenantFormMixin
+from core.widgets import DateInput
 from enderecos.forms import EnderecoForm
 from enderecos.models import Endereco
 from telefones.forms import TelefoneForm
@@ -77,12 +78,8 @@ class DisponibilidadeForm(TenantFormMixin, forms.ModelForm):
                 attrs={"class": "form-control", "type": "time"}
             ),
             "recorrente": forms.CheckboxInput(attrs={"class": "form-check-input"}),
-            "data_inicio": forms.DateInput(
-                attrs={"class": "form-control", "type": "date"}
-            ),
-            "data_fim": forms.DateInput(
-                attrs={"class": "form-control", "type": "date"}
-            ),
+            "data_inicio": DateInput(),
+            "data_fim": DateInput(),
         }
 
     def clean(self):
