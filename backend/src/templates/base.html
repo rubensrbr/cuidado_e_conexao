@@ -62,11 +62,24 @@
           <i class="bi bi-door-open-fill"></i><span>Salas</span>
         </a>
         {% endcomment %}
+        {% if "faturamentos.view_faturamento" in perms or "faturamentos.view_pacote" in perms %}
+        <div class="sidebar-section">Financeiro</div>
+        {% endif %}
+        {% if "faturamentos.view_faturamento" in perms %}
         {% maybe_url 'faturamentos:faturamento_list' as faturamentos_url %}
-        <a class="nav-link{% if request.resolver_match.namespace == 'faturamentos' %} active{% endif %}{% if not faturamentos_url %} disabled{% endif %}"
+        {# Pacotes e sessões de pacote vivem no mesmo namespace: só os "pacote*" ficam com o outro link. #}
+        <a class="nav-link{% if request.resolver_match.namespace == 'faturamentos' and 'pacote' not in request.resolver_match.url_name %} active{% endif %}{% if not faturamentos_url %} disabled{% endif %}"
            href="{{ faturamentos_url|default:'#' }}"{% if not faturamentos_url %} aria-disabled="true" tabindex="-1" title="Em construção"{% endif %}>
           <i class="bi bi-receipt"></i><span>Faturamentos</span>
         </a>
+        {% endif %}
+        {% if "faturamentos.view_pacote" in perms %}
+        {% maybe_url 'faturamentos:pacote_list' as pacotes_url %}
+        <a class="nav-link{% if request.resolver_match.namespace == 'faturamentos' and 'pacote' in request.resolver_match.url_name %} active{% endif %}{% if not pacotes_url %} disabled{% endif %}"
+           href="{{ pacotes_url|default:'#' }}"{% if not pacotes_url %} aria-disabled="true" tabindex="-1" title="Em construção"{% endif %}>
+          <i class="bi bi-box-seam"></i><span>Pacotes</span>
+        </a>
+        {% endif %}
       </nav>
 
       <div class="sidebar-footer">
