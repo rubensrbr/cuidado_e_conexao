@@ -379,3 +379,54 @@ class FaturamentoFormTests(Base):
 class PacienteProBonoFormTests(Base):
     def test_formulario_do_paciente_tem_pro_bono(self):
         self.assertIn("pro_bono", PacienteForm().fields)
+
+
+class OpcoesDoFormularioPorPacienteTests(Base):
+    """Consulta e pacote só são oferecidos para o paciente da cobrança."""
+
+    def setUp(self):
+        super().setUp()
+        self.pacote_ana = criar_pacote(self.ana)
+        self.pacote_bia = criar_pacote(self.bia)
+        self.pacote_ana_concluido = criar_pacote(self.ana, status="concluido")
+        self.consulta_ana = criar_consulta(self.ana, self.dra, dia=3)
+        self.consulta_bia = criar_consulta(self.bia, self.dr, dia=4)
+
+    def opcoes(self, form, campo):
+        return set(form.fields[campo].queryset)
+
+    def test_com_paciente_escolhido_so_aparecem_as_opcoes_dele(self):
+        form = FaturamentoForm(dados_form(self.ana))
+        self.assertEqual(self.opcoes(form, "pacote"), {self.pacote_ana})
+        self.assertEqual(self.opcoes(form, "consulta"), {self.consulta_ana})
+
+    def test_pacote_de_outro_paciente_e_recusado(self):
+        form = FaturamentoForm(dados_form(self.ana, pacote=self.pacote_bia.pk))
+        self.assertFalse(form.is_valid())
+        self.assertIn("pacote", form.errors)
+
+    def test_consulta_de_outro_paciente_e_recusada(self):
+        form = FaturamentoForm(dados_form(self.ana, consulta=self.consulta_bia.pk))
+        self.assertFalse(form.is_valid())
+        self.assertIn("consulta", form.errors)
+
+    def test_formulario_novo_marca_cada_opcao_com_o_paciente_dono(self):
+        html = str(FaturamentoForm()["pacote"])
+        self.assertIn(f'value="{self.pacote_ana.pk}" data-paciente="{self.ana.pk}"', html)
+        self.assertIn(f'value="{self.pacote_bia.pk}" data-paciente="{self.bia.pk}"', html)
+        # Só pacotes ativos: o concluído não aparece.
+        self.assertNotIn(f'value="{self.pacote_ana_concluido.pk}"', html)
+
+    def test_edicao_mantem_o_pacote_ja_vinculado_do_proprio_paciente(self):
+        fat = Faturamento.objects.create(
+            paciente=self.ana,
+            pacote=self.pacote_ana_concluido,
+            data_servico=date(2026, 11, 3),
+            valor_cobrado=Decimal("400"),
+            valor_pago=Decimal("400"),
+            status_pagamento="pago",
+        )
+        form = FaturamentoForm(instance=fat)
+        self.assertEqual(
+            self.opcoes(form, "pacote"), {self.pacote_ana, self.pacote_ana_concluido}
+        )

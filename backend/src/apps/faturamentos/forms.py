@@ -8,6 +8,24 @@ from clinicas.forms import TenantFormMixin
 from .models import Faturamento, Pacote, SessaoPacote
 
 
+class OpcoesPorPaciente(forms.Select):
+    """Select que marca cada opção com o paciente dono dela (`data-paciente`).
+
+    O formulário usa essa marca para esconder, no navegador, as opções de
+    outros pacientes assim que o paciente é trocado.
+    """
+
+    paciente_por_opcao = None
+
+    def create_option(self, name, value, label, selected, index, subindex=None, attrs=None):
+        option = super().create_option(name, value, label, selected, index, subindex, attrs)
+        chave = getattr(value, "value", value)  # ModelChoiceIteratorValue -> pk
+        paciente_id = (self.paciente_por_opcao or {}).get(chave)
+        if paciente_id is not None:
+            option["attrs"]["data-paciente"] = paciente_id
+        return option
+
+
 class FaturamentoForm(TenantFormMixin, forms.ModelForm):
     class Meta:
         model = Faturamento
@@ -27,8 +45,8 @@ class FaturamentoForm(TenantFormMixin, forms.ModelForm):
         ]
         widgets = {
             "paciente": forms.Select(attrs={"class": "form-select"}),
-            "consulta": forms.Select(attrs={"class": "form-select"}),
-            "pacote": forms.Select(attrs={"class": "form-select"}),
+            "consulta": OpcoesPorPaciente(attrs={"class": "form-select"}),
+            "pacote": OpcoesPorPaciente(attrs={"class": "form-select"}),
             "pro_bono": forms.CheckboxInput(attrs={"class": "form-check-input"}),
             "data_servico": forms.DateInput(attrs={"class": "form-control", "type": "date"}),
             "valor_cobrado": forms.NumberInput(
@@ -58,6 +76,33 @@ class FaturamentoForm(TenantFormMixin, forms.ModelForm):
         if self.instance.pacote_id:
             filtro |= Q(pk=self.instance.pacote_id)
         self.fields["pacote"].queryset = self.fields["pacote"].queryset.filter(filtro)
+
+        # Consulta e pacote são sempre do próprio paciente da cobrança: com o
+        # paciente conhecido, só as opções dele são oferecidas; sem ele (formulário
+        # novo), todas vão marcadas com `data-paciente` e o navegador filtra ao
+        # escolher o paciente.
+        paciente_id = self._paciente_selecionado()
+        for nome in ("consulta", "pacote"):
+            campo = self.fields[nome]
+            if paciente_id:
+                campo.queryset = campo.queryset.filter(paciente_id=paciente_id)
+            campo.widget.paciente_por_opcao = dict(
+                campo.queryset.values_list("pk", "paciente_id")
+            )
+        self.fields["consulta"].help_text = "Só aparecem consultas do paciente escolhido."
+        self.fields["pacote"].help_text = (
+            "Só aparecem pacotes ativos do paciente escolhido."
+        )
+
+    def _paciente_selecionado(self):
+        if self.is_bound:
+            valor = self.data.get(self.add_prefix("paciente"))
+        else:
+            valor = self.initial.get("paciente") or self.instance.paciente_id
+        try:
+            return int(valor) if valor else None
+        except (TypeError, ValueError):
+            return None
 
     def clean(self):
         cleaned_data = super().clean()

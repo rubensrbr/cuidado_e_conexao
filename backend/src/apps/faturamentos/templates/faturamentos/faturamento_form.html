@@ -88,3 +88,34 @@
     {% url 'faturamentos:faturamento_list' as cancel_url %}
     {% include "partials/_form_actions.html" with cancel_url=cancel_url submit_label=object|yesno:"Salvar alterações,Registrar faturamento" %}
 {% endblock %}
+
+{% block form_scripts %}
+<script>
+    // Consulta e pacote só podem ser do paciente escolhido: esconde as opções dos outros.
+    (function () {
+        var paciente = document.getElementById("{{ form.paciente.id_for_label }}");
+        var campos = [
+            document.getElementById("{{ form.consulta.id_for_label }}"),
+            document.getElementById("{{ form.pacote.id_for_label }}")
+        ];
+
+        function filtrar() {
+            campos.forEach(function (select) {
+                var escolhida = select.options[select.selectedIndex];
+                Array.prototype.forEach.call(select.options, function (opcao) {
+                    var dono = opcao.getAttribute("data-paciente");
+                    var esconder = dono !== null && dono !== paciente.value;
+                    opcao.hidden = esconder;
+                    opcao.disabled = esconder;
+                });
+                if (escolhida && escolhida.disabled) {
+                    select.value = "";
+                }
+            });
+        }
+
+        paciente.addEventListener("change", filtrar);
+        filtrar();
+    })();
+</script>
+{% endblock %}
